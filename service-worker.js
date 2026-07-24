@@ -1,14 +1,14 @@
-const CACHE_NAME = 'lubayd-descansos-v1.3.0';
+const CACHE_NAME = 'lubayd-descansos-v1.4.0';
 const APP_SHELL = [
   './',
   './index.html',
   './styles.css',
   './manifest.webmanifest',
-  './js/app.js',
-  './js/firebase-config.js',
-  './assets/logo.svg',
-  './assets/icon-192.png',
-  './assets/icon-512.png'
+  './app.js',
+  './firebase-config.js',
+  './logo.svg',
+  './icon-192.png',
+  './icon-512.png'
 ];
 
 self.addEventListener('install', (event) => {
@@ -41,7 +41,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  const isCoreCode = url.pathname.endsWith('/js/app.js') || url.pathname.endsWith('/js/firebase-config.js');
+  const isCoreCode = url.pathname.endsWith('/app.js') || url.pathname.endsWith('/firebase-config.js');
 
   if (isCoreCode) {
     event.respondWith(

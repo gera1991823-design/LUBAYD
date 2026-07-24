@@ -18,7 +18,7 @@ Aplicación web progresiva (PWA) para celular y computadora.
 
 ## Proyecto Firebase configurado
 
-El archivo `js/firebase-config.js` ya apunta al proyecto:
+El archivo `firebase-config.js` ya apunta al proyecto:
 
 ```text
 app-lubayd
@@ -99,7 +99,7 @@ breaks/{uid}/{breakId}/end.jpg
 
 ## Configuracion incluida en V1.1.0
 
-Esta entrega ya contiene la configuracion web proporcionada para `APP LUBAYD`, incluido el bucket `app-lubayd.firebasestorage.app`. No es necesario volver a editar `js/firebase-config.js`.
+Esta entrega ya contiene la configuracion web proporcionada para `APP LUBAYD`, incluido el bucket `app-lubayd.firebasestorage.app`. No es necesario volver a editar `firebase-config.js`.
 
 
 ## Diagnóstico de acceso
@@ -107,6 +107,6 @@ Esta entrega ya contiene la configuracion web proporcionada para `APP LUBAYD`, i
 La versión 1.2 muestra en la pantalla de acceso el código exacto de Firebase cuando falla el registro o el inicio de sesión. También evita que una falla al crear el perfil de Firestore invalide una cuenta que sí fue creada correctamente en Authentication.
 
 
-## Correccion V1.3
+## Correccion V1.4
 
 La interfaz se inicia antes de descargar Firebase. Si Firebase o la red fallan, los botones de acceso siguen respondiendo y muestran un mensaje visible. Debe abrirse desde la URL HTTPS de GitHub Pages, no haciendo doble clic sobre index.html.
