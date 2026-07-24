@@ -1,22 +1,17 @@
-APP LUBAYD V1.5
+APP LUBAYD v1.6.0 - DISEÑO EMPRESARIAL
 
-Reemplazar en la raiz del repositorio GitHub estos archivos:
-
-1. index.html
-2. app.js
-3. styles.css
-4. service-worker.js
-5. manifest.webmanifest
-
-Luego:
-- Confirmar los cambios con Commit changes.
-- Esperar la publicacion de GitHub Pages.
-- Abrir /reset.html y pulsar "Limpiar cache y abrir aplicacion".
-- Si no cambia, cerrar Safari por completo y volver a abrir la app.
+Reemplazar en la raíz del repositorio GitHub:
+- index.html
+- app.js
+- styles.css
+- service-worker.js
+- manifest.webmanifest
 
 Cambios principales:
-- Interfaz movil mas compacta.
-- Se elimino el bloque visible sobre la foto en el panel principal.
-- No se muestran coordenadas ni precision GPS.
-- La ubicacion se visualiza mediante botones de Google Maps.
-- Historial con Fecha, Hora de inicio, Finalizacion, Ubicacion y Fotografias.
+- Diseño móvil empresarial con barra superior y navegación inferior.
+- Resumen diario de cantidad y tiempo de descansos.
+- Historial compacto con fecha, inicio, finalización, duración, mapa y fotos.
+- Fotos visibles dentro de la app mediante miniaturas y visor interno.
+- Corrección para Safari/iPhone: ya no usa window.open después de consultar Firebase.
+
+Después de subir los archivos, abrir /reset.html para limpiar la caché.

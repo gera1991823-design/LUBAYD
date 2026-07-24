@@ -1,6 +1,6 @@
 "use strict";
 
-// APP LUBAYD v1.5.0
+// APP LUBAYD v1.6.0
 // La interfaz se inicia primero y Firebase se carga luego de forma dinámica.
 // Así, aun si el CDN de Firebase falla, los botones y los mensajes siguen funcionando.
 window.__APP_SCRIPT_LOADED__ = true;
@@ -66,6 +66,10 @@ const els = {
   offlineWarning: $("#offlineWarning"),
   liveClock: $("#liveClock"),
   liveDate: $("#liveDate"),
+  dashboardGreeting: $("#dashboardGreeting"),
+  dashboardDate: $("#dashboardDate"),
+  todayBreakCount: $("#todayBreakCount"),
+  todayBreakTotal: $("#todayBreakTotal"),
   pageTitle: $("#pageTitle"),
   dashboardSection: $("#dashboardSection"),
   historySection: $("#historySection"),
@@ -110,7 +114,12 @@ const els = {
   processingMessage: $("#processingMessage"),
   toastRegion: $("#toastRegion"),
   authMessage: $("#authMessage"),
-  startupError: $("#startupError")
+  startupError: $("#startupError"),
+  photoViewerModal: $("#photoViewerModal"),
+  photoViewerImage: $("#photoViewerImage"),
+  photoViewerLoading: $("#photoViewerLoading"),
+  photoViewerTitle: $("#photoViewerTitle"),
+  closePhotoViewerButton: $("#closePhotoViewerButton")
 };
 
 let currentUser = null;
@@ -125,6 +134,8 @@ let capturedBlob = null;
 let capturedPosition = null;
 let captureObjectUrl = null;
 let isSaving = false;
+let lastHistoryRecords = [];
+const photoUrlCache = new Map();
 
 function setBusy(button, busy, label) {
   if (!button) return;
@@ -300,8 +311,14 @@ updateConnectionState();
 function startClock() {
   const render = () => {
     const now = new Date();
+    const hour = now.getHours();
+    const greeting = hour < 12 ? "Buenos días" : hour < 19 ? "Buenas tardes" : "Buenas noches";
+    const operatorName = currentUser?.displayName?.trim()?.split(/\s+/)[0] || "Operador";
+
     els.liveClock.textContent = now.toLocaleTimeString("es-UY", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
     els.liveDate.textContent = now.toLocaleDateString("es-UY", { weekday: "long", day: "2-digit", month: "long", year: "numeric" });
+    if (els.dashboardGreeting) els.dashboardGreeting.textContent = `${greeting}, ${operatorName}`;
+    if (els.dashboardDate) els.dashboardDate.textContent = now.toLocaleDateString("es-UY", { weekday: "long", day: "2-digit", month: "long", year: "numeric" });
   };
   render();
   window.setInterval(render, 1000);
@@ -344,6 +361,12 @@ async function handleAuthStateChanged(user) {
   els.userName.textContent = user.displayName || "Operador";
   els.userEmail.textContent = user.email || "—";
   els.userAvatar.textContent = getInitials(user.displayName || user.email || "U");
+  if (els.dashboardGreeting) {
+    const hour = new Date().getHours();
+    const greeting = hour < 12 ? "Buenos días" : hour < 19 ? "Buenas tardes" : "Buenas noches";
+    const operatorName = (user.displayName || "Operador").trim().split(/\s+/)[0];
+    els.dashboardGreeting.textContent = `${greeting}, ${operatorName}`;
+  }
 
   try {
     const profileRef = doc(db, "users", user.uid);
@@ -408,8 +431,10 @@ function subscribeHistory(uid) {
   const historyQuery = query(collection(db, "users", uid, "breaks"), orderBy("startAtClient", "desc"), limit(50));
   unsubscribeHistory = onSnapshot(historyQuery, (snapshot) => {
     const records = snapshot.docs.map((item) => ({ id: item.id, ...item.data() }));
+    lastHistoryRecords = records;
     renderHistory(records);
     renderRecent(records.slice(0, 4));
+    updateDailySummary(records);
   }, (error) => {
     els.historyList.innerHTML = `<div class="empty-state">No se pudo cargar el historial: ${escapeHtml(friendlyError(error))}</div>`;
     els.recentList.innerHTML = `<div class="empty-state">No se pudo cargar la actividad reciente.</div>`;
@@ -490,6 +515,25 @@ function durationForRecord(record) {
   return { seconds, label: formatDuration(seconds) };
 }
 
+function updateDailySummary(records) {
+  if (!els.todayBreakCount || !els.todayBreakTotal) return;
+  const today = new Date();
+  const sameDay = (date) => date.getFullYear() === today.getFullYear()
+    && date.getMonth() === today.getMonth()
+    && date.getDate() === today.getDate();
+
+  const todaysRecords = records.filter((record) => sameDay(parseDate(record.startAtClient)));
+  const totalSeconds = todaysRecords.reduce((sum, record) => {
+    const duration = durationForRecord(record);
+    return sum + (duration?.seconds || 0);
+  }, 0);
+
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  els.todayBreakCount.textContent = String(todaysRecords.length);
+  els.todayBreakTotal.textContent = `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+}
+
 function renderRecent(records) {
   if (!records.length) {
     els.recentList.innerHTML = `<div class="empty-state">Aún no hay descansos registrados.</div>`;
@@ -524,68 +568,136 @@ function renderHistory(records) {
   els.historyList.innerHTML = records.map((record) => {
     const start = parseDate(record.startAtClient);
     const end = record.endAtClient ? parseDate(record.endAtClient) : null;
+    const duration = durationForRecord(record);
     const startLocation = record.startLocation;
     const endLocation = record.endLocation;
     const dateLong = start.toLocaleDateString("es-UY", { day: "2-digit", month: "long", year: "numeric" });
-    const weekday = start.toLocaleDateString("es-UY", { weekday: "long" }).toUpperCase();
+    const weekday = start.toLocaleDateString("es-UY", { weekday: "long" });
     const startTime = start.toLocaleTimeString("es-UY", { hour: "2-digit", minute: "2-digit" });
     const endTime = end ? end.toLocaleTimeString("es-UY", { hour: "2-digit", minute: "2-digit" }) : "En curso";
+    const durationLabel = duration ? duration.label.slice(0, 5) : "En curso";
 
-    return `<article class="history-card">
-      <header class="history-card-head">
-        <div><span class="eyebrow">${escapeHtml(weekday)}</span><h3>${escapeHtml(dateLong)}</h3></div>
-        <span class="badge ${record.status === "active" ? "active" : "complete"}">${record.status === "active" ? "En curso" : "Completado"}</span>
+    const startPhoto = record.startPhotoPath
+      ? historyPhotoTile(record.startPhotoPath, "Foto de inicio", "Inicio")
+      : historyPhotoPlaceholder("Sin foto inicial");
+    const endPhoto = record.endPhotoPath
+      ? historyPhotoTile(record.endPhotoPath, "Foto de finalización", "Final")
+      : historyPhotoPlaceholder(record.status === "active" ? "Pendiente" : "Sin foto final");
+
+    return `<article class="history-card enterprise-history-card">
+      <header class="history-card-head enterprise-history-head">
+        <div class="history-date-block">
+          <span class="history-calendar-icon" aria-hidden="true">▣</span>
+          <div><strong>${escapeHtml(dateLong)}</strong><small>${escapeHtml(weekday)}</small></div>
+        </div>
+        <span class="badge ${record.status === "active" ? "active" : "complete"}">${record.status === "active" ? "Activo" : "Completado"}</span>
       </header>
 
-      <div class="history-summary">
-        <div><span>Fecha</span><strong>${escapeHtml(dateLong)}</strong></div>
-        <div><span>Hora de inicio</span><strong>${escapeHtml(startTime)}</strong></div>
+      <div class="history-metrics-grid">
+        <div><span>Inicio</span><strong>${escapeHtml(startTime)}</strong></div>
         <div><span>Finalización</span><strong>${escapeHtml(endTime)}</strong></div>
+        <div><span>Duración</span><strong>${escapeHtml(durationLabel)}</strong></div>
       </div>
 
-      <div class="history-resource-list">
-        <section class="history-resource">
-          <div class="history-resource-title">
-            <span class="resource-icon" aria-hidden="true">⌖</span>
-            <div><strong>Ubicación</strong><small>Abrir la marcación en Google Maps</small></div>
-          </div>
-          <div class="history-actions">
-            ${startLocation ? `<a class="photo-button map-button" href="${mapUrl(startLocation.latitude, startLocation.longitude)}" target="_blank" rel="noopener">Mapa de inicio</a>` : `<span class="resource-missing">Sin ubicación inicial</span>`}
-            ${endLocation ? `<a class="photo-button map-button" href="${mapUrl(endLocation.latitude, endLocation.longitude)}" target="_blank" rel="noopener">Mapa de finalización</a>` : record.status === "active" ? `<span class="resource-missing">Se agregará al finalizar</span>` : ""}
-          </div>
-        </section>
+      <div class="history-location-row">
+        <div><span class="resource-icon" aria-hidden="true">⌖</span><strong>Ubicación</strong></div>
+        <div class="history-map-actions">
+          ${startLocation ? `<a href="${mapUrl(startLocation.latitude, startLocation.longitude)}" target="_blank" rel="noopener">Ver inicio</a>` : `<span>Sin inicio</span>`}
+          ${endLocation ? `<a href="${mapUrl(endLocation.latitude, endLocation.longitude)}" target="_blank" rel="noopener">Ver final</a>` : ""}
+        </div>
+      </div>
 
-        <section class="history-resource">
-          <div class="history-resource-title">
-            <span class="resource-icon" aria-hidden="true">▣</span>
-            <div><strong>Fotografías</strong><small>Comprobantes guardados en Firebase</small></div>
-          </div>
-          <div class="history-actions">
-            ${record.startPhotoPath ? `<button class="photo-button" type="button" data-photo-path="${escapeHtml(record.startPhotoPath)}">Foto de inicio</button>` : `<span class="resource-missing">Sin foto inicial</span>`}
-            ${record.endPhotoPath ? `<button class="photo-button" type="button" data-photo-path="${escapeHtml(record.endPhotoPath)}">Foto de finalización</button>` : record.status === "active" ? `<span class="resource-missing">Se agregará al finalizar</span>` : ""}
-          </div>
-        </section>
+      <div class="history-photo-section">
+        <div class="history-photo-heading"><strong>Fotografías</strong><small>Tocá una imagen para ampliarla</small></div>
+        <div class="history-photo-grid">${startPhoto}${endPhoto}</div>
       </div>
     </article>`;
   }).join("");
 
-  $$('[data-photo-path]').forEach((button) => button.addEventListener("click", () => openStoredPhoto(button.dataset.photoPath, button)));
+  hydrateHistoryPhotos();
 }
 
-async function openStoredPhoto(path, button) {
-  const previous = button.textContent;
-  button.disabled = true;
-  button.textContent = "Abriendo…";
+function historyPhotoTile(path, alt, label) {
+  return `<button class="history-photo-tile is-loading" type="button" data-photo-open="${escapeHtml(path)}" data-photo-label="${escapeHtml(label)}">
+    <span class="history-photo-label">${escapeHtml(label)}</span>
+    <span class="history-photo-loader"><span class="mini-loader">…</span></span>
+    <img data-photo-path="${escapeHtml(path)}" alt="${escapeHtml(alt)}" loading="lazy" decoding="async">
+  </button>`;
+}
+
+function historyPhotoPlaceholder(message) {
+  return `<div class="history-photo-tile history-photo-empty"><span>${escapeHtml(message)}</span></div>`;
+}
+
+async function resolvePhotoUrl(path) {
+  if (photoUrlCache.has(path)) return photoUrlCache.get(path);
+  const url = await getDownloadURL(storageRef(storage, path));
+  photoUrlCache.set(path, url);
+  return url;
+}
+
+function hydrateHistoryPhotos() {
+  $$('[data-photo-open]').forEach((button) => {
+    const path = button.dataset.photoOpen;
+    const image = button.querySelector('img[data-photo-path]');
+    if (!image || !path) return;
+
+    resolvePhotoUrl(path).then((url) => {
+      image.src = url;
+      button.dataset.photoUrl = url;
+      image.addEventListener("load", () => button.classList.remove("is-loading"), { once: true });
+      image.addEventListener("error", () => {
+        button.classList.remove("is-loading");
+        button.classList.add("has-error");
+      }, { once: true });
+    }).catch((error) => {
+      console.warn("Fotografía del historial:", error);
+      button.classList.remove("is-loading");
+      button.classList.add("has-error");
+      const loader = button.querySelector(".history-photo-loader");
+      if (loader) loader.textContent = "No disponible";
+    });
+
+    button.addEventListener("click", () => openPhotoViewer(path, button.dataset.photoLabel || "Fotografía"));
+  });
+}
+
+async function openPhotoViewer(path, label) {
+  if (!els.photoViewerModal) return;
+  els.photoViewerTitle.textContent = label || "Fotografía del descanso";
+  els.photoViewerImage.classList.add("hidden");
+  els.photoViewerImage.removeAttribute("src");
+  els.photoViewerLoading.classList.remove("hidden");
+  els.photoViewerModal.classList.remove("hidden");
+  document.body.style.overflow = "hidden";
+
   try {
-    const url = await getDownloadURL(storageRef(storage, path));
-    window.open(url, "_blank", "noopener");
+    const url = await resolvePhotoUrl(path);
+    els.photoViewerImage.src = url;
+    await new Promise((resolve, reject) => {
+      if (els.photoViewerImage.complete && els.photoViewerImage.naturalWidth) return resolve();
+      els.photoViewerImage.onload = resolve;
+      els.photoViewerImage.onerror = reject;
+    });
+    els.photoViewerLoading.classList.add("hidden");
+    els.photoViewerImage.classList.remove("hidden");
   } catch (error) {
+    closePhotoViewer();
     showToast("No se pudo abrir la fotografía", friendlyError(error), "error");
-  } finally {
-    button.disabled = false;
-    button.textContent = previous;
   }
 }
+
+function closePhotoViewer() {
+  if (!els.photoViewerModal) return;
+  els.photoViewerModal.classList.add("hidden");
+  els.photoViewerImage.classList.add("hidden");
+  els.photoViewerImage.removeAttribute("src");
+  els.photoViewerLoading.classList.remove("hidden");
+  if (els.captureModal.classList.contains("hidden")) document.body.style.overflow = "";
+}
+
+els.closePhotoViewerButton?.addEventListener("click", closePhotoViewer);
+els.photoViewerModal?.querySelectorAll('[data-close-photo-viewer]').forEach((element) => element.addEventListener("click", closePhotoViewer));
 
 function mapUrl(latitude, longitude) {
   return `https://www.google.com/maps?q=${encodeURIComponent(latitude)},${encodeURIComponent(longitude)}`;
