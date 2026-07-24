@@ -3,50 +3,62 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#087443">
-  <meta name="description" content="Registro de descansos con fotografía, hora y ubicación GPS.">
+  <meta name="theme-color" content="#06653c">
+  <meta name="description" content="Gestión de descansos con fotografía, hora y ubicación GPS.">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Lubayd Descansos">
-  <title>Lubayd SA | Descansos</title>
-  <link rel="manifest" href="./manifest.webmanifest?v=1.6.0">
+  <title>Lubayd SA | Gestión de descansos</title>
+  <link rel="manifest" href="./manifest.webmanifest?v=2.0.0">
   <link rel="icon" href="./icon-192.png">
   <link rel="apple-touch-icon" href="./icon-192.png">
-  <link rel="stylesheet" href="./styles.css?v=1.6.0">
+  <link rel="stylesheet" href="./styles.css?v=2.0.0">
 </head>
 <body>
   <div id="toastRegion" class="toast-region" aria-live="polite" aria-atomic="true"></div>
 
+  <!-- ACCESO -->
   <section id="authView" class="auth-layout">
-    <div class="auth-visual">
+    <div class="auth-brand-panel">
       <div class="brand-lockup brand-lockup-light">
         <img src="./logo.svg" alt="Lubayd SA" class="brand-logo">
         <div>
-          <strong>Lubayd SA</strong>
+          <strong>LUBAYD SA</strong>
           <span>Gestión de descansos</span>
         </div>
       </div>
-      <div class="auth-hero-copy">
+
+      <div class="auth-copy">
         <span class="eyebrow eyebrow-light">CONTROL OPERATIVO</span>
         <h1>Una marcación clara, segura y verificable.</h1>
-        <p>Registra el inicio y el final del descanso con hora, ubicación y respaldo fotográfico.</p>
+        <p>Registra el inicio y el final de cada descanso con fotografía, hora del servidor y ubicación GPS.</p>
       </div>
-      <div class="feature-row" aria-label="Características">
-        <article><b>01</b><span>Marcación simple</span></article>
-        <article><b>02</b><span>Ubicación en el mapa</span></article>
-        <article><b>03</b><span>Datos en Firebase</span></article>
+
+      <div class="auth-benefits">
+        <article>
+          <span class="benefit-icon">▣</span>
+          <div><strong>Foto obligatoria</strong><small>Respaldo visual de cada marcación</small></div>
+        </article>
+        <article>
+          <span class="benefit-icon">⌖</span>
+          <div><strong>Ubicación precisa</strong><small>Visualización directa en el mapa</small></div>
+        </article>
+        <article>
+          <span class="benefit-icon">✓</span>
+          <div><strong>Información segura</strong><small>Datos protegidos en Firebase</small></div>
+        </article>
       </div>
     </div>
 
-    <div class="auth-panel">
+    <div class="auth-form-panel">
       <div class="auth-card">
         <div class="mobile-brand brand-lockup">
           <img src="./logo.svg" alt="Lubayd SA" class="brand-logo">
-          <div><strong>Lubayd SA</strong><span>Gestión de descansos</span></div>
+          <div><strong>LUBAYD SA</strong><span>Gestión de descansos</span></div>
         </div>
 
-        <div class="auth-tabs" role="tablist" aria-label="Acceso">
+        <div class="auth-tabs" role="tablist" aria-label="Acceso a la aplicación">
           <button id="loginTab" class="auth-tab active" type="button" role="tab" aria-selected="true">Iniciar sesión</button>
           <button id="registerTab" class="auth-tab" type="button" role="tab" aria-selected="false">Crear usuario</button>
         </div>
@@ -58,12 +70,14 @@
           <header class="form-header">
             <span class="eyebrow">BIENVENIDO</span>
             <h2>Ingresa a tu cuenta</h2>
-            <p>Usa el correo y la contraseña registrados en Firebase.</p>
+            <p>Accede con el correo y la contraseña registrados.</p>
           </header>
+
           <label class="field">
             <span>Correo electrónico</span>
             <input id="loginEmail" type="email" autocomplete="email" placeholder="nombre@empresa.com" required>
           </label>
+
           <label class="field">
             <span>Contraseña</span>
             <div class="password-field">
@@ -71,9 +85,9 @@
               <button class="password-toggle" type="button" data-password-target="loginPassword" aria-label="Mostrar contraseña">Ver</button>
             </div>
           </label>
-          <button id="loginButton" class="primary-button" type="submit">
-            <span>Iniciar sesión</span>
-            <span aria-hidden="true">→</span>
+
+          <button id="loginButton" class="primary-button auth-submit" type="submit">
+            <span>Iniciar sesión</span><span aria-hidden="true">→</span>
           </button>
         </form>
 
@@ -81,16 +95,19 @@
           <header class="form-header">
             <span class="eyebrow">NUEVO USUARIO</span>
             <h2>Crea tu cuenta</h2>
-            <p>La cuenta se guardará en Firebase Authentication.</p>
+            <p>El usuario quedará registrado en Firebase Authentication.</p>
           </header>
+
           <label class="field">
             <span>Nombre y apellido</span>
             <input id="registerName" type="text" autocomplete="name" maxlength="80" placeholder="Nombre del operador" required>
           </label>
+
           <label class="field">
             <span>Correo electrónico</span>
             <input id="registerEmail" type="email" autocomplete="email" placeholder="nombre@empresa.com" required>
           </label>
+
           <label class="field">
             <span>Contraseña</span>
             <div class="password-field">
@@ -98,229 +115,278 @@
               <button class="password-toggle" type="button" data-password-target="registerPassword" aria-label="Mostrar contraseña">Ver</button>
             </div>
           </label>
+
           <label class="field">
             <span>Repetir contraseña</span>
             <input id="registerPasswordConfirm" type="password" autocomplete="new-password" minlength="6" placeholder="Repite la contraseña" required>
           </label>
-          <button id="registerButton" class="primary-button" type="submit">
-            <span>Crear usuario</span>
-            <span aria-hidden="true">→</span>
+
+          <button id="registerButton" class="primary-button auth-submit" type="submit">
+            <span>Crear usuario</span><span aria-hidden="true">→</span>
           </button>
         </form>
 
-        <p class="secure-note">
-          <span class="status-dot"></span>
-          Acceso protegido por Firebase Authentication
-        </p>
+        <p class="secure-note"><span class="status-dot"></span>Acceso protegido por Firebase Authentication</p>
       </div>
     </div>
   </section>
 
+  <!-- APLICACIÓN -->
   <div id="appView" class="app-shell hidden">
     <aside class="sidebar">
-      <div class="brand-lockup brand-lockup-light sidebar-brand">
+      <div class="sidebar-brand brand-lockup brand-lockup-light">
         <img src="./logo.svg" alt="Lubayd SA" class="brand-logo">
-        <div><strong>Lubayd SA</strong><span>Gestión de descansos</span></div>
+        <div><strong>LUBAYD SA</strong><span>Gestión de descansos</span></div>
       </div>
+
       <nav class="sidebar-nav" aria-label="Navegación principal">
         <button class="nav-item active" type="button" data-section="dashboard">
-          <span class="nav-icon" aria-hidden="true">⌂</span><span>Descanso</span>
+          <span class="nav-icon">⌂</span><span>Dashboard</span>
         </button>
         <button class="nav-item" type="button" data-section="history">
-          <span class="nav-icon" aria-hidden="true">≡</span><span>Historial</span>
+          <span class="nav-icon">◷</span><span>Historial</span>
         </button>
       </nav>
+
+      <div class="sidebar-user">
+        <div id="userAvatar" class="avatar">U</div>
+        <div class="sidebar-user-copy"><strong id="userName">Usuario</strong><span id="userEmail">—</span></div>
+      </div>
+
       <div class="sidebar-footer">
         <div class="connection-pill"><span id="connectionDot" class="status-dot"></span><span id="connectionText">Comprobando conexión</span></div>
-        <small>Versión 1.6.0</small>
+        <button id="logoutButton" class="sidebar-logout" type="button">Cerrar sesión</button>
+        <small>Versión 2.0.0</small>
       </div>
     </aside>
 
     <main class="main-content">
       <header class="topbar">
         <button id="mobileMenuButton" class="mobile-menu-button" type="button" aria-label="Abrir menú">☰</button>
-        <div>
-          <span class="topbar-kicker">PANEL DEL OPERADOR</span>
-          <h2 id="pageTitle">Descanso</h2>
+        <div class="topbar-title">
+          <span class="topbar-kicker">GESTIÓN DE DESCANSOS</span>
+          <h2 id="pageTitle">Dashboard</h2>
         </div>
-        <div class="user-menu">
-          <div id="userAvatar" class="avatar">U</div>
-          <div class="user-copy"><strong id="userName">Usuario</strong><span id="userEmail">—</span></div>
-          <button id="logoutButton" class="ghost-button" type="button">Salir</button>
+        <div class="topbar-meta">
+          <div class="topbar-clock">
+            <span id="liveDate">—</span>
+            <strong id="liveClock">--:--:--</strong>
+          </div>
+          <div class="topbar-user-mobile">
+            <div class="avatar compact-avatar">U</div>
+          </div>
         </div>
       </header>
 
       <section id="dashboardSection" class="content-section active">
-        <div class="page-intro dashboard-hero">
-          <div class="dashboard-greeting-copy">
-            <span class="eyebrow">PANEL DEL OPERADOR</span>
+        <div class="page-heading">
+          <div>
+            <span class="eyebrow">DASHBOARD</span>
             <h1 id="dashboardGreeting">Hola, Operador</h1>
             <p id="dashboardDate">Cargando fecha…</p>
           </div>
-          <div id="clockCard" class="clock-card enterprise-clock">
-            <span>Hora local</span>
-            <strong id="liveClock">--:--:--</strong>
-            <small id="liveDate">—</small>
-          </div>
+          <div class="heading-security"><span>●</span> Información sincronizada con Firebase</div>
         </div>
 
         <div id="offlineWarning" class="alert warning hidden">
           <strong>Sin conexión a internet</strong>
-          <span>Para enviar fotografías a Firebase necesitas recuperar la conexión.</span>
+          <span>La cámara y el GPS funcionan, pero la marcación no podrá enviarse hasta recuperar la conexión.</span>
         </div>
 
-        <section class="daily-summary-grid" aria-label="Resumen del día">
-          <article class="daily-summary-card">
-            <div class="summary-icon" aria-hidden="true">◷</div>
-            <div><span>Tiempo total de hoy</span><strong id="todayBreakTotal">00:00</strong></div>
+        <section class="status-overview-grid">
+          <article class="overview-card primary-overview">
+            <div class="overview-card-head">
+              <span class="card-icon green">◎</span>
+              <span id="breakStatusBadge" class="badge neutral">Disponible</span>
+            </div>
+            <span class="card-label">ESTADO ACTUAL</span>
+            <h3 id="breakStatusTitle">Disponible para iniciar descanso</h3>
+            <p id="breakStartDescription">Inicia tu descanso cuando corresponda.</p>
+            <button id="startBreakButton" class="primary-button overview-action" type="button">
+              <span>Iniciar descanso</span><span>▶</span>
+            </button>
           </article>
-          <article class="daily-summary-card">
-            <div class="summary-icon" aria-hidden="true">✓</div>
-            <div><span>Descansos registrados</span><strong id="todayBreakCount">0</strong></div>
+
+          <article class="overview-card">
+            <div class="overview-card-head"><span class="card-icon">✓</span></div>
+            <span class="card-label">ÚLTIMA MARCACIÓN</span>
+            <h3 id="lastMarkStatus">Sin registros</h3>
+            <p id="lastMarkTime">Todavía no hay actividad registrada.</p>
+            <button class="secondary-button compact-action" type="button" data-go-history>Ver detalle</button>
+          </article>
+
+          <article class="overview-card active-break-card">
+            <div class="overview-card-head"><span class="card-icon">◷</span></div>
+            <span class="card-label">DESCANSO ACTIVO</span>
+            <div class="active-break-value" id="breakTimer">00:00:00</div>
+            <div id="activeBreakDetails" class="active-details hidden">
+              <div><span>Inicio</span><strong id="activeStartTime">—</strong></div>
+              <a id="activeMapLink" class="map-link" href="#" target="_blank" rel="noopener">Ver ubicación</a>
+            </div>
+            <button id="endBreakButton" class="danger-button overview-action" type="button" disabled>
+              <span>Finalizar descanso</span><span>■</span>
+            </button>
           </article>
         </section>
 
-        <div class="dashboard-grid">
-          <article class="status-card">
-            <div class="status-card-head">
-              <div>
-                <span class="eyebrow">ESTADO ACTUAL</span>
-                <h3 id="breakStatusTitle">Sin descanso activo</h3>
-              </div>
-              <span id="breakStatusBadge" class="badge neutral">Disponible</span>
+        <section class="dashboard-main-grid">
+          <article class="panel-card summary-panel">
+            <div class="panel-heading">
+              <div><span class="eyebrow">RESUMEN DEL DÍA</span><h3>Actividad de hoy</h3></div>
             </div>
-
-            <div class="timer-panel">
-              <span>Duración</span>
-              <strong id="breakTimer">00:00:00</strong>
-              <small id="breakStartDescription">Todavía no se inició un descanso.</small>
-            </div>
-
-            <div id="activeBreakDetails" class="active-details hidden">
-              <div><span>Inicio</span><strong id="activeStartTime">—</strong></div>
-              <div class="active-location-row">
-                <span>Ubicación</span>
-                <a id="activeMapLink" class="location-link" href="#" target="_blank" rel="noopener">Ver en el mapa</a>
-              </div>
-            </div>
-
-            <div class="action-stack">
-              <button id="startBreakButton" class="action-button start" type="button">
-                <span class="action-icon" aria-hidden="true">◉</span>
-                <span><strong>Iniciar descanso</strong><small>Hora y ubicación</small></span>
-              </button>
-              <button id="endBreakButton" class="action-button end" type="button" disabled>
-                <span class="action-icon" aria-hidden="true">■</span>
-                <span><strong>Finalizar descanso</strong><small>Hora y ubicación</small></span>
-              </button>
+            <div class="summary-metrics">
+              <div class="summary-metric"><span>Descansos realizados</span><strong id="todayBreakCount">0</strong></div>
+              <div class="summary-metric"><span>Duración total</span><strong id="todayBreakTotal">00:00</strong></div>
+              <div class="summary-metric"><span>Tiempo promedio</span><strong id="averageBreakTime">00:00</strong></div>
+              <div class="summary-metric"><span>Fotos capturadas</span><strong id="todayPhotoCount">0</strong></div>
             </div>
           </article>
 
-          <aside class="requirements-card location-check-card">
-            <div class="location-check-icon" aria-hidden="true">⌖</div>
-            <div class="location-check-copy">
-              <span class="eyebrow">UBICACIÓN</span>
-              <h3>Ubicación disponible</h3>
-              <p>Comprobá el GPS y visualizá la ubicación directamente en el mapa.</p>
+          <article class="panel-card map-panel">
+            <div class="panel-heading inline-heading">
+              <div><span class="eyebrow">UBICACIÓN ACTUAL</span><h3>Mapa</h3></div>
+              <button id="testGpsButton" class="text-button" type="button">Comprobar GPS</button>
             </div>
-            <button id="testGpsButton" class="secondary-button location-check-button" type="button">Verificar ubicación</button>
+            <div class="map-visual">
+              <div class="map-road road-one"></div>
+              <div class="map-road road-two"></div>
+              <div class="map-road road-three"></div>
+              <div class="map-pin">●</div>
+              <span id="dashboardMapStatus">Ubicación lista para verificar</span>
+            </div>
             <div id="gpsTestResult" class="gps-test-result hidden"></div>
-          </aside>
-        </div>
+          </article>
+        </section>
 
-        <section class="recent-section">
-          <div class="section-heading">
-            <div><span class="eyebrow">ÚLTIMOS REGISTROS</span><h3>Actividad reciente</h3></div>
-            <button class="text-button" type="button" data-go-history>Ver historial completo</button>
+        <section class="panel-card recent-panel">
+          <div class="panel-heading inline-heading">
+            <div><span class="eyebrow">ACTIVIDAD RECIENTE</span><h3>Últimos registros</h3></div>
+            <button class="text-button" type="button" data-go-history>Ver historial completo →</button>
+          </div>
+          <div class="recent-table-head" aria-hidden="true">
+            <span>Fecha</span><span>Inicio</span><span>Finalización</span><span>Duración</span><span>Ubicación</span><span>Estado</span>
           </div>
           <div id="recentList" class="record-list"><div class="empty-state">Cargando registros…</div></div>
         </section>
       </section>
 
       <section id="historySection" class="content-section">
-        <div class="page-intro history-intro">
+        <div class="history-page-heading">
           <div>
             <span class="eyebrow">TRAZABILIDAD</span>
             <h1>Historial de descansos</h1>
-            <p>Consultá la fecha, las horas de inicio y finalización, la ubicación en el mapa y las fotografías.</p>
+            <p>Consulta fecha, horarios, duración, ubicación y comprobantes fotográficos.</p>
+          </div>
+          <div class="history-filter-group" role="group" aria-label="Filtrar historial">
+            <button class="history-filter active" type="button" data-history-filter="all">Todos</button>
+            <button class="history-filter" type="button" data-history-filter="active">Activos</button>
+            <button class="history-filter" type="button" data-history-filter="completed">Completados</button>
           </div>
         </div>
-        <div id="historyList" class="history-list"><div class="empty-state">Cargando historial…</div></div>
+
+        <article class="history-table-card">
+          <div class="history-table-head" aria-hidden="true">
+            <span>Fecha</span><span>Hora de inicio</span><span>Finalización</span><span>Duración</span><span>Ubicación</span><span>Foto inicio</span><span>Foto final</span><span></span>
+          </div>
+          <div id="historyList" class="history-list"><div class="empty-state">Cargando historial…</div></div>
+          <footer class="history-footer"><span id="historyCount">0 registros</span></footer>
+        </article>
       </section>
     </main>
 
     <nav class="mobile-bottom-nav" aria-label="Navegación móvil">
-      <button class="nav-item active" type="button" data-section="dashboard">
-        <span class="bottom-nav-icon" aria-hidden="true">⌂</span>
-        <span>Inicio</span>
-      </button>
-      <button class="nav-item" type="button" data-section="history">
-        <span class="bottom-nav-icon" aria-hidden="true">▤</span>
-        <span>Historial</span>
-      </button>
+      <button class="nav-item active" type="button" data-section="dashboard"><span>⌂</span><small>Inicio</small></button>
+      <button class="nav-item" type="button" data-section="history"><span>◷</span><small>Historial</small></button>
+      <button id="mobileQuickAction" class="mobile-primary-action" type="button" aria-label="Iniciar o finalizar descanso">+</button>
+      <button id="mobileMapButton" class="nav-item" type="button"><span>⌖</span><small>Mapa</small></button>
+      <button id="mobileProfileButton" class="nav-item" type="button"><span>◉</span><small>Perfil</small></button>
     </nav>
   </div>
 
+  <!-- MARCACIÓN -->
   <div id="captureModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="captureTitle">
     <div class="modal-backdrop"></div>
     <div class="capture-dialog">
       <header class="capture-header">
-        <div>
-          <span id="captureEyebrow" class="eyebrow">MARCAR</span>
-          <h2 id="captureTitle">Tomar fotografía</h2>
-          <p id="captureSubtitle">La cámara y el GPS son obligatorios.</p>
+        <button id="closeCaptureButton" class="icon-button capture-back" type="button" aria-label="Cerrar">←</button>
+        <div class="capture-title-copy">
+          <span id="captureEyebrow" class="eyebrow">INICIO DEL DESCANSO</span>
+          <h2 id="captureTitle">Iniciar descanso</h2>
+          <p id="captureSubtitle">Completa los controles obligatorios.</p>
         </div>
-        <button id="closeCaptureButton" class="icon-button" type="button" aria-label="Cerrar">×</button>
+        <span class="capture-security">Firebase</span>
       </header>
 
-      <div class="capture-body">
-        <div class="camera-panel">
-          <video id="cameraVideo" autoplay playsinline muted></video>
-          <canvas id="cameraCanvas" class="hidden"></canvas>
-          <img id="photoPreview" class="photo-preview hidden" alt="Vista previa de la fotografía">
-          <div id="cameraPlaceholder" class="camera-placeholder">
-            <div class="camera-placeholder-icon">◉</div>
-            <strong>Iniciando cámara…</strong>
-            <span>Acepta el permiso cuando el navegador lo solicite.</span>
-          </div>
-          <div class="camera-actions">
-            <button id="takePhotoButton" class="camera-button" type="button" disabled>Tomar foto</button>
-            <button id="retakePhotoButton" class="secondary-button compact hidden" type="button">Repetir</button>
-            <label id="fallbackPhotoLabel" class="secondary-button compact hidden">
-              Elegir foto
-              <input id="fallbackPhotoInput" class="visually-hidden" type="file" accept="image/*" capture="environment">
-            </label>
-          </div>
-        </div>
+      <div class="capture-stepper" aria-label="Progreso de la marcación">
+        <div id="captureStepPhoto" class="capture-step active"><span>1</span><small>Foto</small></div>
+        <div class="step-line"></div>
+        <div id="captureStepLocation" class="capture-step"><span>2</span><small>Ubicación</small></div>
+        <div class="step-line"></div>
+        <div id="captureStepConfirm" class="capture-step"><span>3</span><small>Confirmar</small></div>
+      </div>
 
-        <div class="location-panel">
+      <div class="capture-body">
+        <section class="capture-card camera-section">
+          <div class="capture-section-heading">
+            <div><span class="eyebrow">FOTO OBLIGATORIA</span><h3>Fotografía de la marcación</h3></div>
+            <span id="photoReadyBadge" class="mini-status">Pendiente</span>
+          </div>
+
+          <div class="camera-panel">
+            <video id="cameraVideo" autoplay playsinline muted></video>
+            <canvas id="cameraCanvas" class="hidden"></canvas>
+            <img id="photoPreview" class="photo-preview hidden" alt="Vista previa de la fotografía">
+            <div id="cameraPlaceholder" class="camera-placeholder">
+              <div class="camera-placeholder-icon">▣</div>
+              <strong>Iniciando cámara…</strong>
+              <span>Acepta el permiso cuando el navegador lo solicite.</span>
+            </div>
+            <div class="camera-actions">
+              <button id="takePhotoButton" class="camera-button" type="button" disabled><span>▣</span> Tomar foto</button>
+              <button id="retakePhotoButton" class="secondary-button compact hidden" type="button">Repetir foto</button>
+              <label id="fallbackPhotoLabel" class="secondary-button compact hidden">Elegir foto<input id="fallbackPhotoInput" class="visually-hidden" type="file" accept="image/*" capture="environment"></label>
+            </div>
+          </div>
+        </section>
+
+        <section class="capture-card location-section">
+          <div class="capture-section-heading">
+            <div><span class="eyebrow">UBICACIÓN</span><h3>Posición GPS</h3></div>
+            <span id="locationReadyBadge" class="mini-status">Buscando</span>
+          </div>
+
+          <div class="location-map-preview">
+            <div class="map-road road-one"></div>
+            <div class="map-road road-two"></div>
+            <div class="map-pin">●</div>
+          </div>
+
           <div class="location-status-row">
             <div id="locationSpinner" class="spinner"></div>
             <div><strong id="locationStatus">Buscando ubicación…</strong><span id="locationHelp">Mantené el GPS activado.</span></div>
           </div>
+
           <div class="capture-location-summary">
             <div class="capture-time-box"><span>Hora de la marcación</span><strong id="captureTime">—</strong></div>
-            <a id="captureMapLink" class="secondary-button location-map-button hidden" href="#" target="_blank" rel="noopener">Ver ubicación en el mapa</a>
+            <a id="captureMapLink" class="secondary-button location-map-button hidden" href="#" target="_blank" rel="noopener">Ver en el mapa</a>
           </div>
           <button id="refreshGpsButton" class="text-button" type="button">Actualizar ubicación</button>
-        </div>
+        </section>
       </div>
 
       <footer class="capture-footer">
-        <p id="captureValidation">Debes tomar una fotografía y obtener la ubicación antes de confirmar.</p>
+        <div class="capture-validation-copy"><span class="validation-icon">✓</span><p id="captureValidation">Debes tomar una fotografía y obtener la ubicación antes de confirmar.</p></div>
         <button id="confirmCaptureButton" class="primary-button modal-confirm" type="button" disabled>Confirmar registro</button>
       </footer>
     </div>
   </div>
 
+  <!-- VISOR DE FOTOS -->
   <div id="photoViewerModal" class="photo-viewer-modal hidden" role="dialog" aria-modal="true" aria-labelledby="photoViewerTitle">
     <div class="photo-viewer-backdrop" data-close-photo-viewer></div>
     <div class="photo-viewer-card">
       <header>
-        <div>
-          <span class="eyebrow">COMPROBANTE</span>
-          <h2 id="photoViewerTitle">Fotografía del descanso</h2>
-        </div>
+        <div><span class="eyebrow">COMPROBANTE</span><h2 id="photoViewerTitle">Fotografía del descanso</h2></div>
         <button id="closePhotoViewerButton" class="icon-button" type="button" aria-label="Cerrar fotografía">×</button>
       </header>
       <div class="photo-viewer-stage">
@@ -346,17 +412,17 @@
         const box = document.getElementById('startupError');
         if (box) {
           box.classList.remove('hidden');
-          box.textContent = 'No se cargó el archivo principal de la aplicación. Verifica que app.js esté en GitHub y actualiza con Ctrl+F5.';
+          box.textContent = 'No se cargó app.js. Verifica que el archivo esté en la raíz de GitHub y actualiza la página.';
         }
       }
     }, 5000);
   </script>
-  <script defer src="./app.js?v=1.6.0"></script>
+  <script defer src="./app.js?v=2.0.0"></script>
   <script>
     if ('serviceWorker' in navigator && location.protocol === 'https:') {
       window.addEventListener('load', async () => {
         try {
-          const registration = await navigator.serviceWorker.register('./service-worker.js?v=1.6.0');
+          const registration = await navigator.serviceWorker.register('./service-worker.js?v=2.0.0');
           registration.update().catch(() => {});
         } catch (error) {
           console.warn('Service Worker:', error);

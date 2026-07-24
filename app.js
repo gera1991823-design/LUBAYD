@@ -1,6 +1,6 @@
 "use strict";
 
-// APP LUBAYD v1.6.0
+// APP LUBAYD v2.0.0
 // La interfaz se inicia primero y Firebase se carga luego de forma dinámica.
 // Así, aun si el CDN de Firebase falla, los botones y los mensajes siguen funcionando.
 window.__APP_SCRIPT_LOADED__ = true;
@@ -70,6 +70,12 @@ const els = {
   dashboardDate: $("#dashboardDate"),
   todayBreakCount: $("#todayBreakCount"),
   todayBreakTotal: $("#todayBreakTotal"),
+  averageBreakTime: $("#averageBreakTime"),
+  todayPhotoCount: $("#todayPhotoCount"),
+  lastMarkStatus: $("#lastMarkStatus"),
+  lastMarkTime: $("#lastMarkTime"),
+  dashboardMapStatus: $("#dashboardMapStatus"),
+  historyCount: $("#historyCount"),
   pageTitle: $("#pageTitle"),
   dashboardSection: $("#dashboardSection"),
   historySection: $("#historySection"),
@@ -92,6 +98,11 @@ const els = {
   captureEyebrow: $("#captureEyebrow"),
   captureTitle: $("#captureTitle"),
   captureSubtitle: $("#captureSubtitle"),
+  captureStepPhoto: $("#captureStepPhoto"),
+  captureStepLocation: $("#captureStepLocation"),
+  captureStepConfirm: $("#captureStepConfirm"),
+  photoReadyBadge: $("#photoReadyBadge"),
+  locationReadyBadge: $("#locationReadyBadge"),
   closeCaptureButton: $("#closeCaptureButton"),
   cameraVideo: $("#cameraVideo"),
   cameraCanvas: $("#cameraCanvas"),
@@ -119,7 +130,10 @@ const els = {
   photoViewerImage: $("#photoViewerImage"),
   photoViewerLoading: $("#photoViewerLoading"),
   photoViewerTitle: $("#photoViewerTitle"),
-  closePhotoViewerButton: $("#closePhotoViewerButton")
+  closePhotoViewerButton: $("#closePhotoViewerButton"),
+  mobileQuickAction: $("#mobileQuickAction"),
+  mobileMapButton: $("#mobileMapButton"),
+  mobileProfileButton: $("#mobileProfileButton")
 };
 
 let currentUser = null;
@@ -135,6 +149,7 @@ let capturedPosition = null;
 let captureObjectUrl = null;
 let isSaving = false;
 let lastHistoryRecords = [];
+let historyFilter = "all";
 const photoUrlCache = new Map();
 
 function setBusy(button, busy, label) {
@@ -329,13 +344,35 @@ function showSection(section) {
   const isDashboard = section === "dashboard";
   els.dashboardSection.classList.toggle("active", isDashboard);
   els.historySection.classList.toggle("active", !isDashboard);
-  els.pageTitle.textContent = isDashboard ? "Descanso" : "Historial";
-  $$(".nav-item").forEach((button) => button.classList.toggle("active", button.dataset.section === section));
+  els.pageTitle.textContent = isDashboard ? "Dashboard" : "Historial";
+  $$(".nav-item[data-section]").forEach((button) => button.classList.toggle("active", button.dataset.section === section));
   els.sidebar.classList.remove("open");
+  window.scrollTo({ top: 0, behavior: "smooth" });
 }
 $$('.nav-item').forEach((button) => button.addEventListener("click", () => showSection(button.dataset.section)));
 $$('[data-go-history]').forEach((button) => button.addEventListener("click", () => showSection("history")));
 els.mobileMenuButton.addEventListener("click", () => els.sidebar.classList.toggle("open"));
+
+$$('[data-history-filter]').forEach((button) => {
+  button.addEventListener("click", () => {
+    historyFilter = button.dataset.historyFilter || "all";
+    $$('[data-history-filter]').forEach((item) => item.classList.toggle("active", item === button));
+    renderHistory(lastHistoryRecords);
+  });
+});
+
+els.mobileQuickAction?.addEventListener("click", () => {
+  const active = Boolean(currentBreak && currentBreak.status === "active");
+  openCapture(active ? "end" : "start");
+});
+els.mobileMapButton?.addEventListener("click", async () => {
+  showSection("dashboard");
+  els.testGpsButton?.click();
+  window.setTimeout(() => els.dashboardMapStatus?.scrollIntoView({ behavior: "smooth", block: "center" }), 100);
+});
+els.mobileProfileButton?.addEventListener("click", () => {
+  showToast(currentUser?.displayName || "Operador", currentUser?.email || "Usuario autenticado");
+});
 
 document.addEventListener("click", (event) => {
   if (window.innerWidth <= 820 && els.sidebar.classList.contains("open") && !els.sidebar.contains(event.target) && event.target !== els.mobileMenuButton) {
@@ -361,6 +398,7 @@ async function handleAuthStateChanged(user) {
   els.userName.textContent = user.displayName || "Operador";
   els.userEmail.textContent = user.email || "—";
   els.userAvatar.textContent = getInitials(user.displayName || user.email || "U");
+  $$(".topbar-user-mobile .avatar").forEach((avatar) => { avatar.textContent = getInitials(user.displayName || user.email || "U"); });
   if (els.dashboardGreeting) {
     const hour = new Date().getHours();
     const greeting = hour < 12 ? "Buenos días" : hour < 19 ? "Buenas tardes" : "Buenas noches";
@@ -443,7 +481,7 @@ function subscribeHistory(uid) {
 
 function renderCurrentBreak() {
   const active = Boolean(currentBreak && currentBreak.status === "active");
-  els.breakStatusTitle.textContent = active ? "Descanso en curso" : "Sin descanso activo";
+  els.breakStatusTitle.textContent = active ? "Descanso en curso" : "Disponible para iniciar descanso";
   els.breakStatusBadge.textContent = active ? "En descanso" : "Disponible";
   els.breakStatusBadge.className = `badge ${active ? "active" : "neutral"}`;
   els.activeBreakDetails.classList.toggle("hidden", !active);
@@ -464,7 +502,11 @@ function renderCurrentBreak() {
   } else {
     stopTimer();
     els.breakTimer.textContent = "00:00:00";
-    els.breakStartDescription.textContent = "Todavía no se inició un descanso.";
+    els.breakStartDescription.textContent = "Inicia tu descanso cuando corresponda.";
+  }
+  if (els.mobileQuickAction) {
+    els.mobileQuickAction.textContent = active ? "■" : "+";
+    els.mobileQuickAction.setAttribute("aria-label", active ? "Finalizar descanso" : "Iniciar descanso");
   }
   updateActionButtons();
 }
@@ -516,22 +558,41 @@ function durationForRecord(record) {
 }
 
 function updateDailySummary(records) {
-  if (!els.todayBreakCount || !els.todayBreakTotal) return;
   const today = new Date();
   const sameDay = (date) => date.getFullYear() === today.getFullYear()
     && date.getMonth() === today.getMonth()
     && date.getDate() === today.getDate();
 
   const todaysRecords = records.filter((record) => sameDay(parseDate(record.startAtClient)));
-  const totalSeconds = todaysRecords.reduce((sum, record) => {
-    const duration = durationForRecord(record);
-    return sum + (duration?.seconds || 0);
-  }, 0);
+  const completedToday = todaysRecords.filter((record) => record.endAtClient);
+  const totalSeconds = completedToday.reduce((sum, record) => sum + (durationForRecord(record)?.seconds || 0), 0);
+  const averageSeconds = completedToday.length ? Math.round(totalSeconds / completedToday.length) : 0;
+  const photoCount = todaysRecords.reduce((sum, record) => sum + (record.startPhotoPath ? 1 : 0) + (record.endPhotoPath ? 1 : 0), 0);
 
-  const hours = Math.floor(totalSeconds / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
-  els.todayBreakCount.textContent = String(todaysRecords.length);
-  els.todayBreakTotal.textContent = `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+  const compactDuration = (seconds) => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+  };
+
+  if (els.todayBreakCount) els.todayBreakCount.textContent = String(todaysRecords.length);
+  if (els.todayBreakTotal) els.todayBreakTotal.textContent = compactDuration(totalSeconds);
+  if (els.averageBreakTime) els.averageBreakTime.textContent = compactDuration(averageSeconds);
+  if (els.todayPhotoCount) els.todayPhotoCount.textContent = String(photoCount);
+
+  const latest = records[0];
+  if (els.lastMarkStatus && els.lastMarkTime) {
+    if (!latest) {
+      els.lastMarkStatus.textContent = "Sin registros";
+      els.lastMarkTime.textContent = "Todavía no hay actividad registrada.";
+    } else if (latest.status === "active") {
+      els.lastMarkStatus.textContent = "Inicio registrado";
+      els.lastMarkTime.textContent = formatDateTime(parseDate(latest.startAtClient));
+    } else {
+      els.lastMarkStatus.textContent = "Descanso finalizado";
+      els.lastMarkTime.textContent = latest.endAtClient ? formatDateTime(parseDate(latest.endAtClient)) : formatDateTime(parseDate(latest.startAtClient));
+    }
+  }
 }
 
 function renderRecent(records) {
@@ -543,74 +604,72 @@ function renderRecent(records) {
   els.recentList.innerHTML = records.map((record) => {
     const start = parseDate(record.startAtClient);
     const end = record.endAtClient ? parseDate(record.endAtClient) : null;
-    const dayLabel = start.toLocaleDateString("es-UY", { weekday: "short" }).replace(".", "");
-    const dateLabel = start.toLocaleDateString("es-UY", { day: "2-digit", month: "short" });
+    const duration = durationForRecord(record);
+    const location = record.endLocation || record.startLocation;
+    const dateLabel = start.toLocaleDateString("es-UY", { day: "2-digit", month: "short", year: "numeric" });
+    const startTime = start.toLocaleTimeString("es-UY", { hour: "2-digit", minute: "2-digit" });
+    const endTime = end ? end.toLocaleTimeString("es-UY", { hour: "2-digit", minute: "2-digit" }) : "En curso";
+    const durationLabel = duration ? duration.label.slice(0, 5) : "—";
     return `<article class="record-row">
-      <div class="record-date">
-        <span>${escapeHtml(dayLabel)}</span>
-        <strong>${escapeHtml(dateLabel)}</strong>
-      </div>
-      <div class="record-times">
-        <div><span>Inicio</span><strong>${escapeHtml(start.toLocaleTimeString("es-UY", { hour: "2-digit", minute: "2-digit" }))}</strong></div>
-        <div><span>Finalización</span><strong>${end ? escapeHtml(end.toLocaleTimeString("es-UY", { hour: "2-digit", minute: "2-digit" })) : "En curso"}</strong></div>
-      </div>
-      <span class="badge ${record.status === "active" ? "active" : "complete"} record-status">${record.status === "active" ? "Activo" : "Completado"}</span>
+      <div class="record-cell"><span class="record-mobile-label">Fecha</span><strong>${escapeHtml(dateLabel)}</strong></div>
+      <div class="record-cell"><span class="record-mobile-label">Inicio</span><strong>${escapeHtml(startTime)}</strong></div>
+      <div class="record-cell"><span class="record-mobile-label">Finalización</span><strong>${escapeHtml(endTime)}</strong></div>
+      <div class="record-cell"><span class="record-mobile-label">Duración</span><strong>${escapeHtml(durationLabel)}</strong></div>
+      <div class="record-cell"><span class="record-mobile-label">Ubicación</span>${location ? `<a class="record-location-link" href="${mapUrl(location.latitude, location.longitude)}" target="_blank" rel="noopener">Ver en mapa</a>` : `<strong>—</strong>`}</div>
+      <span class="badge ${record.status === "active" ? "active" : "complete"} record-status">${record.status === "active" ? "Activo" : "Finalizado"}</span>
     </article>`;
   }).join("");
 }
 
 function renderHistory(records) {
-  if (!records.length) {
-    els.historyList.innerHTML = `<div class="empty-state">Aún no hay descansos registrados.</div>`;
+  const filtered = records.filter((record) => {
+    if (historyFilter === "active") return record.status === "active";
+    if (historyFilter === "completed") return record.status !== "active";
+    return true;
+  });
+
+  if (els.historyCount) els.historyCount.textContent = `${filtered.length} ${filtered.length === 1 ? "registro" : "registros"}`;
+
+  if (!filtered.length) {
+    els.historyList.innerHTML = `<div class="empty-state">No hay registros para este filtro.</div>`;
     return;
   }
 
-  els.historyList.innerHTML = records.map((record) => {
+  els.historyList.innerHTML = filtered.map((record) => {
     const start = parseDate(record.startAtClient);
     const end = record.endAtClient ? parseDate(record.endAtClient) : null;
     const duration = durationForRecord(record);
     const startLocation = record.startLocation;
     const endLocation = record.endLocation;
-    const dateLong = start.toLocaleDateString("es-UY", { day: "2-digit", month: "long", year: "numeric" });
+    const dateLong = start.toLocaleDateString("es-UY", { day: "2-digit", month: "short", year: "numeric" });
     const weekday = start.toLocaleDateString("es-UY", { weekday: "long" });
     const startTime = start.toLocaleTimeString("es-UY", { hour: "2-digit", minute: "2-digit" });
     const endTime = end ? end.toLocaleTimeString("es-UY", { hour: "2-digit", minute: "2-digit" }) : "En curso";
-    const durationLabel = duration ? duration.label.slice(0, 5) : "En curso";
+    const durationLabel = duration ? duration.label.slice(0, 5) : "—";
+    const statusClass = record.status === "active" ? "active" : "complete";
+    const statusText = record.status === "active" ? "Activo" : "Finalizado";
 
     const startPhoto = record.startPhotoPath
       ? historyPhotoTile(record.startPhotoPath, "Foto de inicio", "Inicio")
-      : historyPhotoPlaceholder("Sin foto inicial");
+      : historyPhotoPlaceholder("Sin foto");
     const endPhoto = record.endPhotoPath
-      ? historyPhotoTile(record.endPhotoPath, "Foto de finalización", "Final")
-      : historyPhotoPlaceholder(record.status === "active" ? "Pendiente" : "Sin foto final");
+      ? historyPhotoTile(record.endPhotoPath, "Foto final", "Final")
+      : historyPhotoPlaceholder(record.status === "active" ? "Pendiente" : "Sin foto");
 
-    return `<article class="history-card enterprise-history-card">
-      <header class="history-card-head enterprise-history-head">
-        <div class="history-date-block">
-          <span class="history-calendar-icon" aria-hidden="true">▣</span>
-          <div><strong>${escapeHtml(dateLong)}</strong><small>${escapeHtml(weekday)}</small></div>
-        </div>
-        <span class="badge ${record.status === "active" ? "active" : "complete"}">${record.status === "active" ? "Activo" : "Completado"}</span>
-      </header>
-
-      <div class="history-metrics-grid">
-        <div><span>Inicio</span><strong>${escapeHtml(startTime)}</strong></div>
-        <div><span>Finalización</span><strong>${escapeHtml(endTime)}</strong></div>
-        <div><span>Duración</span><strong>${escapeHtml(durationLabel)}</strong></div>
+    return `<article class="history-row">
+      <div class="history-date-cell"><strong>${escapeHtml(dateLong)}</strong><small>${escapeHtml(weekday)}</small></div>
+      <span class="badge ${statusClass} history-mobile-status">${statusText}</span>
+      <div class="history-data-cell"><span>Hora de inicio</span><strong>${escapeHtml(startTime)}</strong></div>
+      <div class="history-data-cell"><span>Finalización</span><strong>${escapeHtml(endTime)}</strong></div>
+      <div class="history-data-cell"><span>Duración</span><strong>${escapeHtml(durationLabel)}</strong></div>
+      <div class="history-map-cell">
+        ${startLocation ? `<a href="${mapUrl(startLocation.latitude, startLocation.longitude)}" target="_blank" rel="noopener">Inicio</a>` : ""}
+        ${endLocation ? `<a href="${mapUrl(endLocation.latitude, endLocation.longitude)}" target="_blank" rel="noopener">Final</a>` : ""}
+        ${!startLocation && !endLocation ? `<span>Sin ubicación</span>` : ""}
       </div>
-
-      <div class="history-location-row">
-        <div><span class="resource-icon" aria-hidden="true">⌖</span><strong>Ubicación</strong></div>
-        <div class="history-map-actions">
-          ${startLocation ? `<a href="${mapUrl(startLocation.latitude, startLocation.longitude)}" target="_blank" rel="noopener">Ver inicio</a>` : `<span>Sin inicio</span>`}
-          ${endLocation ? `<a href="${mapUrl(endLocation.latitude, endLocation.longitude)}" target="_blank" rel="noopener">Ver final</a>` : ""}
-        </div>
-      </div>
-
-      <div class="history-photo-section">
-        <div class="history-photo-heading"><strong>Fotografías</strong><small>Tocá una imagen para ampliarla</small></div>
-        <div class="history-photo-grid">${startPhoto}${endPhoto}</div>
-      </div>
+      ${startPhoto}
+      ${endPhoto}
+      <div class="history-row-more">•••</div>
     </article>`;
   }).join("");
 
@@ -618,15 +677,14 @@ function renderHistory(records) {
 }
 
 function historyPhotoTile(path, alt, label) {
-  return `<button class="history-photo-tile is-loading" type="button" data-photo-open="${escapeHtml(path)}" data-photo-label="${escapeHtml(label)}">
-    <span class="history-photo-label">${escapeHtml(label)}</span>
-    <span class="history-photo-loader"><span class="mini-loader">…</span></span>
-    <img data-photo-path="${escapeHtml(path)}" alt="${escapeHtml(alt)}" loading="lazy" decoding="async">
+  return `<button class="history-photo-button is-loading" type="button" data-photo-open="${escapeHtml(path)}" data-photo-label="${escapeHtml(label)}" aria-label="Abrir ${escapeHtml(alt)}">
+    <span class="photo-loading history-photo-loader">Cargando</span>
+    <img data-photo-path="${escapeHtml(path)}" alt="${escapeHtml(alt)}" loading="eager" decoding="async" referrerpolicy="no-referrer">
   </button>`;
 }
 
 function historyPhotoPlaceholder(message) {
-  return `<div class="history-photo-tile history-photo-empty"><span>${escapeHtml(message)}</span></div>`;
+  return `<div class="history-photo-placeholder">${escapeHtml(message)}</div>`;
 }
 
 async function resolvePhotoUrl(path) {
@@ -643,13 +701,23 @@ function hydrateHistoryPhotos() {
     if (!image || !path) return;
 
     resolvePhotoUrl(path).then((url) => {
-      image.src = url;
-      button.dataset.photoUrl = url;
-      image.addEventListener("load", () => button.classList.remove("is-loading"), { once: true });
-      image.addEventListener("error", () => {
+      const markLoaded = () => {
+        button.classList.remove("is-loading", "has-error");
+      };
+      const markError = () => {
         button.classList.remove("is-loading");
         button.classList.add("has-error");
-      }, { once: true });
+        const loader = button.querySelector(".history-photo-loader");
+        if (loader) loader.textContent = "No disponible";
+      };
+      image.addEventListener("load", markLoaded, { once: true });
+      image.addEventListener("error", markError, { once: true });
+      button.dataset.photoUrl = url;
+      image.src = url;
+      if (image.complete) {
+        if (image.naturalWidth > 0) markLoaded();
+        else markError();
+      }
     }).catch((error) => {
       console.warn("Fotografía del historial:", error);
       button.classList.remove("is-loading");
@@ -720,8 +788,8 @@ async function openCapture(mode) {
 
   const isStart = mode === "start";
   els.captureEyebrow.textContent = isStart ? "INICIO DEL DESCANSO" : "FIN DEL DESCANSO";
-  els.captureTitle.textContent = isStart ? "Fotografía de inicio" : "Fotografía de finalización";
-  els.captureSubtitle.textContent = isStart ? "Toma una foto actual y espera la ubicación GPS." : "Toma la foto final para cerrar el descanso.";
+  els.captureTitle.textContent = isStart ? "Iniciar descanso" : "Finalizar descanso";
+  els.captureSubtitle.textContent = isStart ? "Completa foto, ubicación y confirmación." : "Completa la foto final y confirma el cierre.";
   els.confirmCaptureButton.textContent = isStart ? "Confirmar inicio" : "Confirmar finalización";
   els.captureModal.classList.remove("hidden");
   document.body.style.overflow = "hidden";
@@ -747,6 +815,7 @@ function resetCaptureUi() {
   els.captureMapLink.href = "#";
   els.captureValidation.textContent = "Debes tomar una fotografía y obtener la ubicación antes de confirmar.";
   els.confirmCaptureButton.disabled = true;
+  updateCaptureProgress();
 }
 
 async function startCamera() {
@@ -845,6 +914,7 @@ function showPhotoPreview(blob) {
   els.takePhotoButton.classList.add("hidden");
   els.fallbackPhotoLabel.classList.add("hidden");
   els.retakePhotoButton.classList.remove("hidden");
+  updateCaptureProgress();
 }
 
 function cleanupCaptureObjectUrl() {
@@ -883,6 +953,7 @@ async function locateForCapture() {
     els.locationStatus.textContent = "No se obtuvo la ubicación";
     els.locationHelp.textContent = geolocationMessage(error);
     showToast("GPS no disponible", geolocationMessage(error), "error");
+    updateCaptureProgress();
   }
   validateCapture();
 }
@@ -943,6 +1014,7 @@ function renderCapturedPosition(position) {
   els.captureTime.textContent = new Date().toLocaleTimeString("es-UY", { hour: "2-digit", minute: "2-digit" });
   els.captureMapLink.href = mapUrl(position.latitude, position.longitude);
   els.captureMapLink.classList.remove("hidden");
+  updateCaptureProgress();
 }
 
 function geolocationMessage(error) {
@@ -959,6 +1031,22 @@ function validateCapture() {
   else if (!capturedBlob) els.captureValidation.textContent = "La ubicación está lista. Falta tomar la fotografía.";
   else if (!capturedPosition) els.captureValidation.textContent = "La fotografía está lista. Falta obtener la ubicación GPS.";
   else els.captureValidation.textContent = "Todo listo. Podés confirmar la marcación.";
+  updateCaptureProgress();
+}
+
+function updateCaptureProgress() {
+  const photoReady = Boolean(capturedBlob);
+  const locationReady = Boolean(capturedPosition);
+  const confirmReady = photoReady && locationReady;
+  els.captureStepPhoto?.classList.toggle("done", photoReady);
+  els.captureStepPhoto?.classList.toggle("active", !photoReady);
+  els.captureStepLocation?.classList.toggle("done", locationReady);
+  els.captureStepLocation?.classList.toggle("active", photoReady && !locationReady);
+  els.captureStepConfirm?.classList.toggle("active", confirmReady);
+  els.photoReadyBadge?.classList.toggle("ready", photoReady);
+  els.locationReadyBadge?.classList.toggle("ready", locationReady);
+  if (els.photoReadyBadge) els.photoReadyBadge.textContent = photoReady ? "Capturada" : "Pendiente";
+  if (els.locationReadyBadge) els.locationReadyBadge.textContent = locationReady ? "Obtenida" : "Buscando";
 }
 
 els.testGpsButton.addEventListener("click", async () => {
@@ -966,14 +1054,18 @@ els.testGpsButton.addEventListener("click", async () => {
   els.testGpsButton.textContent = "Buscando GPS…";
   els.gpsTestResult.classList.remove("hidden");
   els.gpsTestResult.textContent = "Buscando la mejor ubicación disponible…";
+  if (els.dashboardMapStatus) els.dashboardMapStatus.textContent = "Obteniendo ubicación…";
   try {
     const position = normalizePosition(await getBestPosition());
-    els.gpsTestResult.innerHTML = `<div class="gps-ready-copy"><strong>Ubicación disponible</strong><span>El teléfono obtuvo correctamente la ubicación.</span></div><a class="gps-map-link" href="${mapUrl(position.latitude, position.longitude)}" target="_blank" rel="noopener">Ver en el mapa</a>`;
+    const url = mapUrl(position.latitude, position.longitude);
+    els.gpsTestResult.innerHTML = `<div class="gps-ready-copy"><strong>Ubicación disponible</strong><span>El dispositivo obtuvo correctamente la posición.</span></div><a class="gps-map-link" href="${url}" target="_blank" rel="noopener">Ver en el mapa</a>`;
+    if (els.dashboardMapStatus) els.dashboardMapStatus.innerHTML = `<a href="${url}" target="_blank" rel="noopener">Ver ubicación en el mapa</a>`;
   } catch (error) {
     els.gpsTestResult.textContent = geolocationMessage(error);
+    if (els.dashboardMapStatus) els.dashboardMapStatus.textContent = "No se pudo obtener la ubicación";
   } finally {
     els.testGpsButton.disabled = false;
-    els.testGpsButton.textContent = "Comprobar ubicación";
+    els.testGpsButton.textContent = "Comprobar GPS";
   }
 });
 

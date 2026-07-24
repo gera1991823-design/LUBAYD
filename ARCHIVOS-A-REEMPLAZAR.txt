@@ -1,4 +1,4 @@
-APP LUBAYD v1.6.0 - DISEÑO EMPRESARIAL
+APP LUBAYD V2.0.0
 
 Reemplazar en la raíz del repositorio GitHub:
 - index.html
@@ -7,11 +7,15 @@ Reemplazar en la raíz del repositorio GitHub:
 - service-worker.js
 - manifest.webmanifest
 
-Cambios principales:
-- Diseño móvil empresarial con barra superior y navegación inferior.
-- Resumen diario de cantidad y tiempo de descansos.
-- Historial compacto con fecha, inicio, finalización, duración, mapa y fotos.
-- Fotos visibles dentro de la app mediante miniaturas y visor interno.
-- Corrección para Safari/iPhone: ya no usa window.open después de consultar Firebase.
+No modificar:
+- logo.svg
+- icon-192.png
+- icon-512.png
+- reset.html
+- firestore.rules
+- storage.rules
 
-Después de subir los archivos, abrir /reset.html para limpiar la caché.
+Luego abrir:
+https://gera1991823-design.github.io/LUBAYD/reset.html
+
+Presionar "Limpiar caché y abrir aplicación".

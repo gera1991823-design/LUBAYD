@@ -1,24 +1,27 @@
-const CACHE_NAME = 'lubayd-descansos-v1.6.0';
+const CACHE_NAME = 'lubayd-descansos-v2.0.0';
 const APP_SHELL = [
   './',
   './index.html',
   './styles.css',
   './manifest.webmanifest',
   './app.js',
-  './firebase-config.js',
   './logo.svg',
   './icon-192.png',
   './icon-512.png'
 ];
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)));
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL))
+  );
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) => Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))))
+    caches.keys().then((keys) => Promise.all(
+      keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
+    ))
   );
   self.clients.claim();
 });
@@ -32,8 +35,10 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       fetch(event.request)
         .then((response) => {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put('./index.html', copy));
+          if (response.ok) {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put('./index.html', copy));
+          }
           return response;
         })
         .catch(() => caches.match('./index.html'))
@@ -41,9 +46,8 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  const isCoreCode = url.pathname.endsWith('/app.js') || url.pathname.endsWith('/firebase-config.js');
-
-  if (isCoreCode) {
+  const networkFirst = url.pathname.endsWith('/app.js') || url.pathname.endsWith('/styles.css');
+  if (networkFirst) {
     event.respondWith(
       fetch(event.request)
         .then((response) => {
