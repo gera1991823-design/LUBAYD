@@ -4,16 +4,16 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#06653c">
-  <meta name="description" content="Gestión de descansos con fotografía, hora y ubicación GPS.">
+  <meta name="description" content="Gestión operativa de descansos y partes con fotografía, hora y ubicación GPS.">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Lubayd Descansos">
-  <title>Lubayd SA | Gestión de descansos</title>
-  <link rel="manifest" href="./manifest.webmanifest?v=2.0.0">
+  <title>Lubayd SA | Gestión operativa</title>
+  <link rel="manifest" href="./manifest.webmanifest?v=2.2.0">
   <link rel="icon" href="./icon-192.png">
   <link rel="apple-touch-icon" href="./icon-192.png">
-  <link rel="stylesheet" href="./styles.css?v=2.0.0">
+  <link rel="stylesheet" href="./styles.css?v=2.2.0">
 </head>
 <body>
   <div id="toastRegion" class="toast-region" aria-live="polite" aria-atomic="true"></div>
@@ -55,7 +55,7 @@
       <div class="auth-card">
         <div class="mobile-brand brand-lockup">
           <img src="./logo.svg" alt="Lubayd SA" class="brand-logo">
-          <div><strong>LUBAYD SA</strong><span>Gestión de descansos</span></div>
+          <div><strong>LUBAYD SA</strong><span>Gestión operativa</span></div>
         </div>
 
         <div class="auth-tabs" role="tablist" aria-label="Acceso a la aplicación">
@@ -136,12 +136,15 @@
     <aside class="sidebar">
       <div class="sidebar-brand brand-lockup brand-lockup-light">
         <img src="./logo.svg" alt="Lubayd SA" class="brand-logo">
-        <div><strong>LUBAYD SA</strong><span>Gestión de descansos</span></div>
+        <div><strong>LUBAYD SA</strong><span>Gestión operativa</span></div>
       </div>
 
       <nav class="sidebar-nav" aria-label="Navegación principal">
         <button class="nav-item active" type="button" data-section="dashboard">
-          <span class="nav-icon">⌂</span><span>Dashboard</span>
+          <span class="nav-icon">⌂</span><span>Inicio</span>
+        </button>
+        <button id="partNavItem" class="nav-item" type="button" data-section="part">
+          <span class="nav-icon">▣</span><span>Parte</span>
         </button>
         <button id="historyNavItem" class="nav-item role-history" type="button" data-section="history">
           <span class="nav-icon">◷</span><span>Historial</span>
@@ -156,7 +159,7 @@
       <div class="sidebar-footer">
         <div class="connection-pill"><span id="connectionDot" class="status-dot"></span><span id="connectionText">Comprobando conexión</span></div>
         <button id="logoutButton" class="sidebar-logout" type="button">Cerrar sesión</button>
-        <small>Versión 2.1.0</small>
+        <small>Versión 2.2.0</small>
       </div>
     </aside>
 
@@ -164,7 +167,7 @@
       <header class="topbar">
         <button id="mobileMenuButton" class="mobile-menu-button" type="button" aria-label="Abrir menú">☰</button>
         <div class="topbar-title">
-          <span class="topbar-kicker">GESTIÓN DE DESCANSOS</span>
+          <span class="topbar-kicker">GESTIÓN OPERATIVA</span>
           <h2 id="pageTitle">Dashboard</h2>
         </div>
         <div class="topbar-meta">
@@ -270,6 +273,129 @@
         </section>
       </section>
 
+
+
+      <section id="partSection" class="content-section">
+        <div class="page-heading part-page-heading">
+          <div>
+            <span class="eyebrow">REGISTRO OPERATIVO</span>
+            <h1>Parte</h1>
+            <p>Registra horómetros, producción y reparaciones con evidencia fotográfica y ubicación.</p>
+          </div>
+          <div class="part-heading-meta">
+            <span id="partDateLabel">—</span>
+            <span id="partStatusBadge" class="badge neutral">Borrador</span>
+          </div>
+        </div>
+
+        <div id="partOfflineWarning" class="alert warning hidden">
+          <strong>Sin conexión a internet</strong>
+          <span>Para registrar fotos y ubicaciones del parte debes recuperar la conexión.</span>
+        </div>
+
+        <form id="partForm" novalidate>
+          <div class="part-layout-grid">
+            <article class="panel-card part-panel">
+              <div class="panel-heading">
+                <div><span class="eyebrow">HORÓMETROS</span><h3>Registro de horómetros</h3><p>Completa cada etapa del proceso.</p></div>
+              </div>
+
+              <div class="part-stage-list">
+                <article class="part-stage-card" data-part-stage-card="horometerInitial">
+                  <header><span class="part-stage-icon">◷</span><div><strong>1. Horómetro inicial</strong><small>Inicio de la jornada</small></div><span id="horometerInitialStatus" class="evidence-status">Pendiente</span></header>
+                  <label class="field part-value-field"><span>Valor del horómetro</span><input id="horometerInitialInput" type="text" inputmode="decimal" placeholder="Ej.: 1250,5" autocomplete="off"></label>
+                  <div class="part-evidence-actions">
+                    <button class="secondary-button part-capture-button" type="button" data-part-capture="horometerInitial"><span>▣</span> Tomar foto</button>
+                    <a id="horometerInitialMap" class="secondary-button part-map-button disabled-link" href="#" target="_blank" rel="noopener"><span>⌖</span> Ubicación</a>
+                  </div>
+                  <div id="horometerInitialEvidence" class="part-evidence-preview"></div>
+                </article>
+
+                <article class="part-stage-card" data-part-stage-card="horometerBreak">
+                  <header><span class="part-stage-icon">◷</span><div><strong>2. Horómetro descanso</strong><small>Lectura al iniciar el descanso</small></div><span id="horometerBreakStatus" class="evidence-status">Pendiente</span></header>
+                  <label class="field part-value-field"><span>Valor del horómetro</span><input id="horometerBreakInput" type="text" inputmode="decimal" placeholder="Ej.: 1254,2" autocomplete="off"></label>
+                  <div class="part-evidence-actions">
+                    <button class="secondary-button part-capture-button" type="button" data-part-capture="horometerBreak"><span>▣</span> Tomar foto</button>
+                    <a id="horometerBreakMap" class="secondary-button part-map-button disabled-link" href="#" target="_blank" rel="noopener"><span>⌖</span> Ubicación</a>
+                  </div>
+                  <div id="horometerBreakEvidence" class="part-evidence-preview"></div>
+                </article>
+
+                <article class="part-stage-card" data-part-stage-card="horometerPostBreak">
+                  <header><span class="part-stage-icon">◷</span><div><strong>3. Horómetro post descanso</strong><small>Lectura al retomar la actividad</small></div><span id="horometerPostBreakStatus" class="evidence-status">Pendiente</span></header>
+                  <label class="field part-value-field"><span>Valor del horómetro</span><input id="horometerPostBreakInput" type="text" inputmode="decimal" placeholder="Ej.: 1254,2" autocomplete="off"></label>
+                  <div class="part-evidence-actions">
+                    <button class="secondary-button part-capture-button" type="button" data-part-capture="horometerPostBreak"><span>▣</span> Tomar foto</button>
+                    <a id="horometerPostBreakMap" class="secondary-button part-map-button disabled-link" href="#" target="_blank" rel="noopener"><span>⌖</span> Ubicación</a>
+                  </div>
+                  <div id="horometerPostBreakEvidence" class="part-evidence-preview"></div>
+                </article>
+
+                <article class="part-stage-card" data-part-stage-card="horometerFinal">
+                  <header><span class="part-stage-icon">◷</span><div><strong>4. Horómetro final</strong><small>Cierre de la jornada</small></div><span id="horometerFinalStatus" class="evidence-status">Pendiente</span></header>
+                  <label class="field part-value-field"><span>Valor del horómetro</span><input id="horometerFinalInput" type="text" inputmode="decimal" placeholder="Ej.: 1261,8" autocomplete="off"></label>
+                  <div class="part-evidence-actions">
+                    <button class="secondary-button part-capture-button" type="button" data-part-capture="horometerFinal"><span>▣</span> Tomar foto</button>
+                    <a id="horometerFinalMap" class="secondary-button part-map-button disabled-link" href="#" target="_blank" rel="noopener"><span>⌖</span> Ubicación</a>
+                  </div>
+                  <div id="horometerFinalEvidence" class="part-evidence-preview"></div>
+                </article>
+              </div>
+            </article>
+
+            <div class="part-side-column">
+              <article class="panel-card part-panel">
+                <div class="panel-heading">
+                  <div><span class="eyebrow">PRODUCCIÓN</span><h3>Producción</h3><p>Ingresa las cantidades realizadas.</p></div>
+                </div>
+                <div class="production-grid">
+                  <label class="production-field"><span class="production-icon">◆</span><div><strong>Trozo</strong><small>Cantidad</small></div><input id="trozoInput" type="text" inputmode="decimal" placeholder="0" autocomplete="off"></label>
+                  <label class="production-field"><span class="production-icon">●</span><div><strong>Pulpa</strong><small>Cantidad</small></div><input id="pulpaInput" type="text" inputmode="decimal" placeholder="0" autocomplete="off"></label>
+                </div>
+              </article>
+
+              <article class="panel-card part-panel repair-panel">
+                <div class="panel-heading inline-heading repair-heading">
+                  <div><span class="eyebrow">MANTENIMIENTO</span><h3>Reparación</h3><p>Registra el inicio y la finalización de una reparación.</p></div>
+                  <label class="switch-control"><input id="repairEnabled" type="checkbox"><span></span><small>Hubo reparación</small></label>
+                </div>
+
+                <div id="repairFields" class="repair-fields is-disabled">
+                  <article class="repair-stage-card" data-part-stage-card="repairStart">
+                    <header><span class="repair-icon">⚒</span><div><strong>Inicio reparación</strong><small>Foto, ubicación y motivo</small></div><span id="repairStartStatus" class="evidence-status">Pendiente</span></header>
+                    <label class="field"><span>Motivo de reparación</span><textarea id="repairStartReason" rows="3" maxlength="500" placeholder="Describe el motivo de la reparación..."></textarea></label>
+                    <div class="part-evidence-actions">
+                      <button class="secondary-button part-capture-button" type="button" data-part-capture="repairStart"><span>▣</span> Tomar foto</button>
+                      <a id="repairStartMap" class="secondary-button part-map-button disabled-link" href="#" target="_blank" rel="noopener"><span>⌖</span> Ubicación</a>
+                    </div>
+                    <div id="repairStartEvidence" class="part-evidence-preview"></div>
+                  </article>
+
+                  <article class="repair-stage-card" data-part-stage-card="repairEnd">
+                    <header><span class="repair-icon">⚒</span><div><strong>Finalización reparación</strong><small>Foto, ubicación y detalle final</small></div><span id="repairEndStatus" class="evidence-status">Pendiente</span></header>
+                    <label class="field"><span>Motivo o detalle de finalización</span><textarea id="repairEndReason" rows="3" maxlength="500" placeholder="Describe el trabajo realizado o el motivo del cierre..."></textarea></label>
+                    <div class="part-evidence-actions">
+                      <button class="secondary-button part-capture-button" type="button" data-part-capture="repairEnd"><span>▣</span> Tomar foto</button>
+                      <a id="repairEndMap" class="secondary-button part-map-button disabled-link" href="#" target="_blank" rel="noopener"><span>⌖</span> Ubicación</a>
+                    </div>
+                    <div id="repairEndEvidence" class="part-evidence-preview"></div>
+                  </article>
+                </div>
+              </article>
+            </div>
+          </div>
+
+          <article class="panel-card part-panel observations-panel">
+            <label class="field"><span>Observaciones generales <small>(opcional)</small></span><textarea id="partObservations" rows="4" maxlength="1000" placeholder="Escribe cualquier observación del parte..."></textarea></label>
+          </article>
+
+          <div class="part-save-bar">
+            <div class="part-save-copy"><strong id="partSaveTitle">Parte del día</strong><span id="partSaveStatus">Los cambios todavía no fueron guardados.</span></div>
+            <button id="savePartButton" class="primary-button part-save-button" type="submit"><span>Guardar parte</span><span>✓</span></button>
+          </div>
+        </form>
+      </section>
+
       <section id="historySection" class="content-section role-history">
         <div class="history-page-heading">
           <div>
@@ -296,9 +422,9 @@
 
     <nav class="mobile-bottom-nav" aria-label="Navegación móvil">
       <button class="nav-item active" type="button" data-section="dashboard"><span>⌂</span><small>Inicio</small></button>
+      <button id="mobileQuickAction" class="nav-item mobile-break-action" type="button" aria-label="Iniciar o finalizar descanso"><span>◷</span><small>Descanso</small></button>
+      <button id="mobilePartNav" class="mobile-primary-action" type="button" data-section="part" aria-label="Abrir parte">▣</button>
       <button id="mobileHistoryNav" class="nav-item role-history" type="button" data-section="history"><span>◷</span><small>Historial</small></button>
-      <button id="mobileQuickAction" class="mobile-primary-action" type="button" aria-label="Iniciar o finalizar descanso">+</button>
-      <button id="mobileMapButton" class="nav-item operator-hidden" type="button"><span>⌖</span><small>Mapa</small></button>
       <button id="mobileProfileButton" class="nav-item" type="button"><span>◉</span><small>Perfil</small></button>
     </nav>
   </div>
@@ -417,12 +543,12 @@
       }
     }, 5000);
   </script>
-  <script defer src="./app.js?v=2.0.0"></script>
+  <script defer src="./app.js?v=2.2.0"></script>
   <script>
     if ('serviceWorker' in navigator && location.protocol === 'https:') {
       window.addEventListener('load', async () => {
         try {
-          const registration = await navigator.serviceWorker.register('./service-worker.js?v=2.1.0');
+          const registration = await navigator.serviceWorker.register('./service-worker.js?v=2.2.0');
           registration.update().catch(() => {});
         } catch (error) {
           console.warn('Service Worker:', error);

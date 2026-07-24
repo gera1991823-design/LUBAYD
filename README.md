@@ -1,8 +1,8 @@
-# APP LUBAYD V2.0.0
+# APP LUBAYD V2.2 — Parte y reparación
 
-Rediseño responsive para computadora y celular.
+## Archivos para reemplazar en GitHub
 
-## Archivos a reemplazar
+Reemplazar en la raíz del repositorio:
 
 - `index.html`
 - `app.js`
@@ -10,30 +10,44 @@ Rediseño responsive para computadora y celular.
 - `service-worker.js`
 - `manifest.webmanifest`
 
-## No reemplazar
+No reemplazar los archivos de logo e iconos existentes.
 
-- `logo.svg`
-- `icon-192.png`
-- `icon-512.png`
-- `reset.html`
-- `firestore.rules`
-- `storage.rules`
+## Reglas obligatorias de Firebase
 
-## Mejoras incluidas
+La sección Parte guarda documentos en:
 
-- Dashboard empresarial para PC.
-- Barra inferior y tarjetas optimizadas para celular.
-- Flujo de marcación en tres pasos: foto, ubicación y confirmación.
-- Historial en tabla para PC y tarjetas para celular.
-- Filtros de registros activos y completados.
-- Fotos de inicio y final con visor ampliado.
-- Corrección de carga de fotos en Safari: los eventos se registran antes de asignar la URL y se comprueba si la imagen ya estaba en caché.
-- Resumen diario con cantidad, duración total, promedio y fotos.
+`users/{uid}/parts/{AAAA-MM-DD}`
 
-## Actualización
+Las fotografías se guardan en:
 
-Después del commit en GitHub, abrir:
+`parts/{uid}/{AAAA-MM-DD}/{etapa}-{timestamp}.jpg`
 
-`https://gera1991823-design.github.io/LUBAYD/reset.html`
+Por eso es obligatorio publicar también:
 
-Luego presionar **Limpiar caché y abrir aplicación**.
+- `firestore.rules` en Firebase > Firestore > Reglas.
+- `storage.rules` en Firebase > Storage > Reglas.
+
+Sin esas reglas, Firebase mostrará `permission-denied` o `storage/unauthorized`.
+
+## Funciones incluidas
+
+- Horómetro inicial: valor, foto y GPS.
+- Horómetro descanso: valor, foto y GPS.
+- Horómetro post descanso: valor, foto y GPS.
+- Horómetro final: valor, foto y GPS.
+- Cantidad de Trozo.
+- Cantidad de Pulpa.
+- Reparación opcional.
+- Inicio de reparación: motivo, foto y GPS.
+- Finalización de reparación: detalle, foto y GPS.
+- Observaciones generales.
+- Guardado del parte diario en Firestore.
+- Diseño responsive para computadora y celular.
+
+## Después de subir los archivos
+
+1. Hacer Commit en GitHub.
+2. Esperar la publicación de GitHub Pages.
+3. Abrir `https://gera1991823-design.github.io/LUBAYD/reset.html`.
+4. Limpiar la caché y volver a iniciar sesión.
+5. Verificar que aparezca `Versión 2.2.0`.

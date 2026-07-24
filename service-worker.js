@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lubayd-descansos-v2.1.0';
+const CACHE_NAME = 'lubayd-operativa-v2.2.0';
 const APP_SHELL = [
   './',
   './index.html',

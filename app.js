@@ -1,6 +1,6 @@
 "use strict";
 
-// APP LUBAYD v2.0.0
+// APP LUBAYD v2.2.0 - Descansos, parte operativo y reparaciones
 // La interfaz se inicia primero y Firebase se carga luego de forma dinámica.
 // Así, aun si el CDN de Firebase falla, los botones y los mensajes siguen funcionando.
 window.__APP_SCRIPT_LOADED__ = true;
@@ -78,7 +78,26 @@ const els = {
   historyCount: $("#historyCount"),
   pageTitle: $("#pageTitle"),
   dashboardSection: $("#dashboardSection"),
+  partSection: $("#partSection"),
   historySection: $("#historySection"),
+  partForm: $("#partForm"),
+  partDateLabel: $("#partDateLabel"),
+  partStatusBadge: $("#partStatusBadge"),
+  partOfflineWarning: $("#partOfflineWarning"),
+  horometerInitialInput: $("#horometerInitialInput"),
+  horometerBreakInput: $("#horometerBreakInput"),
+  horometerPostBreakInput: $("#horometerPostBreakInput"),
+  horometerFinalInput: $("#horometerFinalInput"),
+  trozoInput: $("#trozoInput"),
+  pulpaInput: $("#pulpaInput"),
+  repairEnabled: $("#repairEnabled"),
+  repairFields: $("#repairFields"),
+  repairStartReason: $("#repairStartReason"),
+  repairEndReason: $("#repairEndReason"),
+  partObservations: $("#partObservations"),
+  partSaveTitle: $("#partSaveTitle"),
+  partSaveStatus: $("#partSaveStatus"),
+  savePartButton: $("#savePartButton"),
   sidebar: $(".sidebar"),
   mobileMenuButton: $("#mobileMenuButton"),
   breakStatusTitle: $("#breakStatusTitle"),
@@ -132,7 +151,7 @@ const els = {
   photoViewerTitle: $("#photoViewerTitle"),
   closePhotoViewerButton: $("#closePhotoViewerButton"),
   mobileQuickAction: $("#mobileQuickAction"),
-  mobileMapButton: $("#mobileMapButton"),
+  mobilePartNav: $("#mobilePartNav"),
   mobileProfileButton: $("#mobileProfileButton")
 };
 
@@ -141,6 +160,10 @@ let currentBreak = null;
 let currentBreakId = null;
 let unsubscribeCurrent = null;
 let unsubscribeHistory = null;
+let unsubscribePart = null;
+let currentPart = null;
+let partCaptureStage = null;
+let partDirty = false;
 let timerInterval = null;
 let cameraStream = null;
 let captureMode = "start";
@@ -152,6 +175,15 @@ let lastHistoryRecords = [];
 let historyFilter = "all";
 let currentUserRole = "operator";
 const photoUrlCache = new Map();
+
+const PART_STAGE_CONFIG = {
+  horometerInitial: { group: "horometers", key: "initial", label: "Horómetro inicial", input: "horometerInitialInput" },
+  horometerBreak: { group: "horometers", key: "break", label: "Horómetro descanso", input: "horometerBreakInput" },
+  horometerPostBreak: { group: "horometers", key: "postBreak", label: "Horómetro post descanso", input: "horometerPostBreakInput" },
+  horometerFinal: { group: "horometers", key: "final", label: "Horómetro final", input: "horometerFinalInput" },
+  repairStart: { group: "repair", key: "start", label: "Inicio de reparación", reason: "repairStartReason" },
+  repairEnd: { group: "repair", key: "end", label: "Finalización de reparación", reason: "repairEndReason" }
+};
 
 function setBusy(button, busy, label) {
   if (!button) return;
@@ -318,6 +350,9 @@ function updateConnectionState() {
   els.connectionDot.classList.toggle("offline", !online);
   els.connectionText.textContent = online ? "Conexión disponible" : "Sin conexión";
   els.offlineWarning.classList.toggle("hidden", online);
+  els.partOfflineWarning?.classList.toggle("hidden", online);
+  if (els.savePartButton) els.savePartButton.disabled = !online || isSaving;
+  $$('[data-part-capture]').forEach((button) => { button.disabled = !online || isSaving || (button.closest("#repairFields") && !els.repairEnabled?.checked); });
   updateActionButtons();
 }
 window.addEventListener("online", updateConnectionState);
@@ -342,20 +377,19 @@ function startClock() {
 startClock();
 
 function showSection(section) {
-  // El operador no puede abrir el historial completo, ni siquiera mediante URL o consola.
-  if (currentUserRole === "operator" && section === "history") {
-    section = "dashboard";
-  }
+  if (currentUserRole === "operator" && section === "history") section = "dashboard";
+  if (!["dashboard", "part", "history"].includes(section)) section = "dashboard";
 
-  const isDashboard = section === "dashboard";
-  els.dashboardSection.classList.toggle("active", isDashboard);
-  els.historySection.classList.toggle("active", !isDashboard);
-  els.pageTitle.textContent = isDashboard ? "Inicio" : "Historial";
-  $$(".nav-item[data-section]").forEach((button) => button.classList.toggle("active", button.dataset.section === section));
+  els.dashboardSection.classList.toggle("active", section === "dashboard");
+  els.partSection?.classList.toggle("active", section === "part");
+  els.historySection.classList.toggle("active", section === "history");
+  const titles = { dashboard: "Inicio", part: "Parte", history: "Historial" };
+  els.pageTitle.textContent = titles[section];
+  $$('[data-section]').forEach((button) => button.classList.toggle("active", button.dataset.section === section));
   els.sidebar.classList.remove("open");
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
-$$('.nav-item').forEach((button) => button.addEventListener("click", () => showSection(button.dataset.section)));
+$$('[data-section]').forEach((button) => button.addEventListener("click", () => showSection(button.dataset.section)));
 $$('[data-go-history]').forEach((button) => button.addEventListener("click", () => showSection("history")));
 els.mobileMenuButton.addEventListener("click", () => els.sidebar.classList.toggle("open"));
 
@@ -370,11 +404,6 @@ $$('[data-history-filter]').forEach((button) => {
 els.mobileQuickAction?.addEventListener("click", () => {
   const active = Boolean(currentBreak && currentBreak.status === "active");
   openCapture(active ? "end" : "start");
-});
-els.mobileMapButton?.addEventListener("click", async () => {
-  showSection("dashboard");
-  els.testGpsButton?.click();
-  window.setTimeout(() => els.dashboardMapStatus?.scrollIntoView({ behavior: "smooth", block: "center" }), 100);
 });
 els.mobileProfileButton?.addEventListener("click", () => {
   showToast(currentUser?.displayName || "Operador", currentUser?.email || "Usuario autenticado");
@@ -393,6 +422,7 @@ async function handleAuthStateChanged(user) {
     clearAuthMessage();
     currentBreak = null;
     currentBreakId = null;
+    currentPart = null;
     currentUserRole = "operator";
     document.body.dataset.userRole = "operator";
     els.authView.classList.remove("hidden");
@@ -441,6 +471,7 @@ async function handleAuthStateChanged(user) {
 
   subscribeCurrentBreak(user.uid);
   subscribeHistory(user.uid);
+  subscribeCurrentPart(user.uid);
 }
 
 
@@ -472,8 +503,10 @@ function getInitials(value) {
 function clearSubscriptions() {
   if (unsubscribeCurrent) unsubscribeCurrent();
   if (unsubscribeHistory) unsubscribeHistory();
+  if (unsubscribePart) unsubscribePart();
   unsubscribeCurrent = null;
   unsubscribeHistory = null;
+  unsubscribePart = null;
 }
 
 function subscribeCurrentBreak(uid) {
@@ -514,6 +547,309 @@ function subscribeHistory(uid) {
     els.recentList.innerHTML = `<div class="empty-state">No se pudo cargar la actividad reciente.</div>`;
   });
 }
+
+function localDateKey(date = new Date()) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function currentPartRef(uid = currentUser?.uid) {
+  if (!uid) return null;
+  return doc(db, "users", uid, "parts", localDateKey());
+}
+
+function subscribeCurrentPart(uid) {
+  const partRef = currentPartRef(uid);
+  if (!partRef) return;
+  unsubscribePart = onSnapshot(partRef, (snapshot) => {
+    currentPart = snapshot.exists() ? { id: snapshot.id, ...snapshot.data() } : null;
+    partDirty = false;
+    renderPart();
+  }, (error) => {
+    console.error("Parte:", error);
+    showToast("No se pudo cargar el parte", friendlyError(error), "error");
+  });
+}
+
+function parseDecimalInput(input) {
+  const raw = String(input?.value ?? "").trim().replace(/\s/g, "").replace(",", ".");
+  if (!raw) return null;
+  const value = Number(raw);
+  return Number.isFinite(value) ? value : null;
+}
+
+function formatDecimalInput(value) {
+  if (value === null || value === undefined || value === "") return "";
+  return String(value).replace(".", ",");
+}
+
+function setInputValue(input, value) {
+  if (!input || document.activeElement === input) return;
+  input.value = formatDecimalInput(value);
+}
+
+function stageData(stageKey) {
+  const config = PART_STAGE_CONFIG[stageKey];
+  return currentPart?.[config.group]?.[config.key] || null;
+}
+
+function collectPartPayload(status = currentPart?.status || "draft") {
+  const nowIso = new Date().toISOString();
+  const horometers = {
+    ...(currentPart?.horometers || {}),
+    initial: { ...(currentPart?.horometers?.initial || {}), value: parseDecimalInput(els.horometerInitialInput) },
+    break: { ...(currentPart?.horometers?.break || {}), value: parseDecimalInput(els.horometerBreakInput) },
+    postBreak: { ...(currentPart?.horometers?.postBreak || {}), value: parseDecimalInput(els.horometerPostBreakInput) },
+    final: { ...(currentPart?.horometers?.final || {}), value: parseDecimalInput(els.horometerFinalInput) }
+  };
+  const repairEnabled = Boolean(els.repairEnabled?.checked);
+  const repair = {
+    ...(currentPart?.repair || {}),
+    enabled: repairEnabled,
+    start: { ...(currentPart?.repair?.start || {}), reason: els.repairStartReason?.value.trim() || "" },
+    end: { ...(currentPart?.repair?.end || {}), reason: els.repairEndReason?.value.trim() || "" }
+  };
+  return {
+    userId: currentUser.uid,
+    userName: currentUser.displayName || "Operador",
+    userEmail: currentUser.email || "",
+    dateKey: localDateKey(),
+    status,
+    horometers,
+    production: {
+      trozo: parseDecimalInput(els.trozoInput),
+      pulpa: parseDecimalInput(els.pulpaInput)
+    },
+    repair,
+    observations: els.partObservations?.value.trim() || "",
+    updatedAt: serverTimestamp(),
+    updatedAtClient: nowIso,
+    ...(currentPart ? {} : { createdAt: serverTimestamp(), createdAtClient: nowIso })
+  };
+}
+
+function hasEvidence(entry) {
+  return Boolean(entry?.photoPath && entry?.location && Number.isFinite(Number(entry.location.latitude)) && Number.isFinite(Number(entry.location.longitude)));
+}
+
+function renderPartStage(stageKey) {
+  const entry = stageData(stageKey);
+  const ready = hasEvidence(entry);
+  const status = document.getElementById(`${stageKey}Status`);
+  const map = document.getElementById(`${stageKey}Map`);
+  const evidence = document.getElementById(`${stageKey}Evidence`);
+  const card = document.querySelector(`[data-part-stage-card="${stageKey}"]`);
+
+  if (status) {
+    status.textContent = ready ? "Registrado" : "Pendiente";
+    status.classList.toggle("ready", ready);
+  }
+  card?.classList.toggle("is-complete", ready);
+
+  if (map) {
+    if (entry?.location) {
+      map.href = mapUrl(entry.location.latitude, entry.location.longitude);
+      map.classList.remove("disabled-link");
+      map.innerHTML = "<span>⌖</span> Ver ubicación";
+    } else {
+      map.href = "#";
+      map.classList.add("disabled-link");
+      map.innerHTML = "<span>⌖</span> Ubicación";
+    }
+  }
+
+  if (evidence) {
+    if (entry?.photoPath) {
+      const captured = entry.capturedAtClient ? formatDateTime(parseDate(entry.capturedAtClient)) : "Evidencia registrada";
+      evidence.innerHTML = `<button class="part-photo-thumb is-loading" type="button" data-photo-open="${escapeHtml(entry.photoPath)}" data-photo-label="${escapeHtml(PART_STAGE_CONFIG[stageKey].label)}"><span class="photo-loading history-photo-loader">Cargando</span><img data-photo-path="${escapeHtml(entry.photoPath)}" alt="${escapeHtml(PART_STAGE_CONFIG[stageKey].label)}" loading="eager" decoding="async" referrerpolicy="no-referrer"></button><div><strong>Evidencia guardada</strong><span>${escapeHtml(captured)}</span></div>`;
+    } else {
+      evidence.innerHTML = "";
+    }
+  }
+}
+
+function renderPart() {
+  const date = new Date();
+  if (els.partDateLabel) els.partDateLabel.textContent = date.toLocaleDateString("es-UY", { weekday: "long", day: "2-digit", month: "long", year: "numeric" });
+
+  setInputValue(els.horometerInitialInput, currentPart?.horometers?.initial?.value);
+  setInputValue(els.horometerBreakInput, currentPart?.horometers?.break?.value);
+  setInputValue(els.horometerPostBreakInput, currentPart?.horometers?.postBreak?.value);
+  setInputValue(els.horometerFinalInput, currentPart?.horometers?.final?.value);
+  setInputValue(els.trozoInput, currentPart?.production?.trozo);
+  setInputValue(els.pulpaInput, currentPart?.production?.pulpa);
+  if (els.repairStartReason && document.activeElement !== els.repairStartReason) els.repairStartReason.value = currentPart?.repair?.start?.reason || "";
+  if (els.repairEndReason && document.activeElement !== els.repairEndReason) els.repairEndReason.value = currentPart?.repair?.end?.reason || "";
+  if (els.partObservations && document.activeElement !== els.partObservations) els.partObservations.value = currentPart?.observations || "";
+
+  const hasRepairData = Boolean(currentPart?.repair?.enabled || hasEvidence(currentPart?.repair?.start) || hasEvidence(currentPart?.repair?.end) || currentPart?.repair?.start?.reason || currentPart?.repair?.end?.reason);
+  if (els.repairEnabled) els.repairEnabled.checked = hasRepairData;
+  updateRepairFields(hasRepairData);
+
+  Object.keys(PART_STAGE_CONFIG).forEach(renderPartStage);
+  hydrateHistoryPhotos();
+
+  const completed = currentPart?.status === "completed";
+  if (els.partStatusBadge) {
+    els.partStatusBadge.textContent = completed ? "Completado" : currentPart ? "Borrador" : "Nuevo";
+    els.partStatusBadge.className = `badge ${completed ? "complete" : "neutral"}`;
+  }
+  if (els.partSaveTitle) els.partSaveTitle.textContent = completed ? "Parte guardado" : "Parte del día";
+  if (els.partSaveStatus) {
+    if (currentPart?.updatedAtClient) els.partSaveStatus.textContent = `Última actualización: ${formatDateTime(parseDate(currentPart.updatedAtClient))}.`;
+    else els.partSaveStatus.textContent = "Completa los campos y registra las evidencias obligatorias.";
+  }
+}
+
+function updateRepairFields(enabled) {
+  els.repairFields?.classList.toggle("is-disabled", !enabled);
+  els.repairFields?.querySelectorAll("textarea, button").forEach((control) => { control.disabled = !enabled || (!navigator.onLine && control.matches("button")); });
+}
+
+function markPartDirty() {
+  partDirty = true;
+  if (els.partSaveStatus) els.partSaveStatus.textContent = "Hay cambios sin guardar.";
+  if (els.partStatusBadge && currentPart?.status === "completed") {
+    els.partStatusBadge.textContent = "Modificado";
+    els.partStatusBadge.className = "badge active";
+  }
+}
+
+function validatePartForCompletion(payload) {
+  const stages = [
+    ["Horómetro inicial", payload.horometers.initial],
+    ["Horómetro descanso", payload.horometers.break],
+    ["Horómetro post descanso", payload.horometers.postBreak],
+    ["Horómetro final", payload.horometers.final]
+  ];
+  for (const [label, entry] of stages) {
+    if (!Number.isFinite(entry.value) || entry.value < 0) throw new Error(`${label}: ingresa un valor válido.`);
+    if (!hasEvidence(entry)) throw new Error(`${label}: falta registrar la foto y la ubicación.`);
+  }
+  const values = stages.map(([, entry]) => entry.value);
+  if (values.some((value, index) => index > 0 && value < values[index - 1])) throw new Error("Los horómetros deben mantener un orden igual o creciente.");
+  if (!Number.isFinite(payload.production.trozo) || payload.production.trozo < 0) throw new Error("Trozo: ingresa una cantidad válida, incluso si es 0.");
+  if (!Number.isFinite(payload.production.pulpa) || payload.production.pulpa < 0) throw new Error("Pulpa: ingresa una cantidad válida, incluso si es 0.");
+
+  if (payload.repair.enabled) {
+    if (!payload.repair.start.reason) throw new Error("Inicio de reparación: escribe el motivo.");
+    if (!hasEvidence(payload.repair.start)) throw new Error("Inicio de reparación: falta foto y ubicación.");
+    if (!payload.repair.end.reason) throw new Error("Finalización de reparación: escribe el detalle final.");
+    if (!hasEvidence(payload.repair.end)) throw new Error("Finalización de reparación: falta foto y ubicación.");
+  }
+}
+
+async function savePartForm(event) {
+  event?.preventDefault();
+  if (!currentUser || !firebaseReady || isSaving) return;
+  if (!navigator.onLine) {
+    showToast("Sin conexión", "Recupera internet para guardar el parte.", "error");
+    return;
+  }
+  const payload = collectPartPayload("completed");
+  try {
+    validatePartForCompletion(payload);
+  } catch (error) {
+    showToast("Parte incompleto", error.message, "error");
+    return;
+  }
+
+  isSaving = true;
+  setBusy(els.savePartButton, true, "Guardando…");
+  showProcessing("Guardando parte…", "Validando horómetros, producción y reparación.");
+  try {
+    payload.completedAt = serverTimestamp();
+    payload.completedAtClient = new Date().toISOString();
+    await setDoc(currentPartRef(), payload, { merge: true });
+    partDirty = false;
+    showToast("Parte guardado", "El registro operativo quedó guardado correctamente.");
+  } catch (error) {
+    console.error("Guardar parte:", error);
+    showToast("No se pudo guardar el parte", friendlyError(error), "error");
+  } finally {
+    isSaving = false;
+    setBusy(els.savePartButton, false);
+    hideProcessing();
+    updateConnectionState();
+  }
+}
+
+function openPartCapture(stageKey) {
+  const config = PART_STAGE_CONFIG[stageKey];
+  if (!config) return;
+  if (config.group === "repair" && !els.repairEnabled?.checked) {
+    showToast("Reparación desactivada", "Activa 'Hubo reparación' para registrar esta evidencia.", "error");
+    return;
+  }
+  if (!navigator.onLine) {
+    showToast("Sin conexión", "Recupera internet para subir la fotografía.", "error");
+    return;
+  }
+  partCaptureStage = stageKey;
+  captureMode = "part";
+  capturedBlob = null;
+  capturedPosition = null;
+  isSaving = false;
+  cleanupCaptureObjectUrl();
+  resetCaptureUi();
+  els.captureEyebrow.textContent = "EVIDENCIA DEL PARTE";
+  els.captureTitle.textContent = config.label;
+  els.captureSubtitle.textContent = "Toma una foto y confirma la ubicación del registro.";
+  els.confirmCaptureButton.textContent = "Guardar evidencia";
+  els.captureModal.classList.remove("hidden");
+  document.body.style.overflow = "hidden";
+  startCamera();
+  locateForCapture();
+}
+
+async function savePartEvidence(stageKey) {
+  const config = PART_STAGE_CONFIG[stageKey];
+  if (!config) throw new Error("La etapa del parte no es válida.");
+  const uid = currentUser.uid;
+  const dateKey = localDateKey();
+  const timestamp = Date.now();
+  const path = `parts/${uid}/${dateKey}/${stageKey}-${timestamp}.jpg`;
+  await uploadBytes(storageRef(storage, path), capturedBlob, {
+    contentType: "image/jpeg",
+    customMetadata: { userId: uid, partId: dateKey, stage: stageKey }
+  });
+
+  const nowIso = new Date().toISOString();
+  const payload = collectPartPayload(currentPart?.status === "completed" ? "completed" : "draft");
+  const group = { ...(payload[config.group] || {}) };
+  const existing = { ...(group[config.key] || {}) };
+  group[config.key] = {
+    ...existing,
+    photoPath: path,
+    location: capturedPosition,
+    capturedAt: serverTimestamp(),
+    capturedAtClient: nowIso,
+    ...(config.input ? { value: parseDecimalInput(els[config.input]) } : {}),
+    ...(config.reason ? { reason: els[config.reason]?.value.trim() || "" } : {})
+  };
+  payload[config.group] = group;
+  await setDoc(currentPartRef(), payload, { merge: true });
+}
+
+els.partForm?.addEventListener("submit", savePartForm);
+$$('[data-part-capture]').forEach((button) => button.addEventListener("click", () => openPartCapture(button.dataset.partCapture)));
+$$('#partForm input, #partForm textarea').forEach((control) => {
+  if (control.id !== "repairEnabled") control.addEventListener("input", markPartDirty);
+});
+els.repairEnabled?.addEventListener("change", () => {
+  if (!els.repairEnabled.checked && (hasEvidence(currentPart?.repair?.start) || hasEvidence(currentPart?.repair?.end))) {
+    els.repairEnabled.checked = true;
+    showToast("Reparación registrada", "No se puede desactivar porque ya existen evidencias guardadas.", "error");
+    return;
+  }
+  updateRepairFields(els.repairEnabled.checked);
+  markPartDirty();
+});
+$$('.part-map-button').forEach((link) => link.addEventListener("click", (event) => {
+  if (link.classList.contains("disabled-link")) event.preventDefault();
+}));
 
 function renderCurrentBreak() {
   const active = Boolean(currentBreak && currentBreak.status === "active");
@@ -732,6 +1068,8 @@ async function resolvePhotoUrl(path) {
 
 function hydrateHistoryPhotos() {
   $$('[data-photo-open]').forEach((button) => {
+    if (button.dataset.photoBound === "true") return;
+    button.dataset.photoBound = "true";
     const path = button.dataset.photoOpen;
     const image = button.querySelector('img[data-photo-path]');
     if (!image || !path) return;
@@ -811,6 +1149,7 @@ els.startBreakButton.addEventListener("click", () => openCapture("start"));
 els.endBreakButton.addEventListener("click", () => openCapture("end"));
 
 async function openCapture(mode) {
+  partCaptureStage = null;
   if (!navigator.onLine) {
     showToast("Sin conexión", "Recupera internet para subir la fotografía a Firebase.", "error");
     return;
@@ -1114,16 +1453,20 @@ async function saveCapture() {
     return;
   }
 
+  const savingPartStage = partCaptureStage;
+  const savingMode = captureMode;
   isSaving = true;
   validateCapture();
   updateActionButtons();
-  showProcessing(captureMode === "start" ? "Iniciando descanso…" : "Finalizando descanso…", "Subiendo fotografía y guardando GPS.");
+  showProcessing(savingPartStage ? "Guardando evidencia…" : savingMode === "start" ? "Iniciando descanso…" : "Finalizando descanso…", "Subiendo fotografía y guardando GPS.");
 
   try {
-    if (captureMode === "start") await saveBreakStart();
+    if (savingPartStage) await savePartEvidence(savingPartStage);
+    else if (savingMode === "start") await saveBreakStart();
     else await saveBreakEnd();
-    closeCapture();
-    showToast(captureMode === "start" ? "Descanso iniciado" : "Descanso finalizado", "La fotografía, la hora y la ubicación quedaron guardadas.");
+    closeCapture(true);
+    if (savingPartStage) showToast("Evidencia guardada", `${PART_STAGE_CONFIG[savingPartStage].label}: foto y ubicación registradas.`);
+    else showToast(savingMode === "start" ? "Descanso iniciado" : "Descanso finalizado", "La fotografía, la hora y la ubicación quedaron guardadas.");
   } catch (error) {
     console.error(error);
     showToast("No se pudo guardar el registro", friendlyError(error), "error");
@@ -1132,6 +1475,7 @@ async function saveCapture() {
     hideProcessing();
     validateCapture();
     updateActionButtons();
+    updateConnectionState();
   }
 }
 
@@ -1218,15 +1562,16 @@ function showProcessing(title, message) {
 }
 function hideProcessing() { els.processingOverlay.classList.add("hidden"); }
 
-els.closeCaptureButton.addEventListener("click", closeCapture);
-els.captureModal.querySelector(".modal-backdrop").addEventListener("click", closeCapture);
+els.closeCaptureButton.addEventListener("click", () => closeCapture());
+els.captureModal.querySelector(".modal-backdrop").addEventListener("click", () => closeCapture());
 
-function closeCapture() {
-  if (isSaving) return;
+function closeCapture(force = false) {
+  if (isSaving && !force) return;
   stopCamera();
   cleanupCaptureObjectUrl();
   capturedBlob = null;
   capturedPosition = null;
+  partCaptureStage = null;
   els.captureModal.classList.add("hidden");
   document.body.style.overflow = "";
 }

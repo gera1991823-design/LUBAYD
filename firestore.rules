@@ -14,15 +14,19 @@ service cloud.firestore {
                     && request.resource.data.uid == userId
                     && request.resource.data.email == request.auth.token.email
                     && request.resource.data.role == 'operator';
+
       allow read: if isOwner(userId);
+
       allow update: if isOwner(userId)
                     && request.resource.data.uid == userId
                     && request.resource.data.email == resource.data.email
                     && request.resource.data.role == resource.data.role;
+
       allow delete: if false;
 
       match /breaks/{breakId} {
         allow read: if isOwner(userId);
+
         allow create: if isOwner(userId)
                       && request.resource.data.userId == userId
                       && request.resource.data.status == 'active'
@@ -30,10 +34,29 @@ service cloud.firestore {
                       && request.resource.data.startLocation.longitude is number
                       && request.resource.data.startLocation.accuracy is number
                       && request.resource.data.startPhotoPath is string;
+
         allow update: if isOwner(userId)
                       && resource.data.userId == userId
                       && request.resource.data.userId == userId
                       && request.resource.data.status in ['active', 'completed'];
+
+        allow delete: if false;
+      }
+
+      match /parts/{partId} {
+        allow read: if isOwner(userId);
+
+        allow create: if isOwner(userId)
+                      && request.resource.data.userId == userId
+                      && request.resource.data.dateKey == partId
+                      && request.resource.data.status in ['draft', 'completed'];
+
+        allow update: if isOwner(userId)
+                      && resource.data.userId == userId
+                      && request.resource.data.userId == userId
+                      && request.resource.data.dateKey == resource.data.dateKey
+                      && request.resource.data.status in ['draft', 'completed'];
+
         allow delete: if false;
       }
 
