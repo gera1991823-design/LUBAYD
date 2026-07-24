@@ -150,6 +150,7 @@ let captureObjectUrl = null;
 let isSaving = false;
 let lastHistoryRecords = [];
 let historyFilter = "all";
+let currentUserRole = "operator";
 const photoUrlCache = new Map();
 
 function setBusy(button, busy, label) {
@@ -341,10 +342,15 @@ function startClock() {
 startClock();
 
 function showSection(section) {
+  // El operador no puede abrir el historial completo, ni siquiera mediante URL o consola.
+  if (currentUserRole === "operator" && section === "history") {
+    section = "dashboard";
+  }
+
   const isDashboard = section === "dashboard";
   els.dashboardSection.classList.toggle("active", isDashboard);
   els.historySection.classList.toggle("active", !isDashboard);
-  els.pageTitle.textContent = isDashboard ? "Dashboard" : "Historial";
+  els.pageTitle.textContent = isDashboard ? "Inicio" : "Historial";
   $$(".nav-item[data-section]").forEach((button) => button.classList.toggle("active", button.dataset.section === section));
   els.sidebar.classList.remove("open");
   window.scrollTo({ top: 0, behavior: "smooth" });
@@ -387,6 +393,8 @@ async function handleAuthStateChanged(user) {
     clearAuthMessage();
     currentBreak = null;
     currentBreakId = null;
+    currentUserRole = "operator";
+    document.body.dataset.userRole = "operator";
     els.authView.classList.remove("hidden");
     els.appView.classList.add("hidden");
     stopTimer();
@@ -409,6 +417,8 @@ async function handleAuthStateChanged(user) {
   try {
     const profileRef = doc(db, "users", user.uid);
     const profileSnap = await getDoc(profileRef);
+    let role = "operator";
+
     if (!profileSnap.exists()) {
       await setDoc(profileRef, {
         uid: user.uid,
@@ -419,13 +429,39 @@ async function handleAuthStateChanged(user) {
         createdAt: serverTimestamp(),
         createdAtClient: new Date().toISOString()
       }, { merge: true });
+    } else {
+      role = profileSnap.data()?.role || "operator";
     }
+
+    applyRolePermissions(role);
   } catch (error) {
     console.warn("Perfil:", error);
+    applyRolePermissions("operator");
   }
 
   subscribeCurrentBreak(user.uid);
   subscribeHistory(user.uid);
+}
+
+
+function applyRolePermissions(role) {
+  currentUserRole = role || "operator";
+  document.body.dataset.userRole = currentUserRole;
+
+  const isOperator = currentUserRole === "operator";
+  $$(".role-history").forEach((element) => {
+    element.classList.toggle("role-hidden", isOperator);
+    if (isOperator && element.matches("button, a")) element.setAttribute("tabindex", "-1");
+  });
+
+  $$(".operator-hidden").forEach((element) => {
+    element.classList.toggle("role-hidden", isOperator);
+  });
+
+  if (isOperator) {
+    showSection("dashboard");
+    els.pageTitle.textContent = "Inicio";
+  }
 }
 
 function getInitials(value) {

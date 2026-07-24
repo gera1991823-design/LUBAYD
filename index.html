@@ -143,7 +143,7 @@
         <button class="nav-item active" type="button" data-section="dashboard">
           <span class="nav-icon">⌂</span><span>Dashboard</span>
         </button>
-        <button class="nav-item" type="button" data-section="history">
+        <button id="historyNavItem" class="nav-item role-history" type="button" data-section="history">
           <span class="nav-icon">◷</span><span>Historial</span>
         </button>
       </nav>
@@ -156,7 +156,7 @@
       <div class="sidebar-footer">
         <div class="connection-pill"><span id="connectionDot" class="status-dot"></span><span id="connectionText">Comprobando conexión</span></div>
         <button id="logoutButton" class="sidebar-logout" type="button">Cerrar sesión</button>
-        <small>Versión 2.0.0</small>
+        <small>Versión 2.1.0</small>
       </div>
     </aside>
 
@@ -207,12 +207,12 @@
             </button>
           </article>
 
-          <article class="overview-card">
+          <article id="lastMarkCard" class="overview-card operator-hidden">
             <div class="overview-card-head"><span class="card-icon">✓</span></div>
             <span class="card-label">ÚLTIMA MARCACIÓN</span>
             <h3 id="lastMarkStatus">Sin registros</h3>
             <p id="lastMarkTime">Todavía no hay actividad registrada.</p>
-            <button class="secondary-button compact-action" type="button" data-go-history>Ver detalle</button>
+            <button class="secondary-button compact-action role-history" type="button" data-go-history>Ver detalle</button>
           </article>
 
           <article class="overview-card active-break-card">
@@ -229,7 +229,7 @@
           </article>
         </section>
 
-        <section class="dashboard-main-grid">
+        <section id="dashboardSummaryGrid" class="dashboard-main-grid operator-hidden">
           <article class="panel-card summary-panel">
             <div class="panel-heading">
               <div><span class="eyebrow">RESUMEN DEL DÍA</span><h3>Actividad de hoy</h3></div>
@@ -261,7 +261,7 @@
         <section class="panel-card recent-panel">
           <div class="panel-heading inline-heading">
             <div><span class="eyebrow">ACTIVIDAD RECIENTE</span><h3>Últimos registros</h3></div>
-            <button class="text-button" type="button" data-go-history>Ver historial completo →</button>
+            <button class="text-button role-history" type="button" data-go-history>Ver historial completo →</button>
           </div>
           <div class="recent-table-head" aria-hidden="true">
             <span>Fecha</span><span>Inicio</span><span>Finalización</span><span>Duración</span><span>Ubicación</span><span>Estado</span>
@@ -270,7 +270,7 @@
         </section>
       </section>
 
-      <section id="historySection" class="content-section">
+      <section id="historySection" class="content-section role-history">
         <div class="history-page-heading">
           <div>
             <span class="eyebrow">TRAZABILIDAD</span>
@@ -296,9 +296,9 @@
 
     <nav class="mobile-bottom-nav" aria-label="Navegación móvil">
       <button class="nav-item active" type="button" data-section="dashboard"><span>⌂</span><small>Inicio</small></button>
-      <button class="nav-item" type="button" data-section="history"><span>◷</span><small>Historial</small></button>
+      <button id="mobileHistoryNav" class="nav-item role-history" type="button" data-section="history"><span>◷</span><small>Historial</small></button>
       <button id="mobileQuickAction" class="mobile-primary-action" type="button" aria-label="Iniciar o finalizar descanso">+</button>
-      <button id="mobileMapButton" class="nav-item" type="button"><span>⌖</span><small>Mapa</small></button>
+      <button id="mobileMapButton" class="nav-item operator-hidden" type="button"><span>⌖</span><small>Mapa</small></button>
       <button id="mobileProfileButton" class="nav-item" type="button"><span>◉</span><small>Perfil</small></button>
     </nav>
   </div>
@@ -422,7 +422,7 @@
     if ('serviceWorker' in navigator && location.protocol === 'https:') {
       window.addEventListener('load', async () => {
         try {
-          const registration = await navigator.serviceWorker.register('./service-worker.js?v=2.0.0');
+          const registration = await navigator.serviceWorker.register('./service-worker.js?v=2.1.0');
           registration.update().catch(() => {});
         } catch (error) {
           console.warn('Service Worker:', error);
