@@ -1,6 +1,6 @@
 "use strict";
 
-// APP LUBAYD v1.4.0
+// APP LUBAYD v1.5.0
 // La interfaz se inicia primero y Firebase se carga luego de forma dinámica.
 // Así, aun si el CDN de Firebase falla, los botones y los mensajes siguen funcionando.
 window.__APP_SCRIPT_LOADED__ = true;
@@ -77,7 +77,6 @@ const els = {
   breakStartDescription: $("#breakStartDescription"),
   activeBreakDetails: $("#activeBreakDetails"),
   activeStartTime: $("#activeStartTime"),
-  activeStartGps: $("#activeStartGps"),
   activeMapLink: $("#activeMapLink"),
   startBreakButton: $("#startBreakButton"),
   endBreakButton: $("#endBreakButton"),
@@ -101,10 +100,8 @@ const els = {
   locationSpinner: $("#locationSpinner"),
   locationStatus: $("#locationStatus"),
   locationHelp: $("#locationHelp"),
-  captureLatitude: $("#captureLatitude"),
-  captureLongitude: $("#captureLongitude"),
-  captureAccuracy: $("#captureAccuracy"),
   captureTime: $("#captureTime"),
+  captureMapLink: $("#captureMapLink"),
   refreshGpsButton: $("#refreshGpsButton"),
   captureValidation: $("#captureValidation"),
   confirmCaptureButton: $("#confirmCaptureButton"),
@@ -430,8 +427,13 @@ function renderCurrentBreak() {
     const start = parseDate(currentBreak.startAtClient);
     els.activeStartTime.textContent = formatDateTime(start);
     const location = currentBreak.startLocation;
-    els.activeStartGps.textContent = location ? `${location.latitude.toFixed(6)}, ${location.longitude.toFixed(6)} · ±${Math.round(location.accuracy)} m` : "—";
-    if (location) els.activeMapLink.href = mapUrl(location.latitude, location.longitude);
+    if (location) {
+      els.activeMapLink.href = mapUrl(location.latitude, location.longitude);
+      els.activeMapLink.classList.remove("disabled-link");
+    } else {
+      els.activeMapLink.href = "#";
+      els.activeMapLink.classList.add("disabled-link");
+    }
     els.breakStartDescription.textContent = `Iniciado el ${formatDateTime(start)}.`;
     startTimer(start);
   } else {
@@ -497,12 +499,17 @@ function renderRecent(records) {
   els.recentList.innerHTML = records.map((record) => {
     const start = parseDate(record.startAtClient);
     const end = record.endAtClient ? parseDate(record.endAtClient) : null;
-    const duration = durationForRecord(record);
+    const dayLabel = start.toLocaleDateString("es-UY", { weekday: "short" }).replace(".", "");
+    const dateLabel = start.toLocaleDateString("es-UY", { day: "2-digit", month: "short" });
     return `<article class="record-row">
-      <div class="record-main"><strong>${escapeHtml(start.toLocaleDateString("es-UY", { weekday: "long", day: "2-digit", month: "short" }))}</strong><span>${escapeHtml(record.id)}</span></div>
-      <div class="record-metric"><span>Inicio</span><strong>${escapeHtml(start.toLocaleTimeString("es-UY", { hour: "2-digit", minute: "2-digit" }))}</strong></div>
-      <div class="record-metric"><span>Fin</span><strong>${end ? escapeHtml(end.toLocaleTimeString("es-UY", { hour: "2-digit", minute: "2-digit" })) : "En curso"}</strong></div>
-      <div class="record-metric"><span>Duración</span><strong>${duration ? duration.label : "—"}</strong></div>
+      <div class="record-date">
+        <span>${escapeHtml(dayLabel)}</span>
+        <strong>${escapeHtml(dateLabel)}</strong>
+      </div>
+      <div class="record-times">
+        <div><span>Inicio</span><strong>${escapeHtml(start.toLocaleTimeString("es-UY", { hour: "2-digit", minute: "2-digit" }))}</strong></div>
+        <div><span>Finalización</span><strong>${end ? escapeHtml(end.toLocaleTimeString("es-UY", { hour: "2-digit", minute: "2-digit" })) : "En curso"}</strong></div>
+      </div>
       <span class="badge ${record.status === "active" ? "active" : "complete"} record-status">${record.status === "active" ? "Activo" : "Completado"}</span>
     </article>`;
   }).join("");
@@ -517,29 +524,47 @@ function renderHistory(records) {
   els.historyList.innerHTML = records.map((record) => {
     const start = parseDate(record.startAtClient);
     const end = record.endAtClient ? parseDate(record.endAtClient) : null;
-    const duration = durationForRecord(record);
     const startLocation = record.startLocation;
     const endLocation = record.endLocation;
+    const dateLong = start.toLocaleDateString("es-UY", { day: "2-digit", month: "long", year: "numeric" });
+    const weekday = start.toLocaleDateString("es-UY", { weekday: "long" }).toUpperCase();
+    const startTime = start.toLocaleTimeString("es-UY", { hour: "2-digit", minute: "2-digit" });
+    const endTime = end ? end.toLocaleTimeString("es-UY", { hour: "2-digit", minute: "2-digit" }) : "En curso";
+
     return `<article class="history-card">
       <header class="history-card-head">
-        <div><span class="eyebrow">${escapeHtml(start.toLocaleDateString("es-UY", { weekday: "long" }).toUpperCase())}</span><h3>${escapeHtml(start.toLocaleDateString("es-UY", { day: "2-digit", month: "long", year: "numeric" }))}</h3><p>Registro ${escapeHtml(record.id)}</p></div>
+        <div><span class="eyebrow">${escapeHtml(weekday)}</span><h3>${escapeHtml(dateLong)}</h3></div>
         <span class="badge ${record.status === "active" ? "active" : "complete"}">${record.status === "active" ? "En curso" : "Completado"}</span>
       </header>
-      <div class="history-grid">
-        <div><span>Hora de inicio</span><strong>${escapeHtml(start.toLocaleTimeString("es-UY", { hour: "2-digit", minute: "2-digit", second: "2-digit" }))}</strong></div>
-        <div><span>Hora de fin</span><strong>${end ? escapeHtml(end.toLocaleTimeString("es-UY", { hour: "2-digit", minute: "2-digit", second: "2-digit" })) : "—"}</strong></div>
-        <div><span>Duración</span><strong>${duration ? duration.label : "En curso"}</strong></div>
-        <div><span>Precisión inicial</span><strong>${startLocation ? `±${Math.round(startLocation.accuracy)} m` : "—"}</strong></div>
-        <div><span>GPS inicial</span><strong>${startLocation ? `${startLocation.latitude.toFixed(6)}, ${startLocation.longitude.toFixed(6)}` : "—"}</strong></div>
-        <div><span>GPS final</span><strong>${endLocation ? `${endLocation.latitude.toFixed(6)}, ${endLocation.longitude.toFixed(6)}` : "—"}</strong></div>
-        <div><span>Precisión final</span><strong>${endLocation ? `±${Math.round(endLocation.accuracy)} m` : "—"}</strong></div>
-        <div><span>Estado</span><strong>${record.status === "active" ? "Descanso abierto" : "Cerrado correctamente"}</strong></div>
+
+      <div class="history-summary">
+        <div><span>Fecha</span><strong>${escapeHtml(dateLong)}</strong></div>
+        <div><span>Hora de inicio</span><strong>${escapeHtml(startTime)}</strong></div>
+        <div><span>Finalización</span><strong>${escapeHtml(endTime)}</strong></div>
       </div>
-      <div class="history-actions">
-        ${startLocation ? `<a class="photo-button" href="${mapUrl(startLocation.latitude, startLocation.longitude)}" target="_blank" rel="noopener">Mapa de inicio</a>` : ""}
-        ${endLocation ? `<a class="photo-button" href="${mapUrl(endLocation.latitude, endLocation.longitude)}" target="_blank" rel="noopener">Mapa de fin</a>` : ""}
-        ${record.startPhotoPath ? `<button class="photo-button" type="button" data-photo-path="${escapeHtml(record.startPhotoPath)}">Foto de inicio</button>` : ""}
-        ${record.endPhotoPath ? `<button class="photo-button" type="button" data-photo-path="${escapeHtml(record.endPhotoPath)}">Foto de fin</button>` : ""}
+
+      <div class="history-resource-list">
+        <section class="history-resource">
+          <div class="history-resource-title">
+            <span class="resource-icon" aria-hidden="true">⌖</span>
+            <div><strong>Ubicación</strong><small>Abrir la marcación en Google Maps</small></div>
+          </div>
+          <div class="history-actions">
+            ${startLocation ? `<a class="photo-button map-button" href="${mapUrl(startLocation.latitude, startLocation.longitude)}" target="_blank" rel="noopener">Mapa de inicio</a>` : `<span class="resource-missing">Sin ubicación inicial</span>`}
+            ${endLocation ? `<a class="photo-button map-button" href="${mapUrl(endLocation.latitude, endLocation.longitude)}" target="_blank" rel="noopener">Mapa de finalización</a>` : record.status === "active" ? `<span class="resource-missing">Se agregará al finalizar</span>` : ""}
+          </div>
+        </section>
+
+        <section class="history-resource">
+          <div class="history-resource-title">
+            <span class="resource-icon" aria-hidden="true">▣</span>
+            <div><strong>Fotografías</strong><small>Comprobantes guardados en Firebase</small></div>
+          </div>
+          <div class="history-actions">
+            ${record.startPhotoPath ? `<button class="photo-button" type="button" data-photo-path="${escapeHtml(record.startPhotoPath)}">Foto de inicio</button>` : `<span class="resource-missing">Sin foto inicial</span>`}
+            ${record.endPhotoPath ? `<button class="photo-button" type="button" data-photo-path="${escapeHtml(record.endPhotoPath)}">Foto de finalización</button>` : record.status === "active" ? `<span class="resource-missing">Se agregará al finalizar</span>` : ""}
+          </div>
+        </section>
       </div>
     </article>`;
   }).join("");
@@ -603,12 +628,11 @@ function resetCaptureUi() {
   els.retakePhotoButton.classList.add("hidden");
   els.fallbackPhotoLabel.classList.add("hidden");
   els.locationSpinner.className = "spinner";
-  els.locationStatus.textContent = "Buscando ubicación precisa…";
-  els.locationHelp.textContent = "Mantén el GPS activado.";
-  els.captureLatitude.textContent = "—";
-  els.captureLongitude.textContent = "—";
-  els.captureAccuracy.textContent = "—";
-  els.captureTime.textContent = new Date().toLocaleTimeString("es-UY");
+  els.locationStatus.textContent = "Buscando ubicación…";
+  els.locationHelp.textContent = "Mantené el GPS activado.";
+  els.captureTime.textContent = new Date().toLocaleTimeString("es-UY", { hour: "2-digit", minute: "2-digit" });
+  els.captureMapLink.classList.add("hidden");
+  els.captureMapLink.href = "#";
   els.captureValidation.textContent = "Debes tomar una fotografía y obtener la ubicación antes de confirmar.";
   els.confirmCaptureButton.disabled = true;
 }
@@ -732,11 +756,10 @@ els.refreshGpsButton.addEventListener("click", locateForCapture);
 async function locateForCapture() {
   capturedPosition = null;
   els.locationSpinner.className = "spinner";
-  els.locationStatus.textContent = "Buscando ubicación precisa…";
+  els.locationStatus.textContent = "Buscando ubicación…";
   els.locationHelp.textContent = "Puede demorar algunos segundos.";
-  els.captureLatitude.textContent = "—";
-  els.captureLongitude.textContent = "—";
-  els.captureAccuracy.textContent = "—";
+  els.captureMapLink.classList.add("hidden");
+  els.captureMapLink.href = "#";
   validateCapture();
 
   try {
@@ -797,21 +820,17 @@ function normalizePosition(position) {
 
 function renderLivePosition(position) {
   const normalized = normalizePosition(position);
-  els.captureLatitude.textContent = normalized.latitude.toFixed(6);
-  els.captureLongitude.textContent = normalized.longitude.toFixed(6);
-  els.captureAccuracy.textContent = `±${Math.round(normalized.accuracy)} m`;
-  els.locationStatus.textContent = "Mejorando precisión GPS…";
-  els.locationHelp.textContent = `Mejor lectura actual: ±${Math.round(normalized.accuracy)} metros.`;
+  els.locationStatus.textContent = "Ubicación detectada";
+  els.locationHelp.textContent = normalized.accuracy <= 30 ? "Confirmando la mejor lectura disponible…" : "Mejorando la señal de ubicación…";
 }
 
 function renderCapturedPosition(position) {
   els.locationSpinner.className = "spinner done";
-  els.locationStatus.textContent = "Ubicación obtenida";
-  els.locationHelp.textContent = position.accuracy <= 30 ? "Precisión GPS adecuada." : "La precisión depende de la señal disponible.";
-  els.captureLatitude.textContent = position.latitude.toFixed(6);
-  els.captureLongitude.textContent = position.longitude.toFixed(6);
-  els.captureAccuracy.textContent = `±${Math.round(position.accuracy)} m`;
-  els.captureTime.textContent = new Date().toLocaleTimeString("es-UY");
+  els.locationStatus.textContent = "Ubicación lista";
+  els.locationHelp.textContent = "Podés abrirla en el mapa antes de confirmar.";
+  els.captureTime.textContent = new Date().toLocaleTimeString("es-UY", { hour: "2-digit", minute: "2-digit" });
+  els.captureMapLink.href = mapUrl(position.latitude, position.longitude);
+  els.captureMapLink.classList.remove("hidden");
 }
 
 function geolocationMessage(error) {
@@ -827,7 +846,7 @@ function validateCapture() {
   if (!capturedBlob && !capturedPosition) els.captureValidation.textContent = "Debes tomar una fotografía y obtener la ubicación antes de confirmar.";
   else if (!capturedBlob) els.captureValidation.textContent = "La ubicación está lista. Falta tomar la fotografía.";
   else if (!capturedPosition) els.captureValidation.textContent = "La fotografía está lista. Falta obtener la ubicación GPS.";
-  else els.captureValidation.textContent = `Listo para guardar. Precisión GPS: ±${Math.round(capturedPosition.accuracy)} metros.`;
+  else els.captureValidation.textContent = "Todo listo. Podés confirmar la marcación.";
 }
 
 els.testGpsButton.addEventListener("click", async () => {
@@ -837,12 +856,12 @@ els.testGpsButton.addEventListener("click", async () => {
   els.gpsTestResult.textContent = "Buscando la mejor ubicación disponible…";
   try {
     const position = normalizePosition(await getBestPosition());
-    els.gpsTestResult.innerHTML = `<strong>GPS correcto</strong><br>${position.latitude.toFixed(6)}, ${position.longitude.toFixed(6)}<br>Precisión informada: ±${Math.round(position.accuracy)} metros.`;
+    els.gpsTestResult.innerHTML = `<div class="gps-ready-copy"><strong>Ubicación disponible</strong><span>El teléfono obtuvo correctamente la ubicación.</span></div><a class="gps-map-link" href="${mapUrl(position.latitude, position.longitude)}" target="_blank" rel="noopener">Ver en el mapa</a>`;
   } catch (error) {
     els.gpsTestResult.textContent = geolocationMessage(error);
   } finally {
     els.testGpsButton.disabled = false;
-    els.testGpsButton.textContent = "Probar ubicación GPS";
+    els.testGpsButton.textContent = "Comprobar ubicación";
   }
 });
 

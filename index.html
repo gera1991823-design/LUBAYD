@@ -10,10 +10,10 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Lubayd Descansos">
   <title>Lubayd SA | Descansos</title>
-  <link rel="manifest" href="./manifest.webmanifest?v=1.4.0">
+  <link rel="manifest" href="./manifest.webmanifest?v=1.5.0">
   <link rel="icon" href="./icon-192.png">
   <link rel="apple-touch-icon" href="./icon-192.png">
-  <link rel="stylesheet" href="./styles.css?v=1.4.0">
+  <link rel="stylesheet" href="./styles.css?v=1.5.0">
 </head>
 <body>
   <div id="toastRegion" class="toast-region" aria-live="polite" aria-atomic="true"></div>
@@ -30,11 +30,11 @@
       <div class="auth-hero-copy">
         <span class="eyebrow eyebrow-light">CONTROL OPERATIVO</span>
         <h1>Una marcación clara, segura y verificable.</h1>
-        <p>Registra el inicio y el final del descanso con fotografía, hora del servidor y coordenadas GPS.</p>
+        <p>Registra el inicio y el final del descanso con hora, ubicación y respaldo fotográfico.</p>
       </div>
       <div class="feature-row" aria-label="Características">
-        <article><b>01</b><span>Foto obligatoria</span></article>
-        <article><b>02</b><span>GPS de alta precisión</span></article>
+        <article><b>01</b><span>Marcación simple</span></article>
+        <article><b>02</b><span>Ubicación en el mapa</span></article>
         <article><b>03</b><span>Datos en Firebase</span></article>
       </div>
     </div>
@@ -132,7 +132,7 @@
       </nav>
       <div class="sidebar-footer">
         <div class="connection-pill"><span id="connectionDot" class="status-dot"></span><span id="connectionText">Comprobando conexión</span></div>
-        <small>Versión 1.3.0</small>
+        <small>Versión 1.5.0</small>
       </div>
     </aside>
 
@@ -155,7 +155,7 @@
           <div>
             <span class="eyebrow">REGISTRO DIARIO</span>
             <h1>Control de descanso</h1>
-            <p>La fotografía y la ubicación GPS son obligatorias tanto al iniciar como al finalizar.</p>
+            <p>Marcá el inicio y la finalización. La aplicación registra la hora y permite visualizar la ubicación en el mapa.</p>
           </div>
           <div id="clockCard" class="clock-card">
             <span>Hora local</span>
@@ -187,32 +187,32 @@
 
             <div id="activeBreakDetails" class="active-details hidden">
               <div><span>Inicio</span><strong id="activeStartTime">—</strong></div>
-              <div><span>GPS inicial</span><strong id="activeStartGps">—</strong></div>
-              <a id="activeMapLink" class="text-link" href="#" target="_blank" rel="noopener">Ver ubicación en el mapa</a>
+              <div class="active-location-row">
+                <span>Ubicación</span>
+                <a id="activeMapLink" class="location-link" href="#" target="_blank" rel="noopener">Ver en el mapa</a>
+              </div>
             </div>
 
             <div class="action-stack">
               <button id="startBreakButton" class="action-button start" type="button">
                 <span class="action-icon" aria-hidden="true">◉</span>
-                <span><strong>Iniciar descanso</strong><small>Foto + GPS + hora</small></span>
+                <span><strong>Iniciar descanso</strong><small>Hora y ubicación</small></span>
               </button>
               <button id="endBreakButton" class="action-button end" type="button" disabled>
                 <span class="action-icon" aria-hidden="true">■</span>
-                <span><strong>Finalizar descanso</strong><small>Foto + GPS + hora</small></span>
+                <span><strong>Finalizar descanso</strong><small>Hora y ubicación</small></span>
               </button>
             </div>
           </article>
 
-          <aside class="requirements-card">
-            <span class="eyebrow">ANTES DE MARCAR</span>
-            <h3>Controles obligatorios</h3>
-            <ul class="check-list">
-              <li><span>✓</span><div><strong>Cámara habilitada</strong><small>La foto se toma en el momento.</small></div></li>
-              <li><span>✓</span><div><strong>Ubicación precisa</strong><small>Se guardan latitud, longitud y precisión.</small></div></li>
-              <li><span>✓</span><div><strong>Conexión disponible</strong><small>La imagen se carga a Firebase Storage.</small></div></li>
-              <li><span>✓</span><div><strong>Mismo usuario</strong><small>El operador que inicia debe finalizar.</small></div></li>
-            </ul>
-            <button id="testGpsButton" class="secondary-button" type="button">Probar ubicación GPS</button>
+          <aside class="requirements-card location-check-card">
+            <div class="location-check-icon" aria-hidden="true">⌖</div>
+            <div class="location-check-copy">
+              <span class="eyebrow">UBICACIÓN</span>
+              <h3>Comprobá el GPS</h3>
+              <p>Verificá que el teléfono pueda obtener tu ubicación antes de realizar la marcación.</p>
+            </div>
+            <button id="testGpsButton" class="secondary-button location-check-button" type="button">Comprobar ubicación</button>
             <div id="gpsTestResult" class="gps-test-result hidden"></div>
           </aside>
         </div>
@@ -231,7 +231,7 @@
           <div>
             <span class="eyebrow">TRAZABILIDAD</span>
             <h1>Historial de descansos</h1>
-            <p>Consulta las horas, la duración, la precisión GPS y las fotografías de cada registro.</p>
+            <p>Consultá la fecha, las horas de inicio y finalización, la ubicación en el mapa y las fotografías.</p>
           </div>
         </div>
         <div id="historyList" class="history-list"><div class="empty-state">Cargando historial…</div></div>
@@ -274,15 +274,13 @@
         <div class="location-panel">
           <div class="location-status-row">
             <div id="locationSpinner" class="spinner"></div>
-            <div><strong id="locationStatus">Buscando ubicación precisa…</strong><span id="locationHelp">Mantén el GPS activado.</span></div>
+            <div><strong id="locationStatus">Buscando ubicación…</strong><span id="locationHelp">Mantené el GPS activado.</span></div>
           </div>
-          <dl class="location-grid">
-            <div><dt>Latitud</dt><dd id="captureLatitude">—</dd></div>
-            <div><dt>Longitud</dt><dd id="captureLongitude">—</dd></div>
-            <div><dt>Precisión</dt><dd id="captureAccuracy">—</dd></div>
-            <div><dt>Hora</dt><dd id="captureTime">—</dd></div>
-          </dl>
-          <button id="refreshGpsButton" class="text-button" type="button">Actualizar GPS</button>
+          <div class="capture-location-summary">
+            <div class="capture-time-box"><span>Hora de la marcación</span><strong id="captureTime">—</strong></div>
+            <a id="captureMapLink" class="secondary-button location-map-button hidden" href="#" target="_blank" rel="noopener">Ver ubicación en el mapa</a>
+          </div>
+          <button id="refreshGpsButton" class="text-button" type="button">Actualizar ubicación</button>
         </div>
       </div>
 
@@ -314,12 +312,12 @@
       }
     }, 5000);
   </script>
-  <script defer src="./app.js?v=1.4.0"></script>
+  <script defer src="./app.js?v=1.5.0"></script>
   <script>
     if ('serviceWorker' in navigator && location.protocol === 'https:') {
       window.addEventListener('load', async () => {
         try {
-          const registration = await navigator.serviceWorker.register('./service-worker.js?v=1.4.0');
+          const registration = await navigator.serviceWorker.register('./service-worker.js?v=1.5.0');
           registration.update().catch(() => {});
         } catch (error) {
           console.warn('Service Worker:', error);

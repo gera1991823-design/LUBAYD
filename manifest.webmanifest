@@ -1,7 +1,7 @@
 {
   "name": "Lubayd SA - Gestión de descansos",
   "short_name": "Descansos",
-  "description": "Inicio y finalización de descansos con fotografía, hora y GPS.",
+  "description": "Inicio y finalización de descansos con hora, ubicación en el mapa y respaldo fotográfico.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
