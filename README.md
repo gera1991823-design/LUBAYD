@@ -105,3 +105,8 @@ Esta entrega ya contiene la configuracion web proporcionada para `APP LUBAYD`, i
 ## Diagnóstico de acceso
 
 La versión 1.2 muestra en la pantalla de acceso el código exacto de Firebase cuando falla el registro o el inicio de sesión. También evita que una falla al crear el perfil de Firestore invalide una cuenta que sí fue creada correctamente en Authentication.
+
+
+## Correccion V1.3
+
+La interfaz se inicia antes de descargar Firebase. Si Firebase o la red fallan, los botones de acceso siguen respondiendo y muestran un mensaje visible. Debe abrirse desde la URL HTTPS de GitHub Pages, no haciendo doble clic sobre index.html.
