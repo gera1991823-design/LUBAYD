@@ -51,6 +51,9 @@
           <button id="registerTab" class="auth-tab" type="button" role="tab" aria-selected="false">Crear usuario</button>
         </div>
 
+        <div id="startupError" class="auth-message error hidden" role="alert"></div>
+        <div id="authMessage" class="auth-message hidden" role="alert" aria-live="assertive"></div>
+
         <form id="loginForm" class="auth-form active" autocomplete="on">
           <header class="form-header">
             <span class="eyebrow">BIENVENIDO</span>
@@ -129,7 +132,7 @@
       </nav>
       <div class="sidebar-footer">
         <div class="connection-pill"><span id="connectionDot" class="status-dot"></span><span id="connectionText">Comprobando conexión</span></div>
-        <small>Versión 1.0.0</small>
+        <small>Versión 1.2.0</small>
       </div>
     </aside>
 
@@ -298,6 +301,18 @@
     </div>
   </div>
 
+  <script>
+    window.__APP_READY__ = false;
+    window.setTimeout(() => {
+      if (!window.__APP_READY__) {
+        const box = document.getElementById('startupError');
+        if (box) {
+          box.classList.remove('hidden');
+          box.textContent = 'La aplicación no pudo cargar Firebase. Actualiza con Ctrl+F5. Si continúa, verifica que el navegador o la red no estén bloqueando www.gstatic.com y firebase.googleapis.com.';
+        }
+      }
+    }, 7000);
+  </script>
   <script type="module" src="./js/app.js"></script>
   <script>
     if ('serviceWorker' in navigator) {

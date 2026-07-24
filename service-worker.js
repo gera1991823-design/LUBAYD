@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lubayd-descansos-v1.1.0';
+const CACHE_NAME = 'lubayd-descansos-v1.2.0';
 const APP_SHELL = [
   './',
   './index.html',
@@ -37,6 +37,20 @@ self.addEventListener('fetch', (event) => {
           return response;
         })
         .catch(() => caches.match('./index.html'))
+    );
+    return;
+  }
+
+  const isCoreCode = url.pathname.endsWith('/js/app.js') || url.pathname.endsWith('/js/firebase-config.js');
+
+  if (isCoreCode) {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          if (response.ok) caches.open(CACHE_NAME).then((cache) => cache.put(event.request, response.clone()));
+          return response;
+        })
+        .catch(() => caches.match(event.request))
     );
     return;
   }

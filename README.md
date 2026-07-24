@@ -100,3 +100,8 @@ breaks/{uid}/{breakId}/end.jpg
 ## Configuracion incluida en V1.1.0
 
 Esta entrega ya contiene la configuracion web proporcionada para `APP LUBAYD`, incluido el bucket `app-lubayd.firebasestorage.app`. No es necesario volver a editar `js/firebase-config.js`.
+
+
+## Diagnóstico de acceso
+
+La versión 1.2 muestra en la pantalla de acceso el código exacto de Firebase cuando falla el registro o el inicio de sesión. También evita que una falla al crear el perfil de Firestore invalide una cuenta que sí fue creada correctamente en Authentication.
