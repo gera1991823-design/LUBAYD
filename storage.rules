@@ -1,23 +1,38 @@
 rules_version = '2';
+
 service firebase.storage {
   match /b/{bucket}/o {
-    function validUserImage(userId) {
-      return request.auth != null
-             && request.auth.uid == userId
-             && request.resource.size < 5 * 1024 * 1024
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function validImage() {
+      return request.resource.size < 10 * 1024 * 1024
              && request.resource.contentType.matches('image/.*');
     }
 
-    match /breaks/{userId}/{breakId}/{fileName} {
-      allow read: if request.auth != null && request.auth.uid == userId;
-      allow create: if validUserImage(userId);
-      allow update, delete: if false;
+    match /breaks/{uid}/{recordId}/{fileName} {
+      allow read: if signedIn();
+      allow create, update: if signedIn() && request.auth.uid == uid && validImage();
+      allow delete: if false;
     }
 
-    match /parts/{userId}/{partId}/{fileName} {
-      allow read: if request.auth != null && request.auth.uid == userId;
-      allow create: if validUserImage(userId);
-      allow update, delete: if false;
+    match /parts/{uid}/{partId}/{fileName} {
+      allow read: if signedIn();
+      allow create, update: if signedIn() && request.auth.uid == uid && validImage();
+      allow delete: if false;
+    }
+
+    match /services/{uid}/{serviceId}/{fileName} {
+      allow read: if signedIn();
+      allow create, update: if signedIn() && request.auth.uid == uid && validImage();
+      allow delete: if false;
+    }
+
+    match /fuel/{uid}/{loadId}/{fileName} {
+      allow read: if signedIn();
+      allow create, update: if signedIn() && request.auth.uid == uid && validImage();
+      allow delete: if false;
     }
 
     match /{allPaths=**} {

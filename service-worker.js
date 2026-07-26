@@ -1,68 +1,48 @@
-const CACHE_NAME = 'lubayd-operativa-v2.2.0';
+"use strict";
+
+const CACHE_NAME = "lubayd-operativa-v3.0.0";
 const APP_SHELL = [
-  './',
-  './index.html',
-  './styles.css',
-  './manifest.webmanifest',
-  './app.js',
-  './logo.svg',
-  './icon-192.png',
-  './icon-512.png'
+  "./",
+  "./index.html",
+  "./styles.css?v=3.0.0",
+  "./app.js?v=3.0.0",
+  "./offline-db.js?v=3.0.0",
+  "./sync-manager.js?v=3.0.0",
+  "./manifest.webmanifest?v=3.0.0",
+  "./logo.svg",
+  "./icon-192.png",
+  "./icon-512.png",
+  "./reset.html"
 ];
 
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL))
-  );
-  self.skipWaiting();
+self.addEventListener("install", (event) => {
+  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)).then(() => self.skipWaiting()));
 });
 
-self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys().then((keys) => Promise.all(
-      keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
-    ))
-  );
-  self.clients.claim();
+self.addEventListener("activate", (event) => {
+  event.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key)))).then(() => self.clients.claim()));
 });
 
-self.addEventListener('fetch', (event) => {
-  if (event.request.method !== 'GET') return;
-  const url = new URL(event.request.url);
+self.addEventListener("fetch", (event) => {
+  const request = event.request;
+  const url = new URL(request.url);
+  if (request.method !== "GET") return;
   if (url.origin !== self.location.origin) return;
 
-  if (event.request.mode === 'navigate') {
-    event.respondWith(
-      fetch(event.request)
-        .then((response) => {
-          if (response.ok) {
-            const copy = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put('./index.html', copy));
-          }
-          return response;
-        })
-        .catch(() => caches.match('./index.html'))
-    );
-    return;
-  }
-
-  const networkFirst = url.pathname.endsWith('/app.js') || url.pathname.endsWith('/styles.css');
-  if (networkFirst) {
-    event.respondWith(
-      fetch(event.request)
-        .then((response) => {
-          if (response.ok) caches.open(CACHE_NAME).then((cache) => cache.put(event.request, response.clone()));
-          return response;
-        })
-        .catch(() => caches.match(event.request))
-    );
-    return;
-  }
-
-  event.respondWith(
-    caches.match(event.request).then((cached) => cached || fetch(event.request).then((response) => {
-      if (response.ok) caches.open(CACHE_NAME).then((cache) => cache.put(event.request, response.clone()));
+  if (request.mode === "navigate") {
+    event.respondWith(fetch(request).then((response) => {
+      const copy = response.clone();
+      caches.open(CACHE_NAME).then((cache) => cache.put("./index.html", copy));
       return response;
-    }))
-  );
+    }).catch(() => caches.match("./index.html")));
+    return;
+  }
+
+  event.respondWith(caches.match(request).then((cached) => {
+    const network = fetch(request).then((response) => {
+      if (response.ok) caches.open(CACHE_NAME).then((cache) => cache.put(request, response.clone()));
+      return response;
+    }).catch(() => cached);
+    return cached || network;
+  }));
 });

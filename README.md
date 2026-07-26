@@ -1,112 +1,113 @@
-# APP LUBAYD V2.3 — PIN y funcionamiento offline
+# APP LUBAYD V3.0
 
-Esta versión permite abrir la aplicación, ingresar con un PIN local y registrar descansos y Partes sin conexión. Las fotografías y los datos quedan en el dispositivo y se sincronizan automáticamente con Firebase cuando vuelve Internet.
+Version con permisos por rol, servicio mecanico, carga de combustible y funcionamiento offline.
 
-## Archivos para reemplazar o agregar en GitHub
+## Cambios principales
 
-Subir todos estos archivos a la raíz del repositorio `LUBAYD`:
+### Recarga sin parpadeo de inicio de sesion
 
-### Reemplazar
+La aplicacion muestra una pantalla de carga mientras Firebase restaura la sesion. No muestra primero el acceso y luego el panel del usuario.
+
+### Roles
+
+- `operator`: Inicio, Descanso, Parte y Actividad.
+- `mechanic`: Inicio, Servicio, Combustible y Actividad.
+- `admin`: acceso a todas las secciones y gestion de roles.
+
+Los usuarios nuevos se crean como `operator`.
+
+### Parte del operador
+
+- Establecimiento.
+- Maquina.
+- Horometro inicial, descanso, post descanso y final.
+- Foto y ubicacion obligatorias en cada horometro.
+- Cantidades de Trozo y Pulpa.
+- Guardado local y sincronizacion automatica.
+
+### Servicio del mecanico
+
+- Seleccion del parte, operador y maquina.
+- Inicio de reparacion con motivo, foto y GPS.
+- Reloj de servicio en tiempo real.
+- Finalizacion con detalle, foto y GPS.
+- El mecanico no modifica los horometros ni la produccion del operador.
+
+### Combustible
+
+- Acceso exclusivo para mecanicos y administradores.
+- Tanque principal con capacidad y litros disponibles.
+- Maquina, operador relacionado, litros y turno diurno/nocturno.
+- Foto obligatoria.
+- Descuento del tanque al sincronizar sin duplicar cargas.
+
+### Sin conexion
+
+- Acceso mediante PIN local de 6 numeros.
+- Descansos, partes, servicios y cargas se guardan en IndexedDB.
+- Las fotografias se almacenan como archivos Blob.
+- Cuando vuelve Internet se suben primero las fotos y luego los datos.
+- Un mecanico puede trabajar offline sobre partes que hayan sido descargados previamente en ese dispositivo.
+
+## Archivos para reemplazar en GitHub
+
+Subir todos los archivos de este paquete a la raiz del repositorio:
 
 - `index.html`
-- `app.js`
 - `styles.css`
+- `app.js`
+- `offline-db.js`
+- `sync-manager.js`
 - `service-worker.js`
 - `manifest.webmanifest`
 - `reset.html`
-
-### Agregar
-
-- `offline-db.js`
-- `sync-manager.js`
-
-### Conservar o reemplazar si faltan
-
 - `logo.svg`
 - `icon-192.png`
 - `icon-512.png`
 
-Los archivos deben quedar directamente en la raíz del repositorio, no dentro de otra carpeta.
+Los archivos `firestore.rules` y `storage.rules` se publican en Firebase, no es necesario que GitHub Pages los utilice.
 
-## Primera configuración del usuario
+## Reglas obligatorias
 
-La primera vez en cada teléfono o computadora se necesita Internet:
+1. Firebase > Firestore > Reglas.
+2. Reemplazar todo por el contenido de `firestore.rules`.
+3. Publicar.
+4. Firebase > Storage > Reglas.
+5. Reemplazar todo por el contenido de `storage.rules`.
+6. Publicar.
 
-1. Abrir la app desde GitHub Pages.
-2. Iniciar sesión con correo y contraseña de Firebase.
-3. Crear un PIN offline de exactamente 6 números.
-4. Esperar a que la app indique `Todo sincronizado`.
+## Crear el primer administrador
 
-A partir de ese momento el usuario puede bloquear o cerrar la aplicación y volver a ingresar con el PIN aunque no tenga Internet.
+Por seguridad, los usuarios no pueden convertirse a si mismos en administradores.
 
-## Cómo funciona sin conexión
+1. Crear o iniciar sesion con el usuario elegido.
+2. Firebase > Firestore > Datos > `users`.
+3. Abrir el documento con el UID correspondiente.
+4. Cambiar el campo `role` de `operator` a `admin`.
+5. Cerrar y volver a ingresar en la aplicacion.
 
-Sin Internet, el usuario puede:
+A partir de ese momento, el administrador puede entrar a **Usuarios** y asignar roles desde la app.
 
-- ingresar con su PIN local;
-- iniciar y finalizar un descanso;
-- tomar las fotografías obligatorias;
-- obtener la ubicación GPS;
-- completar horómetros;
-- registrar Trozo y Pulpa;
-- registrar inicio y finalización de una reparación;
-- guardar el Parte.
+## Inicializar el tanque principal
 
-Los registros muestran el estado `Pendiente`. Al volver Internet, la aplicación:
+El administrador debe entrar en **Combustible > Actualizar tanque** y cargar:
 
-1. valida la sesión conservada de Firebase;
-2. sube las fotografías;
-3. guarda los documentos en Firestore;
-4. elimina cada elemento de la cola local cuando termina correctamente.
+- capacidad total;
+- litros disponibles iniciales.
 
-Si Firebase solicita validar nuevamente la sesión, se debe ingresar una vez con correo y contraseña estando conectado. Los registros locales no se eliminan.
+Los mecanicos pueden registrar cargas y descontar litros, pero no pueden aumentar ni redefinir la capacidad.
 
-## Prueba offline recomendada
+## Actualizacion del navegador
 
-1. Ingresar online y configurar el PIN.
-2. Presionar `Bloquear aplicación`.
-3. Activar modo avión.
-4. Volver a abrir la app.
-5. Ingresar con el PIN.
-6. Crear un descanso o Parte de prueba.
-7. Confirmar que aparece como pendiente.
-8. Desactivar modo avión y mantener la app abierta.
-9. Confirmar que el indicador cambia a `Todo sincronizado`.
+Despues de subir los archivos, abrir:
 
-## Cuidados importantes
+`https://gera1991823-design.github.io/LUBAYD/reset.html`
 
-- No usar navegación privada o incógnito.
-- No borrar los datos del sitio mientras existan registros pendientes.
-- El primer uso de cada dispositivo requiere Internet.
-- Crear usuarios nuevos requiere Internet.
-- El PIN solo habilita el dispositivo en el que fue configurado.
-- La contraseña de Firebase no se guarda en la base offline.
-- El archivo `reset.html` limpia archivos en caché, pero conserva IndexedDB, el PIN y los registros pendientes.
+Presionar **Actualizar y abrir aplicacion**. El proceso limpia la cache visual, pero conserva el PIN y los registros pendientes de IndexedDB.
 
-## Firebase
+## Restricciones offline
 
-Las reglas incluidas son las mismas que utiliza la versión 2.2 y contemplan:
-
-- `users/{uid}/breaks/{breakId}`
-- `users/{uid}/parts/{dateKey}`
-- fotografías en `breaks/{uid}/...`
-- fotografías en `parts/{uid}/...`
-
-Si las reglas de la versión 2.2 ya fueron publicadas, no es necesario volver a cambiarlas. Si todavía no fueron publicadas, usar:
-
-- `firestore.rules`
-- `storage.rules`
-
-## Diseño móvil
-
-La interfaz se adapta a pantallas pequeñas con:
-
-- una sola columna;
-- botones al ancho disponible;
-- menú inferior con área segura para iPhone;
-- captura de foto y GPS a pantalla completa;
-- tarjetas de Parte compactas;
-- sin desplazamiento horizontal;
-- barra de guardado visible al final del Parte.
-
-Versión: `2.3.0`
+- El primer ingreso en cada dispositivo requiere Internet.
+- Crear usuarios y cambiar permisos requiere Internet.
+- Para seleccionar un parte estando offline, el mecanico debe haber abierto la app con Internet previamente para descargar la lista de partes del dia.
+- Si se borran los datos del navegador, tambien se elimina el PIN y la cola local.

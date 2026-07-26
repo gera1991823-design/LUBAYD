@@ -1,68 +1,120 @@
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
     function signedIn() {
       return request.auth != null;
     }
 
-    function isOwner(userId) {
-      return signedIn() && request.auth.uid == userId;
+    function profile() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function isAdmin() {
+      return signedIn() && profile().role == 'admin';
+    }
+
+    function isMechanic() {
+      return signedIn() && profile().role == 'mechanic';
+    }
+
+    function isMechanicOrAdmin() {
+      return isMechanic() || isAdmin();
+    }
+
+    function isOwner(uid) {
+      return signedIn() && request.auth.uid == uid;
     }
 
     match /users/{userId} {
       allow create: if isOwner(userId)
                     && request.resource.data.uid == userId
-                    && request.resource.data.email == request.auth.token.email
                     && request.resource.data.role == 'operator';
 
-      allow read: if isOwner(userId);
+      allow read: if isOwner(userId) || isAdmin();
 
-      allow update: if isOwner(userId)
-                    && request.resource.data.uid == userId
-                    && request.resource.data.email == resource.data.email
-                    && request.resource.data.role == resource.data.role;
+      allow update: if isAdmin()
+                    || (isOwner(userId)
+                        && request.resource.data.uid == resource.data.uid
+                        && request.resource.data.email == resource.data.email
+                        && request.resource.data.role == resource.data.role);
 
       allow delete: if false;
 
       match /breaks/{breakId} {
-        allow read: if isOwner(userId);
-
-        allow create: if isOwner(userId)
-                      && request.resource.data.userId == userId
-                      && request.resource.data.status == 'active'
-                      && request.resource.data.startLocation.latitude is number
-                      && request.resource.data.startLocation.longitude is number
-                      && request.resource.data.startLocation.accuracy is number
-                      && request.resource.data.startPhotoPath is string;
-
-        allow update: if isOwner(userId)
-                      && resource.data.userId == userId
-                      && request.resource.data.userId == userId
-                      && request.resource.data.status in ['active', 'completed'];
-
+        allow read, create, update: if isOwner(userId) || isAdmin();
         allow delete: if false;
       }
 
       match /parts/{partId} {
-        allow read: if isOwner(userId);
+        allow read, create, update: if isOwner(userId) || isAdmin();
+        allow delete: if false;
+      }
+    }
 
-        allow create: if isOwner(userId)
-                      && request.resource.data.userId == userId
-                      && request.resource.data.dateKey == partId
-                      && request.resource.data.status in ['draft', 'completed'];
+    match /operationalParts/{partId} {
+      allow read: if signedIn()
+                  && (resource.data.operatorUid == request.auth.uid || isMechanicOrAdmin());
 
-        allow update: if isOwner(userId)
-                      && resource.data.userId == userId
-                      && request.resource.data.userId == userId
-                      && request.resource.data.dateKey == resource.data.dateKey
-                      && request.resource.data.status in ['draft', 'completed'];
+      allow create: if signedIn()
+                    && (request.resource.data.operatorUid == request.auth.uid || isAdmin());
+
+      allow update: if signedIn()
+                    && (resource.data.operatorUid == request.auth.uid || isAdmin());
+
+      allow delete: if false;
+
+      match /services/{serviceId} {
+        allow read: if signedIn()
+                    && (resource.data.operatorUid == request.auth.uid
+                        || isMechanicOrAdmin());
+
+        allow create, update: if signedIn()
+                              && ((isMechanic()
+                                   && request.resource.data.mechanicUid == request.auth.uid)
+                                  || isAdmin());
 
         allow delete: if false;
       }
+    }
 
-      match /current/{documentId} {
-        allow read, create, update, delete: if isOwner(userId);
-      }
+    match /services/{serviceId} {
+      allow read: if signedIn()
+                  && (resource.data.operatorUid == request.auth.uid
+                      || isMechanicOrAdmin());
+
+      allow create, update: if signedIn()
+                            && ((isMechanic()
+                                 && request.resource.data.mechanicUid == request.auth.uid)
+                                || isAdmin());
+
+      allow delete: if false;
+    }
+
+    match /fuelLoads/{loadId} {
+      allow read: if isMechanicOrAdmin();
+
+      allow create: if isMechanicOrAdmin()
+                    && request.resource.data.uid == request.auth.uid
+                    && request.resource.data.liters is number
+                    && request.resource.data.liters > 0
+                    && request.resource.data.shift in ['day', 'night'];
+
+      allow update, delete: if false;
+    }
+
+    match /tanks/{tankId} {
+      allow read: if isMechanicOrAdmin();
+
+      allow create: if isAdmin();
+
+      allow update: if isAdmin()
+                    || (isMechanic()
+                        && request.resource.data.capacityLiters == resource.data.capacityLiters
+                        && request.resource.data.currentLiters >= 0
+                        && request.resource.data.currentLiters <= resource.data.currentLiters);
+
+      allow delete: if false;
     }
 
     match /{document=**} {
