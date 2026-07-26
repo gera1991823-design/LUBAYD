@@ -1,53 +1,112 @@
-# APP LUBAYD V2.2 — Parte y reparación
+# APP LUBAYD V2.3 — PIN y funcionamiento offline
 
-## Archivos para reemplazar en GitHub
+Esta versión permite abrir la aplicación, ingresar con un PIN local y registrar descansos y Partes sin conexión. Las fotografías y los datos quedan en el dispositivo y se sincronizan automáticamente con Firebase cuando vuelve Internet.
 
-Reemplazar en la raíz del repositorio:
+## Archivos para reemplazar o agregar en GitHub
+
+Subir todos estos archivos a la raíz del repositorio `LUBAYD`:
+
+### Reemplazar
 
 - `index.html`
 - `app.js`
 - `styles.css`
 - `service-worker.js`
 - `manifest.webmanifest`
+- `reset.html`
 
-No reemplazar los archivos de logo e iconos existentes.
+### Agregar
 
-## Reglas obligatorias de Firebase
+- `offline-db.js`
+- `sync-manager.js`
 
-La sección Parte guarda documentos en:
+### Conservar o reemplazar si faltan
 
-`users/{uid}/parts/{AAAA-MM-DD}`
+- `logo.svg`
+- `icon-192.png`
+- `icon-512.png`
 
-Las fotografías se guardan en:
+Los archivos deben quedar directamente en la raíz del repositorio, no dentro de otra carpeta.
 
-`parts/{uid}/{AAAA-MM-DD}/{etapa}-{timestamp}.jpg`
+## Primera configuración del usuario
 
-Por eso es obligatorio publicar también:
+La primera vez en cada teléfono o computadora se necesita Internet:
 
-- `firestore.rules` en Firebase > Firestore > Reglas.
-- `storage.rules` en Firebase > Storage > Reglas.
+1. Abrir la app desde GitHub Pages.
+2. Iniciar sesión con correo y contraseña de Firebase.
+3. Crear un PIN offline de exactamente 6 números.
+4. Esperar a que la app indique `Todo sincronizado`.
 
-Sin esas reglas, Firebase mostrará `permission-denied` o `storage/unauthorized`.
+A partir de ese momento el usuario puede bloquear o cerrar la aplicación y volver a ingresar con el PIN aunque no tenga Internet.
 
-## Funciones incluidas
+## Cómo funciona sin conexión
 
-- Horómetro inicial: valor, foto y GPS.
-- Horómetro descanso: valor, foto y GPS.
-- Horómetro post descanso: valor, foto y GPS.
-- Horómetro final: valor, foto y GPS.
-- Cantidad de Trozo.
-- Cantidad de Pulpa.
-- Reparación opcional.
-- Inicio de reparación: motivo, foto y GPS.
-- Finalización de reparación: detalle, foto y GPS.
-- Observaciones generales.
-- Guardado del parte diario en Firestore.
-- Diseño responsive para computadora y celular.
+Sin Internet, el usuario puede:
 
-## Después de subir los archivos
+- ingresar con su PIN local;
+- iniciar y finalizar un descanso;
+- tomar las fotografías obligatorias;
+- obtener la ubicación GPS;
+- completar horómetros;
+- registrar Trozo y Pulpa;
+- registrar inicio y finalización de una reparación;
+- guardar el Parte.
 
-1. Hacer Commit en GitHub.
-2. Esperar la publicación de GitHub Pages.
-3. Abrir `https://gera1991823-design.github.io/LUBAYD/reset.html`.
-4. Limpiar la caché y volver a iniciar sesión.
-5. Verificar que aparezca `Versión 2.2.0`.
+Los registros muestran el estado `Pendiente`. Al volver Internet, la aplicación:
+
+1. valida la sesión conservada de Firebase;
+2. sube las fotografías;
+3. guarda los documentos en Firestore;
+4. elimina cada elemento de la cola local cuando termina correctamente.
+
+Si Firebase solicita validar nuevamente la sesión, se debe ingresar una vez con correo y contraseña estando conectado. Los registros locales no se eliminan.
+
+## Prueba offline recomendada
+
+1. Ingresar online y configurar el PIN.
+2. Presionar `Bloquear aplicación`.
+3. Activar modo avión.
+4. Volver a abrir la app.
+5. Ingresar con el PIN.
+6. Crear un descanso o Parte de prueba.
+7. Confirmar que aparece como pendiente.
+8. Desactivar modo avión y mantener la app abierta.
+9. Confirmar que el indicador cambia a `Todo sincronizado`.
+
+## Cuidados importantes
+
+- No usar navegación privada o incógnito.
+- No borrar los datos del sitio mientras existan registros pendientes.
+- El primer uso de cada dispositivo requiere Internet.
+- Crear usuarios nuevos requiere Internet.
+- El PIN solo habilita el dispositivo en el que fue configurado.
+- La contraseña de Firebase no se guarda en la base offline.
+- El archivo `reset.html` limpia archivos en caché, pero conserva IndexedDB, el PIN y los registros pendientes.
+
+## Firebase
+
+Las reglas incluidas son las mismas que utiliza la versión 2.2 y contemplan:
+
+- `users/{uid}/breaks/{breakId}`
+- `users/{uid}/parts/{dateKey}`
+- fotografías en `breaks/{uid}/...`
+- fotografías en `parts/{uid}/...`
+
+Si las reglas de la versión 2.2 ya fueron publicadas, no es necesario volver a cambiarlas. Si todavía no fueron publicadas, usar:
+
+- `firestore.rules`
+- `storage.rules`
+
+## Diseño móvil
+
+La interfaz se adapta a pantallas pequeñas con:
+
+- una sola columna;
+- botones al ancho disponible;
+- menú inferior con área segura para iPhone;
+- captura de foto y GPS a pantalla completa;
+- tarjetas de Parte compactas;
+- sin desplazamiento horizontal;
+- barra de guardado visible al final del Parte.
+
+Versión: `2.3.0`

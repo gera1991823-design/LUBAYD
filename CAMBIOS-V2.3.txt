@@ -1,0 +1,19 @@
+APP LUBAYD V2.3.0
+
+NUEVO
+- Acceso offline con PIN local de 6 números.
+- Perfil autorizado guardado por dispositivo.
+- IndexedDB para datos y fotografías Blob.
+- Cola de sincronización automática.
+- Reintento al recuperar Internet.
+- Indicador de registros pendientes, sincronizando y con error.
+- Botón manual de sincronización.
+- Descansos totalmente operativos sin conexión.
+- Parte, horómetros, producción y reparaciones operativos sin conexión.
+- Service Worker con caché de la aplicación.
+- Interfaz móvil corregida para iPhone y Android.
+
+IMPORTANTE
+- El primer ingreso en cada dispositivo requiere Internet.
+- El usuario debe configurar el PIN antes de quedarse sin conexión.
+- No borrar los datos del sitio si hay registros pendientes.

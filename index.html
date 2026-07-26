@@ -10,10 +10,10 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Lubayd Descansos">
   <title>Lubayd SA | Gestión operativa</title>
-  <link rel="manifest" href="./manifest.webmanifest?v=2.2.0">
+  <link rel="manifest" href="./manifest.webmanifest?v=2.3.0">
   <link rel="icon" href="./icon-192.png">
   <link rel="apple-touch-icon" href="./icon-192.png">
-  <link rel="stylesheet" href="./styles.css?v=2.2.0">
+  <link rel="stylesheet" href="./styles.css?v=2.3.0">
 </head>
 <body>
   <div id="toastRegion" class="toast-region" aria-live="polite" aria-atomic="true"></div>
@@ -46,7 +46,7 @@
         </article>
         <article>
           <span class="benefit-icon">✓</span>
-          <div><strong>Información segura</strong><small>Datos protegidos en Firebase</small></div>
+          <div><strong>Trabajo sin conexión</strong><small>Los registros se sincronizan al recuperar Internet</small></div>
         </article>
       </div>
     </div>
@@ -87,9 +87,32 @@
           </label>
 
           <button id="loginButton" class="primary-button auth-submit" type="submit">
-            <span>Iniciar sesión</span><span aria-hidden="true">→</span>
+            <span>Ingresar con Internet</span><span aria-hidden="true">→</span>
           </button>
+          <p class="form-help">El primer ingreso en este dispositivo debe realizarse con Internet.</p>
         </form>
+
+        <section id="offlineLoginPanel" class="offline-login-panel hidden" aria-labelledby="offlineLoginTitle">
+          <div class="offline-login-heading">
+            <span class="offline-badge">MODO OFFLINE</span>
+            <div>
+              <h3 id="offlineLoginTitle">Ingresar sin conexión</h3>
+              <p>Usa el PIN configurado previamente en este dispositivo.</p>
+            </div>
+          </div>
+          <div class="saved-user-card">
+            <div id="offlineUserAvatar" class="avatar">U</div>
+            <div><strong id="offlineUserName">Operador</strong><span id="offlineUserEmail">—</span></div>
+          </div>
+          <label class="field pin-field">
+            <span>PIN offline de 6 números</span>
+            <input id="offlinePinInput" type="password" inputmode="numeric" autocomplete="off" maxlength="6" pattern="[0-9]{6}" placeholder="••••••">
+          </label>
+          <button id="offlineLoginButton" class="secondary-button offline-login-button" type="button">
+            <span>Ingresar sin conexión</span><span aria-hidden="true">→</span>
+          </button>
+          <p id="offlineLoginHelp" class="form-help">Disponible después de iniciar sesión online y configurar el PIN.</p>
+        </section>
 
         <form id="registerForm" class="auth-form" autocomplete="on">
           <header class="form-header">
@@ -158,8 +181,10 @@
 
       <div class="sidebar-footer">
         <div class="connection-pill"><span id="connectionDot" class="status-dot"></span><span id="connectionText">Comprobando conexión</span></div>
-        <button id="logoutButton" class="sidebar-logout" type="button">Cerrar sesión</button>
-        <small>Versión 2.2.0</small>
+        <div id="syncStatusPill" class="sync-status-pill"><span class="sync-icon">↻</span><span id="syncStatusText">Sin registros pendientes</span><strong id="pendingSyncCount" class="pending-count hidden">0</strong></div>
+        <button id="manualSyncButton" class="sidebar-sync" type="button">Sincronizar ahora</button>
+        <button id="logoutButton" class="sidebar-logout" type="button">Bloquear aplicación</button>
+        <small>Versión 2.3.0</small>
       </div>
     </aside>
 
@@ -192,8 +217,12 @@
         </div>
 
         <div id="offlineWarning" class="alert warning hidden">
-          <strong>Sin conexión a internet</strong>
-          <span>La cámara y el GPS funcionan, pero la marcación no podrá enviarse hasta recuperar la conexión.</span>
+          <strong>Trabajando sin conexión</strong>
+          <span>Puedes registrar descansos, fotos, GPS y partes normalmente. Todo quedará pendiente y se sincronizará al recuperar Internet.</span>
+        </div>
+        <div id="syncBanner" class="alert sync-banner hidden">
+          <strong id="syncBannerTitle">Registros pendientes</strong>
+          <span id="syncBannerText">La aplicación sincronizará automáticamente cuando haya conexión.</span>
         </div>
 
         <section class="status-overview-grid">
@@ -289,8 +318,8 @@
         </div>
 
         <div id="partOfflineWarning" class="alert warning hidden">
-          <strong>Sin conexión a internet</strong>
-          <span>Para registrar fotos y ubicaciones del parte debes recuperar la conexión.</span>
+          <strong>Parte offline habilitado</strong>
+          <span>Las fotos, ubicaciones y datos se guardarán en este dispositivo y se enviarán automáticamente al recuperar Internet.</span>
         </div>
 
         <form id="partForm" novalidate>
@@ -440,7 +469,7 @@
           <h2 id="captureTitle">Iniciar descanso</h2>
           <p id="captureSubtitle">Completa los controles obligatorios.</p>
         </div>
-        <span class="capture-security">Firebase</span>
+        <span id="captureStorageMode" class="capture-security">Guardado seguro</span>
       </header>
 
       <div class="capture-stepper" aria-label="Progreso de la marcación">
@@ -522,6 +551,27 @@
     </div>
   </div>
 
+
+  <!-- CONFIGURACIÓN DEL PIN OFFLINE -->
+  <div id="pinSetupModal" class="modal pin-modal hidden" role="dialog" aria-modal="true" aria-labelledby="pinSetupTitle">
+    <div class="modal-backdrop"></div>
+    <div class="pin-dialog">
+      <header class="pin-dialog-header">
+        <span class="pin-shield">●</span>
+        <div><span class="eyebrow">ACCESO SIN INTERNET</span><h2 id="pinSetupTitle">Configura tu PIN offline</h2></div>
+      </header>
+      <p>Este PIN permite abrir la aplicación en este dispositivo cuando no haya conexión. No reemplaza tu contraseña de Firebase.</p>
+      <form id="pinSetupForm">
+        <label class="field"><span>Nuevo PIN de 6 números</span><input id="pinSetupInput" type="password" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" autocomplete="new-password" placeholder="••••••" required></label>
+        <label class="field"><span>Repetir PIN</span><input id="pinSetupConfirm" type="password" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" autocomplete="new-password" placeholder="••••••" required></label>
+        <div id="pinSetupError" class="auth-message error hidden" role="alert"></div>
+        <button id="savePinButton" class="primary-button" type="submit">Guardar PIN offline</button>
+        <button id="skipPinButton" class="text-button pin-skip" type="button">Configurar más tarde</button>
+      </form>
+      <small>El PIN se guarda como un verificador criptográfico; no se almacena en texto visible.</small>
+    </div>
+  </div>
+
   <div id="processingOverlay" class="processing-overlay hidden" role="status" aria-live="assertive">
     <div class="processing-card">
       <div class="spinner large"></div>
@@ -543,12 +593,14 @@
       }
     }, 5000);
   </script>
-  <script defer src="./app.js?v=2.2.0"></script>
+  <script defer src="./offline-db.js?v=2.3.0"></script>
+  <script defer src="./sync-manager.js?v=2.3.0"></script>
+  <script defer src="./app.js?v=2.3.0"></script>
   <script>
     if ('serviceWorker' in navigator && location.protocol === 'https:') {
       window.addEventListener('load', async () => {
         try {
-          const registration = await navigator.serviceWorker.register('./service-worker.js?v=2.2.0');
+          const registration = await navigator.serviceWorker.register('./service-worker.js?v=2.3.0');
           registration.update().catch(() => {});
         } catch (error) {
           console.warn('Service Worker:', error);

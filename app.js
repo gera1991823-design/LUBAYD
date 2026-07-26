@@ -1,6 +1,6 @@
 "use strict";
 
-// APP LUBAYD v2.2.0 - Descansos, parte operativo y reparaciones
+// APP LUBAYD v2.3.0 - Offline completo, PIN local, descansos, parte y reparaciones
 // La interfaz se inicia primero y Firebase se carga luego de forma dinámica.
 // Así, aun si el CDN de Firebase falla, los botones y los mensajes siguen funcionando.
 window.__APP_SCRIPT_LOADED__ = true;
@@ -20,6 +20,7 @@ let auth = null;
 let db = null;
 let storage = null;
 let firebaseReady = false;
+let firebaseInitializationPromise = null;
 
 let setPersistence;
 let browserLocalPersistence;
@@ -32,6 +33,7 @@ let onAuthStateChanged;
 let doc;
 let setDoc;
 let getDoc;
+let deleteDoc;
 let collection;
 let query;
 let orderBy;
@@ -57,6 +59,20 @@ const els = {
   registerForm: $("#registerForm"),
   loginButton: $("#loginButton"),
   registerButton: $("#registerButton"),
+  offlineLoginPanel: $("#offlineLoginPanel"),
+  offlineUserAvatar: $("#offlineUserAvatar"),
+  offlineUserName: $("#offlineUserName"),
+  offlineUserEmail: $("#offlineUserEmail"),
+  offlinePinInput: $("#offlinePinInput"),
+  offlineLoginButton: $("#offlineLoginButton"),
+  offlineLoginHelp: $("#offlineLoginHelp"),
+  pinSetupModal: $("#pinSetupModal"),
+  pinSetupForm: $("#pinSetupForm"),
+  pinSetupInput: $("#pinSetupInput"),
+  pinSetupConfirm: $("#pinSetupConfirm"),
+  pinSetupError: $("#pinSetupError"),
+  savePinButton: $("#savePinButton"),
+  skipPinButton: $("#skipPinButton"),
   logoutButton: $("#logoutButton"),
   userName: $("#userName"),
   userEmail: $("#userEmail"),
@@ -64,6 +80,14 @@ const els = {
   connectionDot: $("#connectionDot"),
   connectionText: $("#connectionText"),
   offlineWarning: $("#offlineWarning"),
+  syncBanner: $("#syncBanner"),
+  syncBannerTitle: $("#syncBannerTitle"),
+  syncBannerText: $("#syncBannerText"),
+  syncStatusPill: $("#syncStatusPill"),
+  syncStatusText: $("#syncStatusText"),
+  pendingSyncCount: $("#pendingSyncCount"),
+  manualSyncButton: $("#manualSyncButton"),
+  captureStorageMode: $("#captureStorageMode"),
   liveClock: $("#liveClock"),
   liveDate: $("#liveDate"),
   dashboardGreeting: $("#dashboardGreeting"),
@@ -174,7 +198,14 @@ let isSaving = false;
 let lastHistoryRecords = [];
 let historyFilter = "all";
 let currentUserRole = "operator";
+let offlineProfile = null;
+let localSessionActive = false;
+let serverHistoryRecords = [];
+let localHistoryRecords = [];
+let syncInProgress = false;
+let authStateHandledUid = null;
 const photoUrlCache = new Map();
+const localObjectUrls = new Set();
 
 const PART_STAGE_CONFIG = {
   horometerInitial: { group: "horometers", key: "initial", label: "Horómetro inicial", input: "horometerInitialInput" },
@@ -266,9 +297,95 @@ $$('[data-password-target]').forEach((button) => {
   });
 });
 
+async function renderOfflineAccessPanel() {
+  if (!window.OfflineDB || !els.offlineLoginPanel) return;
+  try {
+    offlineProfile = await OfflineDB.getLastProfile();
+    const enabled = Boolean(offlineProfile?.offlineAccessEnabled && offlineProfile?.pinHash);
+    els.offlineLoginPanel.classList.toggle("hidden", !enabled);
+    if (!enabled) return;
+    els.offlineUserName.textContent = offlineProfile.name || "Operador";
+    els.offlineUserEmail.textContent = offlineProfile.email || "—";
+    els.offlineUserAvatar.textContent = getInitials(offlineProfile.name || offlineProfile.email || "U");
+    els.offlineLoginHelp.textContent = navigator.onLine
+      ? "También puedes usar el PIN para desbloquear este dispositivo."
+      : "Sin conexión: tus registros quedarán guardados en el dispositivo.";
+    if (!navigator.onLine) window.setTimeout(() => els.offlinePinInput?.focus(), 150);
+  } catch (error) {
+    console.warn("Acceso offline:", error);
+  }
+}
+
+async function initializeOfflineAccess() {
+  if (!window.OfflineDB) return;
+  try {
+    await OfflineDB.open();
+    OfflineDB.requestPersistentStorage().catch(() => {});
+    await renderOfflineAccessPanel();
+    await updatePendingSyncUi();
+  } catch (error) {
+    console.warn("Base local:", error);
+  }
+}
+
+function showPinSetup(profile) {
+  if (!profile || profile.offlineAccessEnabled || !els.pinSetupModal) return;
+  els.pinSetupInput.value = "";
+  els.pinSetupConfirm.value = "";
+  els.pinSetupError.classList.add("hidden");
+  els.pinSetupModal.classList.remove("hidden");
+  document.body.style.overflow = "hidden";
+  window.setTimeout(() => els.pinSetupInput?.focus(), 120);
+}
+
+function closePinSetup() {
+  els.pinSetupModal?.classList.add("hidden");
+  if (els.captureModal?.classList.contains("hidden")) document.body.style.overflow = "";
+}
+
+async function cacheAuthenticatedProfile(user, role = "operator") {
+  if (!window.OfflineDB || !user?.uid) return null;
+  const previous = await OfflineDB.getProfile(user.uid);
+  const profile = await OfflineDB.saveProfile({
+    ...(previous || {}),
+    uid: user.uid,
+    name: user.displayName || previous?.name || "Operador",
+    email: user.email || previous?.email || "",
+    role: role || previous?.role || "operator",
+    active: true,
+    locked: false,
+    lastLoginAt: Date.now()
+  });
+  offlineProfile = profile;
+  await renderOfflineAccessPanel();
+  return profile;
+}
+
+async function lockApplication() {
+  if (currentUser?.uid && window.OfflineDB) {
+    try { await OfflineDB.setLocked(currentUser.uid, true); } catch (error) { console.warn(error); }
+  }
+  clearSubscriptions();
+  stopTimer();
+  localSessionActive = false;
+  currentUser = null;
+  currentBreak = null;
+  currentPart = null;
+  els.appView.classList.add("hidden");
+  els.authView.classList.remove("hidden");
+  switchAuthTab("login");
+  await renderOfflineAccessPanel();
+  clearAuthMessage();
+}
+
 els.loginForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   clearAuthMessage();
+  if (!navigator.onLine) {
+    showAuthMessage("No hay conexión. Usa el acceso con PIN offline disponible debajo del formulario.");
+    await renderOfflineAccessPanel();
+    return;
+  }
   if (!firebaseReady || !auth) {
     showAuthMessage("Firebase todavía no terminó de cargar. Espera unos segundos y vuelve a intentar.");
     return;
@@ -277,7 +394,9 @@ els.loginForm.addEventListener("submit", async (event) => {
   const password = $("#loginPassword").value;
   setBusy(els.loginButton, true, "Ingresando…");
   try {
-    await signInWithEmailAndPassword(auth, email, password);
+    const credential = await signInWithEmailAndPassword(auth, email, password);
+    if (window.OfflineDB) await OfflineDB.setLocked(credential.user.uid, false).catch(() => {});
+    await handleAuthStateChanged(credential.user, true);
   } catch (error) {
     const message = friendlyError(error);
     showAuthMessage(message);
@@ -291,6 +410,10 @@ els.loginForm.addEventListener("submit", async (event) => {
 els.registerForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   clearAuthMessage();
+  if (!navigator.onLine) {
+    showAuthMessage("Para crear un usuario nuevo necesitas conexión a Internet.");
+    return;
+  }
   if (!firebaseReady || !auth) {
     showAuthMessage("Firebase todavía no terminó de cargar. Espera unos segundos y vuelve a intentar.");
     return;
@@ -324,8 +447,10 @@ els.registerForm.addEventListener("submit", async (event) => {
       console.warn("La cuenta se creó, pero no se pudo guardar el perfil:", profileError);
     }
 
+    await cacheAuthenticatedProfile(credential.user, "operator");
     clearAuthMessage();
-    showToast("Usuario creado", "La cuenta quedó registrada correctamente.");
+    showToast("Usuario creado", "La cuenta quedó registrada. Configura el PIN para trabajar sin conexión.");
+    await handleAuthStateChanged(credential.user, true);
   } catch (error) {
     const message = friendlyError(error);
     showAuthMessage(message);
@@ -336,27 +461,136 @@ els.registerForm.addEventListener("submit", async (event) => {
   }
 });
 
-els.logoutButton.addEventListener("click", async () => {
-  if (!firebaseReady || !auth) return;
+els.offlineLoginButton?.addEventListener("click", async () => {
+  clearAuthMessage();
+  if (!window.OfflineDB) {
+    showAuthMessage("El almacenamiento offline no está disponible en este navegador.");
+    return;
+  }
+  const pin = String(els.offlinePinInput?.value || "").replace(/\D/g, "");
+  setBusy(els.offlineLoginButton, true, "Verificando…");
   try {
-    await signOut(auth);
+    const profile = offlineProfile || await OfflineDB.getLastProfile();
+    if (!profile) throw new Error("No existe un usuario offline configurado en este dispositivo.");
+    const valid = await OfflineDB.verifyPin(profile, pin);
+    if (!valid) throw new Error("El PIN offline no es correcto.");
+    await OfflineDB.setLocked(profile.uid, false);
+    els.offlinePinInput.value = "";
+    await enterOfflineSession(profile);
   } catch (error) {
-    showToast("No se pudo cerrar la sesión", friendlyError(error), "error");
+    showAuthMessage(error.message || "No se pudo validar el PIN offline.");
+    showToast("Acceso offline rechazado", error.message || "PIN incorrecto.", "error");
+  } finally {
+    setBusy(els.offlineLoginButton, false);
   }
 });
+
+els.offlinePinInput?.addEventListener("keydown", (event) => {
+  if (event.key === "Enter") {
+    event.preventDefault();
+    els.offlineLoginButton?.click();
+  }
+});
+
+els.pinSetupForm?.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  if (!currentUser?.uid || !window.OfflineDB) return;
+  const pin = String(els.pinSetupInput.value || "").replace(/\D/g, "");
+  const confirm = String(els.pinSetupConfirm.value || "").replace(/\D/g, "");
+  els.pinSetupError.classList.add("hidden");
+  if (!/^\d{6}$/.test(pin)) {
+    els.pinSetupError.textContent = "El PIN debe tener exactamente 6 números.";
+    els.pinSetupError.classList.remove("hidden");
+    return;
+  }
+  if (pin !== confirm) {
+    els.pinSetupError.textContent = "Los dos PIN no coinciden.";
+    els.pinSetupError.classList.remove("hidden");
+    return;
+  }
+  setBusy(els.savePinButton, true, "Guardando…");
+  try {
+    offlineProfile = await OfflineDB.configurePin(currentUser.uid, pin);
+    closePinSetup();
+    await renderOfflineAccessPanel();
+    showToast("PIN offline configurado", "Ya puedes ingresar y trabajar sin conexión en este dispositivo.");
+  } catch (error) {
+    els.pinSetupError.textContent = error.message || "No se pudo guardar el PIN.";
+    els.pinSetupError.classList.remove("hidden");
+  } finally {
+    setBusy(els.savePinButton, false);
+  }
+});
+
+els.skipPinButton?.addEventListener("click", () => {
+  closePinSetup();
+  showToast("PIN pendiente", "Puedes configurarlo más adelante volviendo a iniciar sesión con Internet.");
+});
+
+els.logoutButton.addEventListener("click", lockApplication);
+
+async function updatePendingSyncUi(state = {}) {
+  if (!window.OfflineDB) return;
+  const uid = currentUser?.uid || offlineProfile?.uid;
+  const pending = uid ? await OfflineDB.countPending(uid).catch(() => 0) : 0;
+  const running = Boolean(state.running || syncInProgress);
+  const failed = Number(state.failed || 0);
+
+  els.pendingSyncCount?.classList.toggle("hidden", pending === 0);
+  if (els.pendingSyncCount) els.pendingSyncCount.textContent = String(pending);
+  els.syncStatusPill?.classList.toggle("syncing", running);
+  els.syncStatusPill?.classList.toggle("has-pending", pending > 0 && !failed);
+  els.syncStatusPill?.classList.toggle("has-error", failed > 0);
+
+  if (els.syncStatusText) {
+    if (running) els.syncStatusText.textContent = `Sincronizando ${state.processed || 0} de ${state.total || pending}`;
+    else if (failed) els.syncStatusText.textContent = `${pending} pendiente${pending === 1 ? "" : "s"} con error`;
+    else if (pending) els.syncStatusText.textContent = `${pending} registro${pending === 1 ? "" : "s"} pendiente${pending === 1 ? "" : "s"}`;
+    else els.syncStatusText.textContent = "Todo sincronizado";
+  }
+
+  if (els.syncBanner) {
+    els.syncBanner.classList.toggle("hidden", pending === 0 && !running);
+    if (running) {
+      els.syncBannerTitle.textContent = "Sincronizando registros";
+      els.syncBannerText.textContent = `Procesando ${state.processed || 0} de ${state.total || pending}. No cierres la aplicación.`;
+    } else if (pending) {
+      els.syncBannerTitle.textContent = `${pending} registro${pending === 1 ? "" : "s"} pendiente${pending === 1 ? "" : "s"}`;
+      els.syncBannerText.textContent = navigator.onLine
+        ? "La sincronización comenzará automáticamente."
+        : "Se enviarán las fotos y los datos cuando vuelva Internet.";
+    }
+  }
+
+  if (els.manualSyncButton) els.manualSyncButton.disabled = !navigator.onLine || !currentUser || pending === 0 || running;
+}
 
 function updateConnectionState() {
   const online = navigator.onLine;
   els.connectionDot.classList.toggle("offline", !online);
-  els.connectionText.textContent = online ? "Conexión disponible" : "Sin conexión";
+  els.connectionText.textContent = online ? (localSessionActive ? "Conectado; validando sesión" : "Conexión disponible") : "Modo sin conexión";
   els.offlineWarning.classList.toggle("hidden", online);
   els.partOfflineWarning?.classList.toggle("hidden", online);
-  if (els.savePartButton) els.savePartButton.disabled = !online || isSaving;
-  $$('[data-part-capture]').forEach((button) => { button.disabled = !online || isSaving || (button.closest("#repairFields") && !els.repairEnabled?.checked); });
+  if (els.savePartButton) els.savePartButton.disabled = isSaving;
+  $$('[data-part-capture]').forEach((button) => {
+    button.disabled = isSaving || Boolean(button.closest("#repairFields") && !els.repairEnabled?.checked);
+  });
+  if (els.captureStorageMode) els.captureStorageMode.textContent = online ? "Guardado seguro" : "Se guardará en el dispositivo";
   updateActionButtons();
+  updatePendingSyncUi().catch(() => {});
 }
-window.addEventListener("online", updateConnectionState);
+
+window.addEventListener("online", async () => {
+  updateConnectionState();
+  try {
+    if (!firebaseReady) await ensureFirebaseServices();
+    await attemptAutomaticSync();
+  } catch (error) {
+    console.warn("Reconexión y sincronización automática:", error);
+  }
+});
 window.addEventListener("offline", updateConnectionState);
+els.manualSyncButton?.addEventListener("click", () => attemptAutomaticSync(true));
 updateConnectionState();
 
 function startClock() {
@@ -415,11 +649,83 @@ document.addEventListener("click", (event) => {
   }
 });
 
-async function handleAuthStateChanged(user) {
+function presentUserInInterface(user) {
+  els.authView.classList.add("hidden");
+  els.appView.classList.remove("hidden");
+  els.userName.textContent = user.displayName || "Operador";
+  els.userEmail.textContent = user.email || "—";
+  els.userAvatar.textContent = getInitials(user.displayName || user.email || "U");
+  $$(".topbar-user-mobile .avatar").forEach((avatar) => { avatar.textContent = getInitials(user.displayName || user.email || "U"); });
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? "Buenos días" : hour < 19 ? "Buenas tardes" : "Buenas noches";
+  const operatorName = (user.displayName || "Operador").trim().split(/\s+/)[0];
+  if (els.dashboardGreeting) els.dashboardGreeting.textContent = `${greeting}, ${operatorName}`;
+}
+
+async function loadLocalState(uid) {
+  if (!window.OfflineDB || !uid) return;
+  try {
+    localHistoryRecords = await OfflineDB.getBreaks(uid);
+    const localActive = await OfflineDB.getActiveBreak(uid);
+    if (localActive) {
+      currentBreak = localActive;
+      currentBreakId = localActive.id;
+    }
+    const localPart = await OfflineDB.getPart(uid, localDateKey());
+    if (localPart && (!currentPart || localPart.syncStatus === "pending" || Number(localPart.updatedAtLocal || 0) >= Number(currentPart.updatedAtLocal || 0))) {
+      currentPart = localPart;
+    }
+    renderMergedHistory();
+    renderCurrentBreak();
+    renderPart();
+    await updatePendingSyncUi();
+  } catch (error) {
+    console.warn("Estado local:", error);
+  }
+}
+
+function mergeHistoryRecords(serverRecords = serverHistoryRecords, localRecords = localHistoryRecords) {
+  const map = new Map();
+  serverRecords.forEach((record) => map.set(record.id, record));
+  localRecords.forEach((record) => {
+    const server = map.get(record.id);
+    if (!server || record.syncStatus === "pending" || record.status !== server.status) map.set(record.id, { ...(server || {}), ...record });
+  });
+  return Array.from(map.values()).sort((a, b) => String(b.startAtClient || "").localeCompare(String(a.startAtClient || "")));
+}
+
+function renderMergedHistory() {
+  const records = mergeHistoryRecords();
+  lastHistoryRecords = records;
+  renderHistory(records);
+  renderRecent(records.slice(0, 4));
+  updateDailySummary(records);
+}
+
+async function enterOfflineSession(profile) {
   clearSubscriptions();
-  currentUser = user;
+  localSessionActive = true;
+  currentUser = {
+    uid: profile.uid,
+    email: profile.email || "",
+    displayName: profile.name || "Operador",
+    isOfflineLocal: true
+  };
+  currentUserRole = profile.role || "operator";
+  presentUserInInterface(currentUser);
+  applyRolePermissions(currentUserRole);
+  await loadLocalState(profile.uid);
+  updateConnectionState();
+  showToast("Modo offline activo", "Puedes trabajar normalmente. Los datos se sincronizarán al recuperar Internet.");
+  if (navigator.onLine) attemptAutomaticSync().catch(() => {});
+}
+
+async function handleAuthStateChanged(user, force = false) {
+  if (user && localSessionActive && currentUser?.uid === user.uid && !navigator.onLine && !force) return;
   if (!user) {
-    clearAuthMessage();
+    if (localSessionActive) return;
+    clearSubscriptions();
+    currentUser = null;
     currentBreak = null;
     currentBreakId = null;
     currentPart = null;
@@ -428,50 +734,63 @@ async function handleAuthStateChanged(user) {
     els.authView.classList.remove("hidden");
     els.appView.classList.add("hidden");
     stopTimer();
+    await renderOfflineAccessPanel();
     return;
   }
 
-  els.authView.classList.add("hidden");
-  els.appView.classList.remove("hidden");
-  els.userName.textContent = user.displayName || "Operador";
-  els.userEmail.textContent = user.email || "—";
-  els.userAvatar.textContent = getInitials(user.displayName || user.email || "U");
-  $$(".topbar-user-mobile .avatar").forEach((avatar) => { avatar.textContent = getInitials(user.displayName || user.email || "U"); });
-  if (els.dashboardGreeting) {
-    const hour = new Date().getHours();
-    const greeting = hour < 12 ? "Buenos días" : hour < 19 ? "Buenas tardes" : "Buenas noches";
-    const operatorName = (user.displayName || "Operador").trim().split(/\s+/)[0];
-    els.dashboardGreeting.textContent = `${greeting}, ${operatorName}`;
+  const localProfile = window.OfflineDB ? await OfflineDB.getProfile(user.uid).catch(() => null) : null;
+  const requireOfflinePin = !navigator.onLine && localProfile?.offlineAccessEnabled;
+  if (!force && (localProfile?.locked || requireOfflinePin)) {
+    currentUser = null;
+    els.appView.classList.add("hidden");
+    els.authView.classList.remove("hidden");
+    await renderOfflineAccessPanel();
+    return;
   }
 
+  if (!force && authStateHandledUid === user.uid && !localSessionActive) return;
+  authStateHandledUid = user.uid;
+  clearSubscriptions();
+  localSessionActive = false;
+  currentUser = user;
+  presentUserInInterface(user);
+
+  let role = localProfile?.role || "operator";
   try {
-    const profileRef = doc(db, "users", user.uid);
-    const profileSnap = await getDoc(profileRef);
-    let role = "operator";
-
-    if (!profileSnap.exists()) {
-      await setDoc(profileRef, {
-        uid: user.uid,
-        name: user.displayName || "Operador",
-        email: user.email || "",
-        role: "operator",
-        active: true,
-        createdAt: serverTimestamp(),
-        createdAtClient: new Date().toISOString()
-      }, { merge: true });
-    } else {
-      role = profileSnap.data()?.role || "operator";
+    if (db && navigator.onLine) {
+      const profileRef = doc(db, "users", user.uid);
+      const profileSnap = await getDoc(profileRef);
+      if (!profileSnap.exists()) {
+        await setDoc(profileRef, {
+          uid: user.uid,
+          name: user.displayName || "Operador",
+          email: user.email || "",
+          role: "operator",
+          active: true,
+          createdAt: serverTimestamp(),
+          createdAtClient: new Date().toISOString()
+        }, { merge: true });
+      } else {
+        role = profileSnap.data()?.role || role;
+      }
     }
-
-    applyRolePermissions(role);
   } catch (error) {
-    console.warn("Perfil:", error);
-    applyRolePermissions("operator");
+    console.warn("Perfil remoto; se utilizará la copia local:", error);
   }
 
-  subscribeCurrentBreak(user.uid);
-  subscribeHistory(user.uid);
-  subscribeCurrentPart(user.uid);
+  const cachedProfile = await cacheAuthenticatedProfile(user, role).catch(() => localProfile);
+  applyRolePermissions(role);
+  await loadLocalState(user.uid);
+
+  if (db) {
+    subscribeCurrentBreak(user.uid);
+    subscribeHistory(user.uid);
+    subscribeCurrentPart(user.uid);
+  }
+
+  updateConnectionState();
+  if (cachedProfile && !cachedProfile.offlineAccessEnabled) showPinSetup(cachedProfile);
+  if (navigator.onLine) attemptAutomaticSync().catch((error) => console.warn("Sincronización inicial:", error));
 }
 
 
@@ -510,41 +829,53 @@ function clearSubscriptions() {
 }
 
 function subscribeCurrentBreak(uid) {
+  if (!db) return;
   const currentRef = doc(db, "users", uid, "current", "break");
   unsubscribeCurrent = onSnapshot(currentRef, async (snapshot) => {
+    const localActive = window.OfflineDB ? await OfflineDB.getActiveBreak(uid).catch(() => null) : null;
     if (!snapshot.exists()) {
-      currentBreak = null;
-      currentBreakId = null;
+      if (localActive) {
+        currentBreak = localActive;
+        currentBreakId = localActive.id;
+      } else {
+        currentBreak = null;
+        currentBreakId = null;
+      }
       renderCurrentBreak();
       return;
     }
 
     const pointer = snapshot.data();
     if (!pointer.breakId) {
-      currentBreak = null;
-      currentBreakId = null;
+      currentBreak = localActive || null;
+      currentBreakId = localActive?.id || null;
       renderCurrentBreak();
       return;
     }
 
-    currentBreakId = pointer.breakId;
     const breakSnap = await getDoc(doc(db, "users", uid, "breaks", pointer.breakId));
-    currentBreak = breakSnap.exists() ? { id: breakSnap.id, ...breakSnap.data() } : null;
+    const remote = breakSnap.exists() ? { id: breakSnap.id, ...breakSnap.data() } : null;
+    if (localActive && localActive.syncStatus === "pending") {
+      currentBreak = localActive;
+      currentBreakId = localActive.id;
+    } else {
+      currentBreak = remote;
+      currentBreakId = remote?.id || null;
+    }
     renderCurrentBreak();
-  }, (error) => showToast("No se pudo leer el descanso", friendlyError(error), "error"));
+  }, (error) => console.warn("Descanso remoto:", error));
 }
 
 function subscribeHistory(uid) {
+  if (!db) return;
   const historyQuery = query(collection(db, "users", uid, "breaks"), orderBy("startAtClient", "desc"), limit(50));
-  unsubscribeHistory = onSnapshot(historyQuery, (snapshot) => {
-    const records = snapshot.docs.map((item) => ({ id: item.id, ...item.data() }));
-    lastHistoryRecords = records;
-    renderHistory(records);
-    renderRecent(records.slice(0, 4));
-    updateDailySummary(records);
+  unsubscribeHistory = onSnapshot(historyQuery, async (snapshot) => {
+    serverHistoryRecords = snapshot.docs.map((item) => ({ id: item.id, ...item.data() }));
+    if (window.OfflineDB) localHistoryRecords = await OfflineDB.getBreaks(uid).catch(() => localHistoryRecords);
+    renderMergedHistory();
   }, (error) => {
-    els.historyList.innerHTML = `<div class="empty-state">No se pudo cargar el historial: ${escapeHtml(friendlyError(error))}</div>`;
-    els.recentList.innerHTML = `<div class="empty-state">No se pudo cargar la actividad reciente.</div>`;
+    console.warn("Historial remoto:", error);
+    renderMergedHistory();
   });
 }
 
@@ -562,14 +893,16 @@ function currentPartRef(uid = currentUser?.uid) {
 
 function subscribeCurrentPart(uid) {
   const partRef = currentPartRef(uid);
-  if (!partRef) return;
-  unsubscribePart = onSnapshot(partRef, (snapshot) => {
-    currentPart = snapshot.exists() ? { id: snapshot.id, ...snapshot.data() } : null;
+  if (!partRef || !db) return;
+  unsubscribePart = onSnapshot(partRef, async (snapshot) => {
+    const remotePart = snapshot.exists() ? { id: `${uid}:${snapshot.id}`, ...snapshot.data() } : null;
+    const localPart = window.OfflineDB ? await OfflineDB.getPart(uid, localDateKey()).catch(() => null) : null;
+    currentPart = localPart?.syncStatus === "pending" ? localPart : (remotePart || localPart);
     partDirty = false;
     renderPart();
   }, (error) => {
-    console.error("Parte:", error);
-    showToast("No se pudo cargar el parte", friendlyError(error), "error");
+    console.warn("Parte remoto:", error);
+    loadLocalState(uid).catch(() => {});
   });
 }
 
@@ -612,6 +945,9 @@ function collectPartPayload(status = currentPart?.status || "draft") {
     end: { ...(currentPart?.repair?.end || {}), reason: els.repairEndReason?.value.trim() || "" }
   };
   return {
+    ...(currentPart || {}),
+    id: `${currentUser.uid}:${localDateKey()}`,
+    uid: currentUser.uid,
     userId: currentUser.uid,
     userName: currentUser.displayName || "Operador",
     userEmail: currentUser.email || "",
@@ -624,14 +960,21 @@ function collectPartPayload(status = currentPart?.status || "draft") {
     },
     repair,
     observations: els.partObservations?.value.trim() || "",
-    updatedAt: serverTimestamp(),
+    syncStatus: "pending",
     updatedAtClient: nowIso,
-    ...(currentPart ? {} : { createdAt: serverTimestamp(), createdAtClient: nowIso })
+    createdAtClient: currentPart?.createdAtClient || nowIso
   };
 }
 
 function hasEvidence(entry) {
-  return Boolean(entry?.photoPath && entry?.location && Number.isFinite(Number(entry.location.latitude)) && Number.isFinite(Number(entry.location.longitude)));
+  return Boolean((entry?.photoPath || entry?.localPhotoBlob) && entry?.location && Number.isFinite(Number(entry.location.latitude)) && Number.isFinite(Number(entry.location.longitude)));
+}
+
+function createLocalObjectUrl(blob) {
+  if (!(blob instanceof Blob)) return "";
+  const url = URL.createObjectURL(blob);
+  localObjectUrls.add(url);
+  return url;
 }
 
 function renderPartStage(stageKey) {
@@ -661,8 +1004,12 @@ function renderPartStage(stageKey) {
   }
 
   if (evidence) {
-    if (entry?.photoPath) {
-      const captured = entry.capturedAtClient ? formatDateTime(parseDate(entry.capturedAtClient)) : "Evidencia registrada";
+    const captured = entry?.capturedAtClient ? formatDateTime(parseDate(entry.capturedAtClient)) : "Evidencia registrada";
+    if (entry?.localPhotoBlob instanceof Blob) {
+      const url = createLocalObjectUrl(entry.localPhotoBlob);
+      const pending = currentPart?.syncStatus === "pending" || entry?.syncStatus === "pending";
+      evidence.innerHTML = `<button class="part-photo-thumb" type="button" data-local-photo-url="${escapeHtml(url)}" data-photo-label="${escapeHtml(PART_STAGE_CONFIG[stageKey].label)}"><img class="local-photo" src="${escapeHtml(url)}" alt="${escapeHtml(PART_STAGE_CONFIG[stageKey].label)}"></button><div><strong>${pending ? "Evidencia guardada localmente" : "Evidencia guardada"}</strong><span>${escapeHtml(captured)} ${pending ? '<span class="local-sync-badge">Pendiente</span>' : ''}</span></div>`;
+    } else if (entry?.photoPath) {
       evidence.innerHTML = `<button class="part-photo-thumb is-loading" type="button" data-photo-open="${escapeHtml(entry.photoPath)}" data-photo-label="${escapeHtml(PART_STAGE_CONFIG[stageKey].label)}"><span class="photo-loading history-photo-loader">Cargando</span><img data-photo-path="${escapeHtml(entry.photoPath)}" alt="${escapeHtml(PART_STAGE_CONFIG[stageKey].label)}" loading="eager" decoding="async" referrerpolicy="no-referrer"></button><div><strong>Evidencia guardada</strong><span>${escapeHtml(captured)}</span></div>`;
     } else {
       evidence.innerHTML = "";
@@ -698,14 +1045,15 @@ function renderPart() {
   }
   if (els.partSaveTitle) els.partSaveTitle.textContent = completed ? "Parte guardado" : "Parte del día";
   if (els.partSaveStatus) {
-    if (currentPart?.updatedAtClient) els.partSaveStatus.textContent = `Última actualización: ${formatDateTime(parseDate(currentPart.updatedAtClient))}.`;
+    if (currentPart?.syncStatus === "pending") els.partSaveStatus.textContent = "Guardado en el dispositivo. Pendiente de sincronización.";
+    else if (currentPart?.updatedAtClient) els.partSaveStatus.textContent = `Última actualización: ${formatDateTime(parseDate(currentPart.updatedAtClient))}.`;
     else els.partSaveStatus.textContent = "Completa los campos y registra las evidencias obligatorias.";
   }
 }
 
 function updateRepairFields(enabled) {
   els.repairFields?.classList.toggle("is-disabled", !enabled);
-  els.repairFields?.querySelectorAll("textarea, button").forEach((control) => { control.disabled = !enabled || (!navigator.onLine && control.matches("button")); });
+  els.repairFields?.querySelectorAll("textarea, button").forEach((control) => { control.disabled = !enabled || isSaving; });
 }
 
 function markPartDirty() {
@@ -741,13 +1089,25 @@ function validatePartForCompletion(payload) {
   }
 }
 
+async function queuePartForSync(part) {
+  if (!window.OfflineDB) throw new Error("El almacenamiento offline no está disponible.");
+  await OfflineDB.putPart(part);
+  await OfflineDB.enqueue({
+    id: `part-upsert:${part.uid}:${part.dateKey}`,
+    uid: part.uid,
+    type: "part-upsert",
+    partId: part.dateKey,
+    createdAt: Date.now()
+  });
+  currentPart = part;
+  partDirty = false;
+  renderPart();
+  await updatePendingSyncUi();
+}
+
 async function savePartForm(event) {
   event?.preventDefault();
-  if (!currentUser || !firebaseReady || isSaving) return;
-  if (!navigator.onLine) {
-    showToast("Sin conexión", "Recupera internet para guardar el parte.", "error");
-    return;
-  }
+  if (!currentUser || isSaving) return;
   const payload = collectPartPayload("completed");
   try {
     validatePartForCompletion(payload);
@@ -758,16 +1118,18 @@ async function savePartForm(event) {
 
   isSaving = true;
   setBusy(els.savePartButton, true, "Guardando…");
-  showProcessing("Guardando parte…", "Validando horómetros, producción y reparación.");
+  showProcessing("Guardando parte…", navigator.onLine ? "Preparando datos para sincronizar." : "Guardando datos y fotos en este dispositivo.");
   try {
-    payload.completedAt = serverTimestamp();
     payload.completedAtClient = new Date().toISOString();
-    await setDoc(currentPartRef(), payload, { merge: true });
-    partDirty = false;
-    showToast("Parte guardado", "El registro operativo quedó guardado correctamente.");
+    payload.syncStatus = "pending";
+    await queuePartForSync(payload);
+    showToast("Parte guardado", navigator.onLine
+      ? "El registro quedó guardado y se sincronizará en segundos."
+      : "El registro quedó guardado en el dispositivo y se sincronizará cuando vuelva Internet.");
+    if (navigator.onLine) attemptAutomaticSync().catch(() => {});
   } catch (error) {
-    console.error("Guardar parte:", error);
-    showToast("No se pudo guardar el parte", friendlyError(error), "error");
+    console.error("Guardar parte local:", error);
+    showToast("No se pudo guardar el parte", error.message || "Error de almacenamiento local.", "error");
   } finally {
     isSaving = false;
     setBusy(els.savePartButton, false);
@@ -781,10 +1143,6 @@ function openPartCapture(stageKey) {
   if (!config) return;
   if (config.group === "repair" && !els.repairEnabled?.checked) {
     showToast("Reparación desactivada", "Activa 'Hubo reparación' para registrar esta evidencia.", "error");
-    return;
-  }
-  if (!navigator.onLine) {
-    showToast("Sin conexión", "Recupera internet para subir la fotografía.", "error");
     return;
   }
   partCaptureStage = stageKey;
@@ -807,15 +1165,11 @@ function openPartCapture(stageKey) {
 async function savePartEvidence(stageKey) {
   const config = PART_STAGE_CONFIG[stageKey];
   if (!config) throw new Error("La etapa del parte no es válida.");
+  if (!window.OfflineDB) throw new Error("El almacenamiento offline no está disponible.");
   const uid = currentUser.uid;
   const dateKey = localDateKey();
   const timestamp = Date.now();
   const path = `parts/${uid}/${dateKey}/${stageKey}-${timestamp}.jpg`;
-  await uploadBytes(storageRef(storage, path), capturedBlob, {
-    contentType: "image/jpeg",
-    customMetadata: { userId: uid, partId: dateKey, stage: stageKey }
-  });
-
   const nowIso = new Date().toISOString();
   const payload = collectPartPayload(currentPart?.status === "completed" ? "completed" : "draft");
   const group = { ...(payload[config.group] || {}) };
@@ -823,14 +1177,17 @@ async function savePartEvidence(stageKey) {
   group[config.key] = {
     ...existing,
     photoPath: path,
+    localPhotoBlob: capturedBlob,
     location: capturedPosition,
-    capturedAt: serverTimestamp(),
     capturedAtClient: nowIso,
+    syncStatus: "pending",
     ...(config.input ? { value: parseDecimalInput(els[config.input]) } : {}),
     ...(config.reason ? { reason: els[config.reason]?.value.trim() || "" } : {})
   };
   payload[config.group] = group;
-  await setDoc(currentPartRef(), payload, { merge: true });
+  payload.syncStatus = "pending";
+  await queuePartForSync(payload);
+  if (navigator.onLine) attemptAutomaticSync().catch(() => {});
 }
 
 els.partForm?.addEventListener("submit", savePartForm);
@@ -884,10 +1241,9 @@ function renderCurrentBreak() {
 }
 
 function updateActionButtons() {
-  const online = navigator.onLine;
   const active = Boolean(currentBreak && currentBreak.status === "active");
-  els.startBreakButton.disabled = !currentUser || active || !online || isSaving;
-  els.endBreakButton.disabled = !currentUser || !active || !online || isSaving;
+  els.startBreakButton.disabled = !currentUser || active || isSaving;
+  els.endBreakButton.disabled = !currentUser || !active || isSaving;
 }
 
 function startTimer(startDate) {
@@ -939,7 +1295,9 @@ function updateDailySummary(records) {
   const completedToday = todaysRecords.filter((record) => record.endAtClient);
   const totalSeconds = completedToday.reduce((sum, record) => sum + (durationForRecord(record)?.seconds || 0), 0);
   const averageSeconds = completedToday.length ? Math.round(totalSeconds / completedToday.length) : 0;
-  const photoCount = todaysRecords.reduce((sum, record) => sum + (record.startPhotoPath ? 1 : 0) + (record.endPhotoPath ? 1 : 0), 0);
+  const photoCount = todaysRecords.reduce((sum, record) => sum
+    + ((record.startPhotoPath || record.startPhotoBlob) ? 1 : 0)
+    + ((record.endPhotoPath || record.endPhotoBlob) ? 1 : 0), 0);
 
   const compactDuration = (seconds) => {
     const hours = Math.floor(seconds / 3600);
@@ -988,7 +1346,7 @@ function renderRecent(records) {
       <div class="record-cell"><span class="record-mobile-label">Finalización</span><strong>${escapeHtml(endTime)}</strong></div>
       <div class="record-cell"><span class="record-mobile-label">Duración</span><strong>${escapeHtml(durationLabel)}</strong></div>
       <div class="record-cell"><span class="record-mobile-label">Ubicación</span>${location ? `<a class="record-location-link" href="${mapUrl(location.latitude, location.longitude)}" target="_blank" rel="noopener">Ver en mapa</a>` : `<strong>—</strong>`}</div>
-      <span class="badge ${record.status === "active" ? "active" : "complete"} record-status">${record.status === "active" ? "Activo" : "Finalizado"}</span>
+      <span class="badge ${record.status === "active" ? "active" : "complete"} record-status">${record.status === "active" ? "Activo" : "Finalizado"}${record.syncStatus === "pending" ? ' · Pendiente' : ''}</span>
     </article>`;
   }).join("");
 }
@@ -1021,16 +1379,16 @@ function renderHistory(records) {
     const statusClass = record.status === "active" ? "active" : "complete";
     const statusText = record.status === "active" ? "Activo" : "Finalizado";
 
-    const startPhoto = record.startPhotoPath
-      ? historyPhotoTile(record.startPhotoPath, "Foto de inicio", "Inicio")
+    const startPhoto = (record.startPhotoPath || record.startPhotoBlob)
+      ? historyPhotoTile(record.startPhotoPath, "Foto de inicio", "Inicio", record.startPhotoBlob)
       : historyPhotoPlaceholder("Sin foto");
-    const endPhoto = record.endPhotoPath
-      ? historyPhotoTile(record.endPhotoPath, "Foto final", "Final")
+    const endPhoto = (record.endPhotoPath || record.endPhotoBlob)
+      ? historyPhotoTile(record.endPhotoPath, "Foto final", "Final", record.endPhotoBlob)
       : historyPhotoPlaceholder(record.status === "active" ? "Pendiente" : "Sin foto");
 
     return `<article class="history-row">
       <div class="history-date-cell"><strong>${escapeHtml(dateLong)}</strong><small>${escapeHtml(weekday)}</small></div>
-      <span class="badge ${statusClass} history-mobile-status">${statusText}</span>
+      <span class="badge ${statusClass} history-mobile-status">${statusText}${record.syncStatus === "pending" ? ' · Pendiente' : ''}</span>
       <div class="history-data-cell"><span>Hora de inicio</span><strong>${escapeHtml(startTime)}</strong></div>
       <div class="history-data-cell"><span>Finalización</span><strong>${escapeHtml(endTime)}</strong></div>
       <div class="history-data-cell"><span>Duración</span><strong>${escapeHtml(durationLabel)}</strong></div>
@@ -1048,7 +1406,11 @@ function renderHistory(records) {
   hydrateHistoryPhotos();
 }
 
-function historyPhotoTile(path, alt, label) {
+function historyPhotoTile(path, alt, label, localBlob = null) {
+  if (localBlob instanceof Blob) {
+    const url = createLocalObjectUrl(localBlob);
+    return `<button class="history-photo-button" type="button" data-local-photo-url="${escapeHtml(url)}" data-photo-label="${escapeHtml(label)}" aria-label="Abrir ${escapeHtml(alt)}"><img class="local-photo" src="${escapeHtml(url)}" alt="${escapeHtml(alt)}"></button>`;
+  }
   return `<button class="history-photo-button is-loading" type="button" data-photo-open="${escapeHtml(path)}" data-photo-label="${escapeHtml(label)}" aria-label="Abrir ${escapeHtml(alt)}">
     <span class="photo-loading history-photo-loader">Cargando</span>
     <img data-photo-path="${escapeHtml(path)}" alt="${escapeHtml(alt)}" loading="eager" decoding="async" referrerpolicy="no-referrer">
@@ -1067,6 +1429,11 @@ async function resolvePhotoUrl(path) {
 }
 
 function hydrateHistoryPhotos() {
+  $$('[data-local-photo-url]').forEach((button) => {
+    if (button.dataset.photoBound === "true") return;
+    button.dataset.photoBound = "true";
+    button.addEventListener("click", () => openLocalPhotoViewer(button.dataset.localPhotoUrl, button.dataset.photoLabel || "Fotografía"));
+  });
   $$('[data-photo-open]').forEach((button) => {
     if (button.dataset.photoBound === "true") return;
     button.dataset.photoBound = "true";
@@ -1102,6 +1469,16 @@ function hydrateHistoryPhotos() {
 
     button.addEventListener("click", () => openPhotoViewer(path, button.dataset.photoLabel || "Fotografía"));
   });
+}
+
+function openLocalPhotoViewer(url, label) {
+  if (!els.photoViewerModal || !url) return;
+  els.photoViewerTitle.textContent = label || "Fotografía";
+  els.photoViewerLoading.classList.add("hidden");
+  els.photoViewerImage.src = url;
+  els.photoViewerImage.classList.remove("hidden");
+  els.photoViewerModal.classList.remove("hidden");
+  document.body.style.overflow = "hidden";
 }
 
 async function openPhotoViewer(path, label) {
@@ -1150,10 +1527,6 @@ els.endBreakButton.addEventListener("click", () => openCapture("end"));
 
 async function openCapture(mode) {
   partCaptureStage = null;
-  if (!navigator.onLine) {
-    showToast("Sin conexión", "Recupera internet para subir la fotografía a Firebase.", "error");
-    return;
-  }
   captureMode = mode;
   capturedBlob = null;
   capturedPosition = null;
@@ -1446,30 +1819,55 @@ els.testGpsButton.addEventListener("click", async () => {
 
 els.confirmCaptureButton.addEventListener("click", saveCapture);
 
+function createLocalId(prefix = "item") {
+  if (crypto?.randomUUID) return `${prefix}-${crypto.randomUUID()}`;
+  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+async function refreshLocalBreakState() {
+  if (!window.OfflineDB || !currentUser?.uid) return;
+  localHistoryRecords = await OfflineDB.getBreaks(currentUser.uid);
+  const localActive = await OfflineDB.getActiveBreak(currentUser.uid);
+  if (localActive) {
+    currentBreak = localActive;
+    currentBreakId = localActive.id;
+  } else if (currentBreak?.syncStatus === "pending") {
+    currentBreak = null;
+    currentBreakId = null;
+  }
+  renderMergedHistory();
+  renderCurrentBreak();
+  await updatePendingSyncUi();
+}
+
 async function saveCapture() {
   if (!currentUser || !capturedBlob || !capturedPosition || isSaving) return;
-  if (!navigator.onLine) {
-    showToast("Sin conexión", "No se puede subir la fotografía en este momento.", "error");
-    return;
-  }
-
   const savingPartStage = partCaptureStage;
   const savingMode = captureMode;
   isSaving = true;
   validateCapture();
   updateActionButtons();
-  showProcessing(savingPartStage ? "Guardando evidencia…" : savingMode === "start" ? "Iniciando descanso…" : "Finalizando descanso…", "Subiendo fotografía y guardando GPS.");
+  showProcessing(
+    savingPartStage ? "Guardando evidencia…" : savingMode === "start" ? "Iniciando descanso…" : "Finalizando descanso…",
+    navigator.onLine ? "Guardando localmente y preparando sincronización." : "Guardando foto, hora y GPS en este dispositivo."
+  );
 
   try {
     if (savingPartStage) await savePartEvidence(savingPartStage);
     else if (savingMode === "start") await saveBreakStart();
     else await saveBreakEnd();
     closeCapture(true);
-    if (savingPartStage) showToast("Evidencia guardada", `${PART_STAGE_CONFIG[savingPartStage].label}: foto y ubicación registradas.`);
-    else showToast(savingMode === "start" ? "Descanso iniciado" : "Descanso finalizado", "La fotografía, la hora y la ubicación quedaron guardadas.");
+    if (savingPartStage) {
+      showToast("Evidencia guardada", `${PART_STAGE_CONFIG[savingPartStage].label}: foto y ubicación registradas${navigator.onLine ? "" : " sin conexión"}.`);
+    } else {
+      showToast(savingMode === "start" ? "Descanso iniciado" : "Descanso finalizado", navigator.onLine
+        ? "El registro se guardó y se sincronizará automáticamente."
+        : "El registro quedó pendiente en el dispositivo hasta recuperar Internet.");
+    }
+    if (navigator.onLine) attemptAutomaticSync().catch(() => {});
   } catch (error) {
     console.error(error);
-    showToast("No se pudo guardar el registro", friendlyError(error), "error");
+    showToast("No se pudo guardar el registro", error.message || friendlyError(error), "error");
   } finally {
     isSaving = false;
     hideProcessing();
@@ -1480,79 +1878,252 @@ async function saveCapture() {
 }
 
 async function saveBreakStart() {
+  if (!window.OfflineDB) throw new Error("El almacenamiento offline no está disponible.");
   const uid = currentUser.uid;
-  const breakRef = doc(collection(db, "users", uid, "breaks"));
-  const currentRef = doc(db, "users", uid, "current", "break");
-  const path = `breaks/${uid}/${breakRef.id}/start.jpg`;
+  const existingActive = currentBreak?.status === "active" ? currentBreak : await OfflineDB.getActiveBreak(uid);
+  if (existingActive) throw new Error("Ya existe un descanso activo para este usuario.");
 
-  await uploadBytes(storageRef(storage, path), capturedBlob, {
-    contentType: "image/jpeg",
-    customMetadata: { userId: uid, breakId: breakRef.id, mark: "start" }
-  });
-
+  const breakId = createLocalId("break");
+  const path = `breaks/${uid}/${breakId}/start.jpg`;
   const nowIso = new Date().toISOString();
-  await runTransaction(db, async (transaction) => {
-    const currentSnapshot = await transaction.get(currentRef);
-    if (currentSnapshot.exists() && currentSnapshot.data().status === "active") {
-      throw new Error("Ya existe un descanso activo para este usuario.");
-    }
+  const record = {
+    id: breakId,
+    uid,
+    userId: uid,
+    userName: currentUser.displayName || "Operador",
+    userEmail: currentUser.email || "",
+    status: "active",
+    startAtClient: nowIso,
+    startLocation: capturedPosition,
+    startPhotoPath: path,
+    startPhotoBlob: capturedBlob,
+    createdAtClient: nowIso,
+    updatedAtClient: nowIso,
+    syncStatus: "pending"
+  };
 
-    transaction.set(breakRef, {
-      userId: uid,
-      userName: currentUser.displayName || "Operador",
-      userEmail: currentUser.email || "",
-      status: "active",
-      startAt: serverTimestamp(),
-      startAtClient: nowIso,
-      startLocation: capturedPosition,
-      startPhotoPath: path,
-      createdAt: serverTimestamp(),
-      createdAtClient: nowIso,
-      updatedAt: serverTimestamp()
-    });
-
-    transaction.set(currentRef, {
-      userId: uid,
-      breakId: breakRef.id,
-      status: "active",
-      startAtClient: nowIso,
-      updatedAt: serverTimestamp()
-    });
+  await OfflineDB.putBreak(record);
+  await OfflineDB.enqueue({
+    id: `break-start:${uid}:${breakId}`,
+    uid,
+    type: "break-start",
+    breakId,
+    createdAt: Date.now()
   });
+  currentBreak = record;
+  currentBreakId = breakId;
+  await refreshLocalBreakState();
 }
 
 async function saveBreakEnd() {
+  if (!window.OfflineDB) throw new Error("El almacenamiento offline no está disponible.");
   const uid = currentUser.uid;
-  const currentRef = doc(db, "users", uid, "current", "break");
-  const currentSnapshot = await getDoc(currentRef);
-  if (!currentSnapshot.exists() || !currentSnapshot.data().breakId) throw new Error("No existe un descanso activo para finalizar.");
+  const active = currentBreak?.status === "active" ? currentBreak : await OfflineDB.getActiveBreak(uid);
+  if (!active?.id) throw new Error("No existe un descanso activo para finalizar.");
 
-  const breakId = currentSnapshot.data().breakId;
-  const breakRef = doc(db, "users", uid, "breaks", breakId);
+  const breakId = active.id;
   const path = `breaks/${uid}/${breakId}/end.jpg`;
-
-  await uploadBytes(storageRef(storage, path), capturedBlob, {
-    contentType: "image/jpeg",
-    customMetadata: { userId: uid, breakId, mark: "end" }
-  });
-
   const nowIso = new Date().toISOString();
-  await runTransaction(db, async (transaction) => {
-    const pointerSnapshot = await transaction.get(currentRef);
-    const breakSnapshot = await transaction.get(breakRef);
-    if (!pointerSnapshot.exists() || pointerSnapshot.data().breakId !== breakId) throw new Error("El descanso activo cambió. Actualiza la pantalla.");
-    if (!breakSnapshot.exists() || breakSnapshot.data().status !== "active") throw new Error("El descanso ya no está activo.");
+  const record = {
+    ...active,
+    uid,
+    userId: uid,
+    status: "completed",
+    endAtClient: nowIso,
+    endLocation: capturedPosition,
+    endPhotoPath: path,
+    endPhotoBlob: capturedBlob,
+    updatedAtClient: nowIso,
+    syncStatus: "pending"
+  };
 
-    transaction.update(breakRef, {
-      status: "completed",
-      endAt: serverTimestamp(),
-      endAtClient: nowIso,
-      endLocation: capturedPosition,
-      endPhotoPath: path,
-      updatedAt: serverTimestamp()
-    });
-    transaction.delete(currentRef);
+  await OfflineDB.putBreak(record);
+  await OfflineDB.enqueue({
+    id: `break-end:${uid}:${breakId}`,
+    uid,
+    type: "break-end",
+    breakId,
+    createdAt: Date.now()
   });
+  currentBreak = null;
+  currentBreakId = null;
+  await refreshLocalBreakState();
+}
+
+function sanitizeForFirestore(value) {
+  if (value === null || value === undefined) return value;
+  if (value instanceof Blob) return undefined;
+  if (typeof value?.toDate === "function") return value;
+  if (Array.isArray(value)) return value.map(sanitizeForFirestore).filter((item) => item !== undefined);
+  if (typeof value !== "object") return value;
+  const output = {};
+  const localOnlyKeys = new Set(["id", "uid", "syncStatus", "updatedAtLocal", "startPhotoBlob", "endPhotoBlob", "localPhotoBlob"]);
+  Object.entries(value).forEach(([key, item]) => {
+    if (localOnlyKeys.has(key)) return;
+    const cleaned = sanitizeForFirestore(item);
+    if (cleaned !== undefined) output[key] = cleaned;
+  });
+  return output;
+}
+
+async function ensureRemotePhoto(path, blob, metadata = {}) {
+  if (!path) throw new Error("La fotografía no tiene una ruta de destino.");
+  const ref = storageRef(storage, path);
+  try {
+    await getDownloadURL(ref);
+    return path;
+  } catch (error) {
+    if (error?.code && error.code !== "storage/object-not-found") throw error;
+  }
+  if (!(blob instanceof Blob)) throw new Error(`No se encontró la foto local pendiente: ${path}`);
+  await uploadBytes(ref, blob, { contentType: "image/jpeg", customMetadata: metadata });
+  return path;
+}
+
+async function syncBreakStart(item) {
+  const record = await OfflineDB.getBreak(item.breakId);
+  if (!record) throw new Error("No se encontró el descanso local de inicio.");
+  await ensureRemotePhoto(record.startPhotoPath, record.startPhotoBlob, {
+    userId: item.uid,
+    breakId: item.breakId,
+    mark: "start"
+  });
+
+  const breakRef = doc(db, "users", item.uid, "breaks", item.breakId);
+  const currentRef = doc(db, "users", item.uid, "current", "break");
+  await setDoc(breakRef, {
+    userId: item.uid,
+    userName: record.userName || "Operador",
+    userEmail: record.userEmail || "",
+    status: "active",
+    startAt: serverTimestamp(),
+    startAtClient: record.startAtClient,
+    startLocation: record.startLocation,
+    startPhotoPath: record.startPhotoPath,
+    createdAt: serverTimestamp(),
+    createdAtClient: record.createdAtClient || record.startAtClient,
+    updatedAt: serverTimestamp(),
+    updatedAtClient: record.updatedAtClient || record.startAtClient
+  }, { merge: true });
+  await setDoc(currentRef, {
+    userId: item.uid,
+    breakId: item.breakId,
+    status: "active",
+    startAtClient: record.startAtClient,
+    updatedAt: serverTimestamp()
+  }, { merge: true });
+
+  record.startSynced = true;
+  if (record.status === "active") record.syncStatus = "synced";
+  await OfflineDB.putBreak(record);
+}
+
+async function syncBreakEnd(item) {
+  const record = await OfflineDB.getBreak(item.breakId);
+  if (!record) throw new Error("No se encontró el descanso local de finalización.");
+
+  // Si el inicio todavía no llegó al servidor, se crea primero para respetar las reglas de Firestore.
+  const breakRef = doc(db, "users", item.uid, "breaks", item.breakId);
+  const remote = await getDoc(breakRef);
+  if (!remote.exists()) {
+    await syncBreakStart({ ...item, type: "break-start" });
+  }
+
+  await ensureRemotePhoto(record.endPhotoPath, record.endPhotoBlob, {
+    userId: item.uid,
+    breakId: item.breakId,
+    mark: "end"
+  });
+
+  await setDoc(breakRef, {
+    userId: item.uid,
+    status: "completed",
+    endAt: serverTimestamp(),
+    endAtClient: record.endAtClient,
+    endLocation: record.endLocation,
+    endPhotoPath: record.endPhotoPath,
+    updatedAt: serverTimestamp(),
+    updatedAtClient: record.updatedAtClient || record.endAtClient
+  }, { merge: true });
+  await deleteDoc(doc(db, "users", item.uid, "current", "break"));
+
+  record.startSynced = true;
+  record.endSynced = true;
+  record.syncStatus = "synced";
+  await OfflineDB.putBreak(record);
+}
+
+async function syncPartUpsert(item) {
+  const part = await OfflineDB.getPart(item.uid, item.partId);
+  if (!part) throw new Error("No se encontró el parte local pendiente.");
+
+  for (const [stageKey, config] of Object.entries(PART_STAGE_CONFIG)) {
+    const entry = part?.[config.group]?.[config.key];
+    if (!entry?.localPhotoBlob) continue;
+    await ensureRemotePhoto(entry.photoPath, entry.localPhotoBlob, {
+      userId: item.uid,
+      partId: item.partId,
+      stage: stageKey
+    });
+    entry.photoSynced = true;
+    entry.syncStatus = "synced";
+  }
+
+  const clean = sanitizeForFirestore(part);
+  clean.userId = item.uid;
+  clean.dateKey = item.partId;
+  clean.updatedAt = serverTimestamp();
+  if (!clean.createdAtClient) clean.createdAtClient = new Date().toISOString();
+  if (clean.status === "completed") clean.completedAt = serverTimestamp();
+  await setDoc(doc(db, "users", item.uid, "parts", item.partId), clean, { merge: true });
+
+  part.syncStatus = "synced";
+  await OfflineDB.putPart(part);
+  currentPart = part;
+}
+
+async function processSyncItem(item) {
+  if (item.type === "break-start") return syncBreakStart(item);
+  if (item.type === "break-end") return syncBreakEnd(item);
+  if (item.type === "part-upsert") return syncPartUpsert(item);
+  throw new Error(`Tipo de sincronización desconocido: ${item.type}`);
+}
+
+async function attemptAutomaticSync(manual = false) {
+  if (syncInProgress || !navigator.onLine || !window.OfflineDB || !window.LubaydSyncQueue || !currentUser?.uid) return;
+  if (!firebaseReady || !auth || !db || !storage) {
+    if (manual) showToast("Firebase aún no está disponible", "Espera unos segundos y vuelve a intentar.", "error");
+    return;
+  }
+  const authenticatedUser = auth.currentUser;
+  if (!authenticatedUser || authenticatedUser.uid !== currentUser.uid) {
+    if (manual) showToast("Debes validar la sesión online", "Ingresa con correo y contraseña para sincronizar este dispositivo.", "error");
+    els.connectionText.textContent = "Conectado; falta validar sesión";
+    return;
+  }
+
+  const pending = await OfflineDB.countPending(currentUser.uid);
+  if (!pending) {
+    await updatePendingSyncUi();
+    return;
+  }
+
+  syncInProgress = true;
+  try {
+    const result = await LubaydSyncQueue.process({
+      uid: currentUser.uid,
+      adapter: processSyncItem,
+      onProgress: ({ index, total }) => updatePendingSyncUi({ running: true, processed: index - 1, total }),
+      onChange: (state) => updatePendingSyncUi(state)
+    });
+    await loadLocalState(currentUser.uid);
+    if (result.processed) showToast("Sincronización completada", `${result.processed} registro${result.processed === 1 ? "" : "s"} enviado${result.processed === 1 ? "" : "s"} a Firebase.`);
+    if (result.failed) showToast("Quedaron registros pendientes", "La aplicación volverá a intentar automáticamente.", "error");
+  } finally {
+    syncInProgress = false;
+    await updatePendingSyncUi();
+    updateConnectionState();
+  }
 }
 
 function showProcessing(title, message) {
@@ -1600,6 +2171,7 @@ async function initializeFirebaseServices() {
     doc = firestoreSdk.doc;
     setDoc = firestoreSdk.setDoc;
     getDoc = firestoreSdk.getDoc;
+    deleteDoc = firestoreSdk.deleteDoc;
     collection = firestoreSdk.collection;
     query = firestoreSdk.query;
     orderBy = firestoreSdk.orderBy;
@@ -1640,15 +2212,40 @@ async function initializeFirebaseServices() {
     firebaseReady = false;
     window.__FIREBASE_READY__ = false;
     console.error("No se pudo cargar Firebase:", error);
+    const offlineAvailable = Boolean(offlineProfile?.offlineAccessEnabled);
     const message = window.location.protocol === "file:"
       ? "Estás abriendo index.html desde una carpeta. La aplicación debe abrirse desde la dirección HTTPS de GitHub Pages."
-      : "No se pudo cargar Firebase. Actualiza con Ctrl+F5 y revisa que la red no bloquee www.gstatic.com.";
+      : !navigator.onLine && offlineAvailable
+        ? "Firebase no está disponible sin conexión. Ingresa con tu PIN offline."
+        : "No se pudo cargar Firebase. Actualiza la página y revisa que la red no bloquee www.gstatic.com.";
     if (els.startupError) {
       els.startupError.textContent = message;
-      els.startupError.classList.remove("hidden");
+      els.startupError.classList.toggle("hidden", !navigator.onLine && offlineAvailable);
     }
-    showAuthMessage(message);
+    if (!offlineAvailable || navigator.onLine) showAuthMessage(message);
+    await renderOfflineAccessPanel();
   }
 }
 
-initializeFirebaseServices();
+async function ensureFirebaseServices() {
+  if (firebaseReady) return true;
+  if (!firebaseInitializationPromise) {
+    firebaseInitializationPromise = initializeFirebaseServices()
+      .catch((error) => {
+        console.warn("Inicialización de Firebase:", error);
+        return false;
+      })
+      .finally(() => {
+        firebaseInitializationPromise = null;
+      });
+  }
+  await firebaseInitializationPromise;
+  return firebaseReady;
+}
+
+async function bootApplication() {
+  await initializeOfflineAccess();
+  await ensureFirebaseServices();
+}
+
+bootApplication();
