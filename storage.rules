@@ -13,25 +13,33 @@ service firebase.storage {
 
     match /breaks/{uid}/{recordId}/{fileName} {
       allow read: if signedIn();
-      allow create, update: if signedIn() && request.auth.uid == uid && validImage();
+      allow create, update: if signedIn()
+                            && request.auth.uid == uid
+                            && validImage();
       allow delete: if false;
     }
 
     match /parts/{uid}/{partId}/{fileName} {
       allow read: if signedIn();
-      allow create, update: if signedIn() && request.auth.uid == uid && validImage();
+      allow create, update: if signedIn()
+                            && request.auth.uid == uid
+                            && validImage();
       allow delete: if false;
     }
 
     match /services/{uid}/{serviceId}/{fileName} {
       allow read: if signedIn();
-      allow create, update: if signedIn() && request.auth.uid == uid && validImage();
+      allow create, update: if signedIn()
+                            && request.auth.uid == uid
+                            && validImage();
       allow delete: if false;
     }
 
     match /fuel/{uid}/{loadId}/{fileName} {
       allow read: if signedIn();
-      allow create, update: if signedIn() && request.auth.uid == uid && validImage();
+      allow create, update: if signedIn()
+                            && request.auth.uid == uid
+                            && validImage();
       allow delete: if false;
     }
 

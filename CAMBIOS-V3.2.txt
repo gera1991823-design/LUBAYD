@@ -1,0 +1,13 @@
+APP LUBAYD V3.2
+
+- Diseño moderno para PC y celular.
+- Navegación móvil inferior con áreas seguras de iPhone.
+- Tarjetas y formularios adaptados al ancho de pantalla.
+- Reintento automático de Firebase al recuperar Internet.
+- Recuperación automática de sesión para sincronizar después de ingresar por PIN.
+- Cola offline con detalle de errores.
+- Fotos comprimidas antes de guardarse y sincronizarse.
+- Botón de sincronización visible en la barra superior móvil.
+- Mecánico sin acceso a Descanso.
+- Combustible visible para Mecánico y Administrador.
+- Reglas de Firestore y Storage incluidas.

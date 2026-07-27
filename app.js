@@ -23,6 +23,7 @@ const els = {
   offlineLoginPanel: $("#offlineLoginPanel"), offlineUserAvatar: $("#offlineUserAvatar"), offlineUserName: $("#offlineUserName"), offlineUserEmail: $("#offlineUserEmail"), offlinePinInput: $("#offlinePinInput"), offlineLoginButton: $("#offlineLoginButton"),
   sidebar: $("#sidebar"), menuButton: $("#menuButton"), pageTitle: $("#pageTitle"), userAvatar: $("#userAvatar"), userName: $("#userName"), userEmail: $("#userEmail"), userRoleBadge: $("#userRoleBadge"),
   connectionDot: $("#connectionDot"), connectionText: $("#connectionText"), syncText: $("#syncText"), pendingCount: $("#pendingCount"), syncButton: $("#syncButton"), lockButton: $("#lockButton"),
+  topSyncButton: $("#topSyncButton"), topConnectionDot: $("#topConnectionDot"), topConnectionText: $("#topConnectionText"), topSyncText: $("#topSyncText"), topPendingCount: $("#topPendingCount"),
   liveDate: $("#liveDate"), liveClock: $("#liveClock"), dashboardClock: $("#dashboardClock"), dashboardAvatar: $("#dashboardAvatar"), dashboardGreeting: $("#dashboardGreeting"), dashboardRole: $("#dashboardRole"), dashboardConnection: $("#dashboardConnection"), offlineBanner: $("#offlineBanner"), dashboardCards: $("#dashboardCards"), recentActivity: $("#recentActivity"),
   breakBadge: $("#breakBadge"), breakTitle: $("#breakTitle"), breakTimer: $("#breakTimer"), breakDescription: $("#breakDescription"), startBreakButton: $("#startBreakButton"), endBreakButton: $("#endBreakButton"), breakRecentList: $("#breakRecentList"),
   partForm: $("#partForm"), partStatus: $("#partStatus"), establishmentInput: $("#establishmentInput"), machineInput: $("#machineInput"), partDateInput: $("#partDateInput"), horometerStages: $("#horometerStages"), trozoInput: $("#trozoInput"), pulpaInput: $("#pulpaInput"), savePartButton: $("#savePartButton"),
@@ -75,6 +76,11 @@ let captureObjectUrl = null;
 let timerHandle = null;
 let syncRunning = false;
 let authResolved = false;
+let firebaseInitPromise = null;
+let authObserverUnsubscribe = null;
+let reconnectRunning = false;
+let lastSyncError = "";
+let syncRetryHandle = null;
 
 function escapeHtml(value) {
   return String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
@@ -118,21 +124,76 @@ function reveal(view) {
 }
 
 async function importFirebase() {
-  const version = "10.14.1";
-  const [appSdk, authSdk, firestoreSdk, storageSdk] = await Promise.all([
-    import(`https://www.gstatic.com/firebasejs/${version}/firebase-app.js`),
-    import(`https://www.gstatic.com/firebasejs/${version}/firebase-auth.js`),
-    import(`https://www.gstatic.com/firebasejs/${version}/firebase-firestore.js`),
-    import(`https://www.gstatic.com/firebasejs/${version}/firebase-storage.js`)
-  ]);
-  sdk = { ...authSdk, ...firestoreSdk, storageRef: storageSdk.ref, uploadBytes: storageSdk.uploadBytes, getDownloadURL: storageSdk.getDownloadURL };
-  const app = appSdk.initializeApp(firebaseConfig);
-  auth = authSdk.getAuth(app);
-  db = firestoreSdk.getFirestore(app);
-  storage = storageSdk.getStorage(app);
-  await authSdk.setPersistence(auth, authSdk.browserLocalPersistence).catch(() => {});
-  firestoreSdk.enableMultiTabIndexedDbPersistence(db).catch(() => {});
-  firebaseReady = true;
+  if (firebaseReady && auth && db && storage) return true;
+  if (firebaseInitPromise) return firebaseInitPromise;
+
+  firebaseInitPromise = (async () => {
+    const version = "10.14.1";
+    const [appSdk, authSdk, firestoreSdk, storageSdk] = await Promise.all([
+      import(`https://www.gstatic.com/firebasejs/${version}/firebase-app.js`),
+      import(`https://www.gstatic.com/firebasejs/${version}/firebase-auth.js`),
+      import(`https://www.gstatic.com/firebasejs/${version}/firebase-firestore.js`),
+      import(`https://www.gstatic.com/firebasejs/${version}/firebase-storage.js`)
+    ]);
+
+    sdk = {
+      ...authSdk,
+      ...firestoreSdk,
+      storageRef: storageSdk.ref,
+      uploadBytes: storageSdk.uploadBytes,
+      getDownloadURL: storageSdk.getDownloadURL
+    };
+
+    const app = appSdk.getApps().length ? appSdk.getApps()[0] : appSdk.initializeApp(firebaseConfig);
+    auth = authSdk.getAuth(app);
+    db = firestoreSdk.getFirestore(app);
+    storage = storageSdk.getStorage(app);
+    await authSdk.setPersistence(auth, authSdk.browserLocalPersistence).catch(() => {});
+
+    try {
+      await firestoreSdk.enableMultiTabIndexedDbPersistence(db);
+    } catch (error) {
+      if (!String(error?.code || "").includes("failed-precondition") && !String(error?.code || "").includes("unimplemented")) {
+        console.warn("Persistencia Firestore", error);
+      }
+    }
+
+    firebaseReady = true;
+    attachAuthObserver();
+    return true;
+  })().catch((error) => {
+    firebaseReady = false;
+    firebaseInitPromise = null;
+    throw error;
+  });
+
+  return firebaseInitPromise;
+}
+
+function attachAuthObserver() {
+  if (!auth || authObserverUnsubscribe) return;
+  authObserverUnsubscribe = sdk.onAuthStateChanged(auth, handleAuthState, (error) => {
+    console.warn("Estado de autenticacion", error);
+  });
+}
+
+async function waitForAuthUser(timeoutMs = 7000) {
+  if (!auth) return null;
+  if (auth.currentUser) return auth.currentUser;
+  return new Promise((resolve) => {
+    let settled = false;
+    let timer = null;
+    let unsubscribe = () => {};
+    const finish = (user) => {
+      if (settled) return;
+      settled = true;
+      if (timer) clearTimeout(timer);
+      unsubscribe();
+      resolve(user || null);
+    };
+    unsubscribe = sdk.onAuthStateChanged(auth, finish, () => finish(null));
+    timer = setTimeout(() => finish(auth.currentUser), timeoutMs);
+  });
 }
 
 async function initializeOfflineProfile() {
@@ -156,14 +217,30 @@ async function boot() {
   bindEvents();
   startClock();
   try { await initializeOfflineProfile(); } catch (error) { console.warn("Base offline", error); }
+
+  if (!navigator.onLine) {
+    authResolved = true;
+    reveal("auth");
+    renderOfflineLoginPanel();
+    if (!lastOfflineProfile?.offlineAccessEnabled) {
+      showAuthMessage("Este dispositivo todavia no tiene acceso offline configurado. Conectate una vez para iniciar sesion y crear el PIN.");
+    }
+    return;
+  }
+
   try {
     await importFirebase();
-    sdk.onAuthStateChanged(auth, handleAuthState);
+    const user = await waitForAuthUser();
+    if (!user && !authResolved && !localSession) {
+      authResolved = true;
+      reveal("auth");
+      renderOfflineLoginPanel();
+    }
   } catch (error) {
     console.warn("Firebase no disponible", error);
     authResolved = true;
     reveal("auth");
-    if (!lastOfflineProfile?.offlineAccessEnabled) showAuthMessage(navigator.onLine ? "No se pudo cargar Firebase. Revisa la conexion y actualiza la pagina." : "Este dispositivo todavia no tiene acceso offline configurado.");
+    if (!lastOfflineProfile?.offlineAccessEnabled) showAuthMessage("No se pudo cargar Firebase. Revisa la conexion y actualiza la pagina.");
   }
 }
 
@@ -171,15 +248,34 @@ async function handleAuthState(user) {
   if (user) {
     try {
       const profile = await resolveProfile(user);
-      if (profile?.locked) {
+      if (profile?.locked && !localSession) {
         authResolved = true;
         reveal("auth");
         renderOfflineLoginPanel();
         return;
       }
+
+      if (localSession && currentProfile?.uid === user.uid) {
+        currentUser = user;
+        currentProfile = profile;
+        localSession = false;
+        authResolved = true;
+        applyProfile();
+        applyRoleVisibility();
+        updateConnection();
+        await refreshServerData().catch((error) => console.warn("Datos remotos", error));
+        await syncNow(false).catch((error) => console.warn("Sincronizacion al reconectar", error));
+        showToast("Sesion validada", "La aplicacion volvio al modo en linea y sincronizara los pendientes.");
+        return;
+      }
+
       await enterApplication(user, profile, false);
     } catch (error) {
       console.error("Sesion", error);
+      if (localSession && currentProfile) {
+        updateConnection();
+        return;
+      }
       showAuthMessage("No se pudo cargar el perfil del usuario.");
       reveal("auth");
     }
@@ -289,6 +385,7 @@ function bindEvents() {
   els.offlineLoginButton.addEventListener("click", loginOffline);
   els.menuButton.addEventListener("click", () => els.sidebar.classList.toggle("open"));
   els.syncButton.addEventListener("click", () => syncNow(true));
+  els.topSyncButton?.addEventListener("click", () => syncNow(true));
   els.lockButton.addEventListener("click", lockApplication);
   $$('[data-section]').forEach((button) => button.addEventListener("click", () => showSection(button.dataset.section)));
   $$('[data-section-link]').forEach((button) => button.addEventListener("click", () => showSection(button.dataset.sectionLink)));
@@ -309,8 +406,11 @@ function bindEvents() {
   els.confirmCaptureButton.addEventListener("click", confirmCapture);
   els.savePinButton.addEventListener("click", saveOfflinePin);
   els.skipPinButton.addEventListener("click", () => els.pinModal.classList.add("hidden"));
-  window.addEventListener("online", () => { updateConnection(); syncNow(false).catch(console.warn); });
-  window.addEventListener("offline", updateConnection);
+  window.addEventListener("online", () => { updateConnection(); reconnectAndSync().catch(console.warn); });
+  window.addEventListener("offline", () => { updateConnection(); scheduleSyncRetry(false); });
+  navigator.serviceWorker?.addEventListener?.("message", (event) => {
+    if (event.data?.type === "TRY_SYNC") reconnectAndSync().catch(console.warn);
+  });
   document.addEventListener("click", (event) => {
     const partCapture = event.target.closest("[data-horometer-capture]");
     if (partCapture) captureHorometer(partCapture.dataset.horometerCapture);
@@ -330,20 +430,24 @@ function switchAuth(mode) {
 
 async function loginOnline(event) {
   event.preventDefault();
-  if (!navigator.onLine || !firebaseReady) { showAuthMessage("No hay conexion. Usa el ingreso por PIN offline."); return; }
+  if (!navigator.onLine) { showAuthMessage("No hay conexion. Usa el ingreso por PIN offline."); return; }
   setBusy(els.loginButton, true, "Ingresando...");
   clearAuthMessage();
-  try { await sdk.signInWithEmailAndPassword(auth, els.loginEmail.value.trim(), els.loginPassword.value); }
+  try {
+    await importFirebase();
+    await sdk.signInWithEmailAndPassword(auth, els.loginEmail.value.trim(), els.loginPassword.value);
+  }
   catch (error) { showAuthMessage(friendlyError(error)); }
   finally { setBusy(els.loginButton, false); }
 }
 
 async function registerOnline(event) {
   event.preventDefault();
-  if (!navigator.onLine || !firebaseReady) { showAuthMessage("Crear usuarios requiere Internet."); return; }
+  if (!navigator.onLine) { showAuthMessage("Crear usuarios requiere Internet."); return; }
   if (els.registerPassword.value !== els.registerPasswordConfirm.value) { showAuthMessage("Las contrasenas no coinciden."); return; }
   setBusy(els.registerButton, true, "Creando...");
   try {
+    await importFirebase();
     const credential = await sdk.createUserWithEmailAndPassword(auth, els.registerEmail.value.trim(), els.registerPassword.value);
     await sdk.updateProfile(credential.user, { displayName: els.registerName.value.trim() });
     await sdk.setDoc(sdk.doc(db, "users", credential.user.uid), { uid: credential.user.uid, name: els.registerName.value.trim(), email: credential.user.email || "", role: "operator", active: true, createdAt: sdk.serverTimestamp(), createdAtClient: localIso() }, { merge: true });
@@ -404,7 +508,11 @@ function friendlyError(error) {
     "auth/wrong-password": "Contrasena incorrecta.",
     "auth/email-already-in-use": "Ese correo ya esta registrado.",
     "auth/weak-password": "La contrasena debe tener al menos 6 caracteres.",
-    "auth/network-request-failed": "No se pudo conectar con Firebase."
+    "auth/network-request-failed": "No se pudo conectar con Firebase.",
+    "permission-denied": "Firebase rechazo la operacion. Publica las reglas incluidas en esta version.",
+    "storage/unauthorized": "Storage rechazo la foto. Publica las reglas de Storage incluidas.",
+    "storage/retry-limit-exceeded": "La foto no pudo cargarse por un problema de red.",
+    "unavailable": "Firebase no esta disponible temporalmente."
   };
   return messages[code] || error?.message || "Ocurrio un error inesperado.";
 }
@@ -490,19 +598,46 @@ function renderAll() {
 
 function updateConnection() {
   const online = navigator.onLine;
-  els.connectionDot.classList.toggle("online", online);
-  els.connectionDot.classList.toggle("offline", !online);
-  els.connectionText.textContent = online ? (localSession ? "En linea; validar sesion" : "En linea") : "Sin conexion";
-  els.dashboardConnection.textContent = online ? "En linea" : "Sin conexion";
+  const validated = online && firebaseReady && !localSession && Boolean(auth?.currentUser);
+  const connectionLabel = !online ? "Sin conexion" : validated ? "En linea" : "En linea · validando";
+  const connectionDetail = !online ? "Modo offline" : validated ? "Sesion validada" : "Pendiente validar sesion";
+
+  [els.connectionDot, els.topConnectionDot].filter(Boolean).forEach((dot) => {
+    dot.classList.toggle("online", validated);
+    dot.classList.toggle("offline", !online);
+    dot.classList.toggle("waiting", online && !validated);
+  });
+  els.connectionText.textContent = connectionLabel;
+  if (els.topConnectionText) els.topConnectionText.textContent = connectionLabel;
+  els.dashboardConnection.textContent = connectionDetail;
   els.offlineBanner.classList.toggle("hidden", online);
 }
 
 async function updateSyncUi(state = null) {
   if (!currentUser) return;
   const count = await OfflineDB.countPending(currentUser.uid).catch(() => 0);
+  const running = Boolean(state?.running);
+  if (state?.lastError) lastSyncError = state.lastError;
+  if (!count && !running) lastSyncError = "";
+
+  const text = running
+    ? `Sincronizando ${state.processed || 0}/${state.total || count}`
+    : count
+      ? lastSyncError ? `${count} pendiente${count === 1 ? "" : "s"} · revisar` : `${count} pendiente${count === 1 ? "" : "s"}`
+      : "Todo sincronizado";
+
   els.pendingCount.textContent = String(count);
   els.pendingCount.classList.toggle("hidden", count === 0);
-  els.syncText.textContent = state?.running ? `Sincronizando ${state.processed || 0}/${state.total || count}` : count ? `${count} pendiente${count === 1 ? "" : "s"}` : "Sin pendientes";
+  els.syncText.textContent = text;
+  els.syncText.title = lastSyncError || "";
+  if (els.topPendingCount) {
+    els.topPendingCount.textContent = String(count);
+    els.topPendingCount.classList.toggle("hidden", count === 0);
+  }
+  if (els.topSyncText) {
+    els.topSyncText.textContent = text;
+    els.topSyncText.title = lastSyncError || "";
+  }
 }
 
 function renderDashboardCards() {
@@ -568,6 +703,60 @@ function renderTimers() {
   els.serviceTimer.textContent = currentService?.status === "active" ? formatDuration(currentService.startAtClient) : currentService?.status === "completed" ? formatDuration(currentService.startAtClient, currentService.endAtClient) : "00:00:00";
 }
 
+async function requestBackgroundSync() {
+  try {
+    if (!("serviceWorker" in navigator)) return;
+    const registration = await navigator.serviceWorker.ready;
+    if (registration.sync?.register) await registration.sync.register("lubayd-sync");
+  } catch (error) {
+    console.debug("Background Sync no disponible", error);
+  }
+}
+
+async function queueForSync(item) {
+  await OfflineDB.enqueue(item);
+  requestBackgroundSync().catch(() => {});
+  scheduleSyncRetry(true);
+}
+
+function scheduleSyncRetry(enabled = true) {
+  if (syncRetryHandle) clearTimeout(syncRetryHandle);
+  syncRetryHandle = null;
+  if (!enabled || !navigator.onLine || !currentUser) return;
+  syncRetryHandle = setTimeout(() => reconnectAndSync().catch(console.warn), 5000);
+}
+
+async function reconnectAndSync() {
+  if (!navigator.onLine || reconnectRunning || !currentProfile) return;
+  reconnectRunning = true;
+  try {
+    await importFirebase();
+    const onlineUser = await waitForAuthUser();
+    if (!onlineUser) {
+      updateConnection();
+      showToast("Conexion recuperada", "Para enviar los pendientes, ingresa una vez con correo y contrasena.", "error");
+      return;
+    }
+    if (onlineUser.uid !== currentProfile.uid) {
+      showToast("Usuario diferente", "La sesion de Firebase no coincide con el usuario offline. Bloquea la app e ingresa con la cuenta correcta.", "error");
+      return;
+    }
+    currentUser = onlineUser;
+    currentProfile = await resolveProfile(onlineUser);
+    localSession = false;
+    applyProfile();
+    applyRoleVisibility();
+    updateConnection();
+    await syncNow(false);
+  } catch (error) {
+    lastSyncError = friendlyError(error);
+    await updateSyncUi({ lastError: lastSyncError });
+    console.warn("Reconexion", error);
+  } finally {
+    reconnectRunning = false;
+  }
+}
+
 async function startBreak() {
   if (currentBreak) return;
   openCapture({ title: "Iniciar descanso", subtitle: "La foto y la ubicacion son obligatorias.", requireGps: true, onConfirm: async (evidence) => {
@@ -575,7 +764,7 @@ async function startBreak() {
     currentBreak = record;
     breakRecords.unshift(record);
     await OfflineDB.putBreak(record);
-    await OfflineDB.enqueue({ id: `break:${record.id}`, uid: currentUser.uid, type: "break-upsert", payload: record });
+    await queueForSync({ id: `break:${record.id}`, uid: currentUser.uid, type: "break-upsert", payload: record });
     renderAll();
     await updateSyncUi();
     syncNow(false).catch(console.warn);
@@ -588,7 +777,7 @@ async function endBreak() {
     currentBreak = { ...currentBreak, status: "completed", endAtClient: localIso(), endEvidence: evidence, syncStatus: "pending" };
     breakRecords = breakRecords.map((item) => item.id === currentBreak.id ? currentBreak : item);
     await OfflineDB.putBreak(currentBreak);
-    await OfflineDB.enqueue({ id: `break:${currentBreak.id}`, uid: currentUser.uid, type: "break-upsert", payload: currentBreak });
+    await queueForSync({ id: `break:${currentBreak.id}`, uid: currentUser.uid, type: "break-upsert", payload: currentBreak });
     currentBreak = null;
     renderAll();
     await updateSyncUi();
@@ -666,7 +855,7 @@ async function savePart(event) {
   currentPart = part;
   await OfflineDB.putPart(part);
   await OfflineDB.putOperatorPart(part);
-  await OfflineDB.enqueue({ id: `part:${part.id}`, uid: currentUser.uid, type: "part-upsert", payload: part });
+  await queueForSync({ id: `part:${part.id}`, uid: currentUser.uid, type: "part-upsert", payload: part });
   showToast("Parte guardado", navigator.onLine ? "Se enviara a Firebase." : "Quedo pendiente de sincronizacion.");
   renderAll();
   await updateSyncUi();
@@ -732,7 +921,7 @@ async function startService() {
     currentService = record;
     services.unshift(record);
     await OfflineDB.putService(record);
-    await OfflineDB.enqueue({ id: `service:${record.id}`, uid: currentUser.uid, type: "service-upsert", payload: record });
+    await queueForSync({ id: `service:${record.id}`, uid: currentUser.uid, type: "service-upsert", payload: record });
     renderAll();
     await updateSyncUi();
     syncNow(false).catch(console.warn);
@@ -746,7 +935,7 @@ async function endService() {
     currentService = { ...currentService, status: "completed", endReason: els.serviceEndReason.value.trim(), endAtClient: localIso(), endEvidence: evidence, syncStatus: "pending" };
     services = services.map((item) => item.id === currentService.id ? currentService : item);
     await OfflineDB.putService(currentService);
-    await OfflineDB.enqueue({ id: `service:${currentService.id}`, uid: currentUser.uid, type: "service-upsert", payload: currentService });
+    await queueForSync({ id: `service:${currentService.id}`, uid: currentUser.uid, type: "service-upsert", payload: currentService });
     renderAll();
     await updateSyncUi();
     syncNow(false).catch(console.warn);
@@ -806,13 +995,14 @@ async function saveFuelLoad(event) {
   if (!fuelPhoto) { showToast("Falta la foto", "Debes tomar una foto de la carga.", "error"); return; }
   const litersValue = Number(els.fuelLiters.value || 0);
   if (!els.fuelMachine.value || litersValue <= 0) { showToast("Datos incompletos", "Selecciona la maquina e ingresa los litros.", "error"); return; }
+  if (Number(tank.currentLiters || 0) > 0 && litersValue > Number(tank.currentLiters || 0)) { showToast("Stock insuficiente", "Los litros superan el disponible del tanque principal.", "error"); return; }
   const operatorOption = els.fuelOperator.selectedOptions[0];
   const record = { id: uuid(), uid: currentUser.uid, userName: currentProfile.name, machine: els.fuelMachine.value, operatorUid: els.fuelOperator.value || "", operatorName: els.fuelOperator.value ? operatorOption.textContent : "", liters: litersValue, shift: document.querySelector('input[name="fuelShift"]:checked')?.value || "day", photoEvidence: fuelPhoto, createdAtClient: localIso(), syncStatus: "pending" };
   fuelLoads.unshift(record);
   await OfflineDB.putFuelLoad(record);
   tank = { ...tank, currentLiters: Math.max(0, Number(tank.currentLiters || 0) - litersValue), updatedAtClient: localIso(), localEstimate: true };
   await OfflineDB.putTank(tank);
-  await OfflineDB.enqueue({ id: `fuel:${record.id}`, uid: currentUser.uid, type: "fuel-load", payload: record });
+  await queueForSync({ id: `fuel:${record.id}`, uid: currentUser.uid, type: "fuel-load", payload: record });
   fuelPhoto = null;
   els.fuelForm.reset();
   evidenceBox(els.fuelPhotoEvidence, null, "Foto obligatoria pendiente");
@@ -834,7 +1024,7 @@ async function saveTank() {
   if (capacity <= 0 || current < 0 || current > capacity) { showToast("Valores invalidos", "El disponible debe estar entre 0 y la capacidad total.", "error"); return; }
   tank = { id: "main", capacityLiters: capacity, currentLiters: current, updatedAtClient: localIso(), updatedBy: currentUser.uid, syncStatus: "pending" };
   await OfflineDB.putTank(tank);
-  await OfflineDB.enqueue({ id: "tank:main", uid: currentUser.uid, type: "tank-update", payload: tank });
+  await queueForSync({ id: "tank:main", uid: currentUser.uid, type: "tank-update", payload: tank });
   els.tankModal.classList.add("hidden");
   renderTank();
   await updateSyncUi();
@@ -885,13 +1075,36 @@ function closeCapture() {
   captureLocation = null;
 }
 
-function handleCaptureFile(event) {
+async function compressImage(file, maxDimension = 1600, quality = 0.82) {
+  if (!file || !file.type.startsWith("image/")) return file;
+  try {
+    const bitmap = await createImageBitmap(file);
+    const scale = Math.min(1, maxDimension / Math.max(bitmap.width, bitmap.height));
+    const width = Math.max(1, Math.round(bitmap.width * scale));
+    const height = Math.max(1, Math.round(bitmap.height * scale));
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const context = canvas.getContext("2d", { alpha: false });
+    context.drawImage(bitmap, 0, 0, width, height);
+    bitmap.close?.();
+    const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", quality));
+    return blob || file;
+  } catch (error) {
+    console.warn("Compresion de imagen", error);
+    return file;
+  }
+}
+
+async function handleCaptureFile(event) {
   const file = event.target.files?.[0];
   if (!file) return;
   if (!file.type.startsWith("image/")) { showToast("Archivo invalido", "Selecciona una imagen.", "error"); return; }
-  captureBlob = file;
+  els.confirmCaptureButton.disabled = true;
+  els.capturePreview.innerHTML = "<span>Preparando foto...</span>";
+  captureBlob = await compressImage(file);
   if (captureObjectUrl) URL.revokeObjectURL(captureObjectUrl);
-  captureObjectUrl = URL.createObjectURL(file);
+  captureObjectUrl = URL.createObjectURL(captureBlob);
   els.capturePreview.innerHTML = `<img src="${captureObjectUrl}" alt="Vista previa">`;
   updateCaptureConfirm();
 }
@@ -925,19 +1138,59 @@ async function confirmCapture() {
 
 async function syncNow(manual) {
   if (syncRunning || !currentUser) return;
-  if (!navigator.onLine || !firebaseReady || localSession || !auth?.currentUser) {
-    if (manual) showToast("Sincronizacion no disponible", "Conectate e ingresa con correo y contrasena para sincronizar.", "error");
+  if (!navigator.onLine) {
+    if (manual) showToast("Sin conexion", "Los registros permanecen guardados en el dispositivo.", "error");
     return;
   }
-  const pending = await OfflineDB.countPending(currentUser.uid);
-  if (!pending) { if (manual) showToast("Todo sincronizado", "No hay registros pendientes."); return; }
-  syncRunning = true;
+
   try {
+    await importFirebase();
+    if (!auth?.currentUser || auth.currentUser.uid !== currentUser.uid || localSession) {
+      const restored = await waitForAuthUser();
+      if (restored?.uid === currentUser.uid) {
+        currentUser = restored;
+        localSession = false;
+        currentProfile = await resolveProfile(restored);
+        applyProfile();
+        applyRoleVisibility();
+      }
+    }
+
+    if (!auth?.currentUser || auth.currentUser.uid !== currentUser.uid || localSession) {
+      updateConnection();
+      if (manual) showToast("Falta validar la sesion", "Bloquea la aplicacion e ingresa con correo y contrasena. Los datos no se perderan.", "error");
+      return;
+    }
+
+    await sdk.getIdToken(auth.currentUser, true).catch(() => {});
+    const pending = await OfflineDB.countPending(currentUser.uid);
+    if (!pending) {
+      lastSyncError = "";
+      await updateSyncUi();
+      if (manual) showToast("Todo sincronizado", "No hay registros pendientes.");
+      return;
+    }
+
+    syncRunning = true;
+    lastSyncError = "";
     const result = await LubaydSyncQueue.process({ uid: currentUser.uid, adapter: processSyncItem, onChange: updateSyncUi });
     if (result.processed) showToast("Sincronizacion completada", `${result.processed} registro${result.processed === 1 ? "" : "s"} enviado${result.processed === 1 ? "" : "s"}.`);
-    if (result.failed) showToast("Quedaron pendientes", "Se volvera a intentar automaticamente.", "error");
-    await refreshServerData();
-  } finally { syncRunning = false; await updateSyncUi(); }
+    if (result.failed) {
+      lastSyncError = result.errors?.[0]?.message || "No se pudieron enviar algunos registros.";
+      showToast("Quedaron pendientes", lastSyncError, "error");
+      scheduleSyncRetry(true);
+    } else {
+      await refreshServerData();
+    }
+  } catch (error) {
+    lastSyncError = friendlyError(error);
+    showToast("Error de sincronizacion", lastSyncError, "error");
+    scheduleSyncRetry(true);
+  } finally {
+    syncRunning = false;
+    updateConnection();
+    await updateSyncUi({ lastError: lastSyncError });
+  }
 }
 
 async function uploadEvidence(evidence, path) {
@@ -1004,8 +1257,12 @@ async function processSyncItem(item) {
       const existing = await transaction.get(loadRef);
       if (existing.exists()) return;
       const tankSnap = await transaction.get(tankRef);
-      const currentTank = tankSnap.exists() ? tankSnap.data() : { capacityLiters: 0, currentLiters: 0 };
-      const nextLiters = Math.max(0, Number(currentTank.currentLiters || 0) - Number(record.liters || 0));
+      if (!tankSnap.exists()) throw new Error("El administrador debe configurar el tanque principal antes de sincronizar cargas.");
+      const currentTank = tankSnap.data();
+      const available = Number(currentTank.currentLiters || 0);
+      const requested = Number(record.liters || 0);
+      if (requested > available) throw new Error("La carga supera los litros disponibles en el tanque principal.");
+      const nextLiters = available - requested;
       transaction.set(loadRef, { ...cleanRecord(record), syncStatus: "synced", syncedAt: sdk.serverTimestamp() });
       transaction.set(tankRef, { ...currentTank, currentLiters: nextLiters, updatedAtClient: localIso(), updatedBy: record.uid, updatedAt: sdk.serverTimestamp() }, { merge: true });
     });
