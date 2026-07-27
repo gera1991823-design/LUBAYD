@@ -1,4 +1,4 @@
-# APP LUBAYD V3.2
+# APP LUBAYD V3.3
 
 Versión completa con diseño responsive, roles y sincronización offline corregida.
 

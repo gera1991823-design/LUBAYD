@@ -1,4 +1,4 @@
-APP LUBAYD V3.2
+APP LUBAYD V3.3
 
 - Diseño moderno para PC y celular.
 - Navegación móvil inferior con áreas seguras de iPhone.

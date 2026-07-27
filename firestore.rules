@@ -64,12 +64,17 @@ service cloud.firestore {
                       || isMechanicOrAdmin());
 
       allow create: if signedIn()
-                    && (request.resource.data.operatorUid == request.auth.uid
-                        || isAdmin());
+                    && request.resource.data.operatorUid == request.auth.uid
+                    && (profile().role == 'operator' || isAdmin());
 
+      // Permite al propietario corregir Partes antiguos que no tenian operatorUid,
+      // sin habilitar la edicion de Partes pertenecientes a otros usuarios.
       allow update: if signedIn()
-                    && (resource.data.operatorUid == request.auth.uid
-                        || isAdmin());
+                    && (isAdmin()
+                        || (request.resource.data.operatorUid == request.auth.uid
+                            && profile().role == 'operator'
+                            && (!("operatorUid" in resource.data)
+                                || resource.data.operatorUid == request.auth.uid)));
 
       allow delete: if false;
 

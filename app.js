@@ -522,10 +522,12 @@ async function loadAllLocalData() {
   breakRecords = await OfflineDB.getBreaks(currentUser.uid).catch(() => []);
   currentBreak = breakRecords.find((record) => record.status === "active") || null;
   currentPart = await OfflineDB.getPart(currentUser.uid, todayKey()).catch(() => null);
+  if (currentPart) currentPart = normalizePartRecord(currentPart);
   services = await OfflineDB.getServicesForMechanic(currentUser.uid).catch(() => []);
   fuelLoads = currentProfile?.role === "admin" ? await OfflineDB.getAllFuelLoads().catch(() => []) : await OfflineDB.getFuelLoads(currentUser.uid).catch(() => []);
   tank = await OfflineDB.getTank().catch(() => null) || tank;
   operatorParts = await OfflineDB.getOperatorParts(todayKey()).catch(() => []);
+  await repairPendingPart().catch((error) => console.warn("Reparacion de parte pendiente", error));
   updateConnection();
   await updateSyncUi();
 }
@@ -556,7 +558,7 @@ async function loadPartFromServer() {
   const id = `${currentUser.uid}_${todayKey()}`;
   const snap = await sdk.getDoc(sdk.doc(db, "operationalParts", id));
   if (snap.exists()) {
-    const record = { id, ...snap.data(), uid: currentUser.uid, syncStatus: "synced" };
+    const record = normalizePartRecord({ id, ...snap.data(), uid: currentUser.uid, operatorUid: snap.data().operatorUid || currentUser.uid, syncStatus: "synced" });
     await OfflineDB.putPart(record);
     await OfflineDB.putOperatorPart(record);
     currentPart = record;
@@ -785,9 +787,57 @@ async function endBreak() {
   }});
 }
 
+function normalizePartRecord(source = {}) {
+  const operatorUid = String(source.operatorUid || source.uid || currentUser?.uid || "").trim();
+  if (!operatorUid) throw new Error("El parte no tiene un usuario asociado. Vuelve a iniciar sesion y reintenta.");
+
+  const dateKey = String(source.dateKey || els.partDateInput?.value || todayKey());
+  const sourceId = String(source.id || "");
+  const id = (!sourceId || sourceId.includes("undefined") || sourceId.includes("null"))
+    ? `${operatorUid}_${dateKey}`
+    : sourceId;
+
+  return {
+    ...source,
+    id,
+    uid: operatorUid,
+    operatorUid,
+    operatorName: source.operatorName || currentProfile?.name || currentUser?.email || "Operador",
+    dateKey,
+    establishment: source.establishment || "LAS CANIAS",
+    machine: source.machine || "",
+    status: source.status || "active",
+    horometers: source.horometers && typeof source.horometers === "object" ? source.horometers : {},
+    production: {
+      trozo: Number(source.production?.trozo || 0),
+      pulpa: Number(source.production?.pulpa || 0)
+    },
+    createdAtClient: source.createdAtClient || localIso(),
+    updatedAtClient: source.updatedAtClient || localIso(),
+    syncStatus: source.syncStatus === "synced" ? "synced" : "pending"
+  };
+}
+
+async function repairPendingPart() {
+  if (!currentPart || currentPart.syncStatus === "synced" || !currentUser) return;
+  const repaired = normalizePartRecord(currentPart);
+  currentPart = repaired;
+  await OfflineDB.putPart(repaired);
+  await OfflineDB.putOperatorPart(repaired);
+  await queueForSync({
+    id: `part:${repaired.id}`,
+    uid: repaired.operatorUid,
+    type: "part-upsert",
+    payload: repaired
+  });
+}
+
 function ensurePart() {
-  if (currentPart) return currentPart;
-  currentPart = {
+  if (currentPart) {
+    currentPart = normalizePartRecord(currentPart);
+    return currentPart;
+  }
+  currentPart = normalizePartRecord({
     id: `${currentUser.uid}_${els.partDateInput.value || todayKey()}`,
     uid: currentUser.uid,
     operatorUid: currentUser.uid,
@@ -801,7 +851,7 @@ function ensurePart() {
     createdAtClient: localIso(),
     updatedAtClient: localIso(),
     syncStatus: "pending"
-  };
+  });
   return currentPart;
 }
 
@@ -852,10 +902,10 @@ async function savePart(event) {
   part.production = { trozo: Number(els.trozoInput.value || 0), pulpa: Number(els.pulpaInput.value || 0) };
   part.updatedAtClient = localIso();
   part.syncStatus = "pending";
-  currentPart = part;
-  await OfflineDB.putPart(part);
-  await OfflineDB.putOperatorPart(part);
-  await queueForSync({ id: `part:${part.id}`, uid: currentUser.uid, type: "part-upsert", payload: part });
+  currentPart = normalizePartRecord(part);
+  await OfflineDB.putPart(currentPart);
+  await OfflineDB.putOperatorPart(currentPart);
+  await queueForSync({ id: `part:${currentPart.id}`, uid: currentPart.operatorUid, type: "part-upsert", payload: currentPart });
   showToast("Parte guardado", navigator.onLine ? "Se enviara a Firebase." : "Quedo pendiente de sincronizacion.");
   renderAll();
   await updateSyncUi();
@@ -1226,16 +1276,39 @@ async function processSyncItem(item) {
     return;
   }
   if (item.type === "part-upsert") {
-    const record = typeof structuredClone === "function" ? structuredClone(item.payload) : { ...item.payload };
+    let record = typeof structuredClone === "function" ? structuredClone(item.payload) : { ...item.payload };
+    record = normalizePartRecord(record);
+
+    if (record.operatorUid !== currentUser?.uid && currentProfile?.role !== "admin") {
+      throw new Error("El parte pertenece a otro usuario y no puede sincronizarse desde esta sesion.");
+    }
+
     for (const config of HOROMETER_CONFIG) {
       const stage = record.horometers?.[config.key];
-      if (stage?.evidence) stage.evidence = await uploadEvidence(stage.evidence, `parts/${record.operatorUid}/${record.id}/${config.key}.jpg`);
+      if (stage?.evidence) {
+        stage.evidence = await uploadEvidence(
+          stage.evidence,
+          `parts/${record.operatorUid}/${record.id}/${config.key}.jpg`
+        );
+        item.payload = record;
+        await OfflineDB.updateQueue(item);
+      }
     }
+
     const remote = { ...cleanRecord(record), syncStatus: "synced", syncedAt: sdk.serverTimestamp() };
-    await sdk.setDoc(sdk.doc(db, "operationalParts", record.id), remote, { merge: true });
-    await sdk.setDoc(sdk.doc(db, "users", record.operatorUid, "parts", record.id), remote, { merge: true });
-    await OfflineDB.putPart({ ...record, syncStatus: "synced" });
-    await OfflineDB.putOperatorPart({ ...record, syncStatus: "synced" });
+    const batch = sdk.writeBatch(db);
+    batch.set(sdk.doc(db, "operationalParts", record.id), remote, { merge: true });
+    batch.set(sdk.doc(db, "users", record.operatorUid, "parts", record.id), remote, { merge: true });
+    await batch.commit();
+
+    const syncedRecord = { ...record, syncStatus: "synced" };
+    await OfflineDB.putPart(syncedRecord);
+    await OfflineDB.putOperatorPart(syncedRecord);
+    if (currentPart?.id === syncedRecord.id) currentPart = syncedRecord;
+    operatorParts = operatorParts.filter((part) => part.id !== syncedRecord.id).concat(syncedRecord);
+    renderPart();
+    renderDashboard();
+    renderActivity();
     return;
   }
   if (item.type === "service-upsert") {

@@ -10,7 +10,6 @@
       "network-request-failed",
       "unavailable",
       "unauthenticated",
-      "permission-denied",
       "storage/retry-limit-exceeded"
     ].some((token) => code.includes(token) || message.includes(token));
   }
