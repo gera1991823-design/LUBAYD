@@ -1,4 +1,4 @@
-APP LUBAYD V3.3.0 - CORRECCION DE PARTE PENDIENTE
+APP LUBAYD V3.4.0 - CORRECCION DE PARTE PENDIENTE
 
 1. Reemplaza en GitHub todos los archivos de este paquete.
 2. Publica nuevamente firestore.rules en Firebase > Firestore > Reglas.

@@ -1,4 +1,4 @@
-APP LUBAYD V3.3.0
+APP LUBAYD V3.4.0
 
 - Corrige Partes que quedaban permanentemente en estado Pendiente.
 - Migra automaticamente Partes locales creados por versiones anteriores sin operatorUid.

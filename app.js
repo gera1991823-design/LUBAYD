@@ -509,7 +509,7 @@ function friendlyError(error) {
     "auth/email-already-in-use": "Ese correo ya esta registrado.",
     "auth/weak-password": "La contrasena debe tener al menos 6 caracteres.",
     "auth/network-request-failed": "No se pudo conectar con Firebase.",
-    "permission-denied": "Firebase rechazo la operacion. Publica las reglas incluidas en esta version.",
+    "permission-denied": "Firestore rechazo el Parte por permisos. Publica firestore.rules de la version 3.4 en el proyecto APP LUBAYD.",
     "storage/unauthorized": "Storage rechazo la foto. Publica las reglas de Storage incluidas.",
     "storage/retry-limit-exceeded": "La foto no pudo cargarse por un problema de red.",
     "unavailable": "Firebase no esta disponible temporalmente."
@@ -1296,10 +1296,9 @@ async function processSyncItem(item) {
     }
 
     const remote = { ...cleanRecord(record), syncStatus: "synced", syncedAt: sdk.serverTimestamp() };
-    const batch = sdk.writeBatch(db);
-    batch.set(sdk.doc(db, "operationalParts", record.id), remote, { merge: true });
-    batch.set(sdk.doc(db, "users", record.operatorUid, "parts", record.id), remote, { merge: true });
-    await batch.commit();
+    // operationalParts es la fuente canonica. La copia antigua bajo users/{uid}/parts
+    // no se escribe porque una regla desactualizada en esa ruta bloqueaba todo el batch.
+    await sdk.setDoc(sdk.doc(db, "operationalParts", record.id), remote, { merge: true });
 
     const syncedRecord = { ...record, syncStatus: "synced" };
     await OfflineDB.putPart(syncedRecord);

@@ -52,8 +52,11 @@ service cloud.firestore {
         allow delete: if false;
       }
 
+      // Ruta heredada. Se conserva para leer datos antiguos, pero la app V3.4
+      // guarda el Parte en operationalParts como unica fuente canonica.
       match /parts/{partId} {
-        allow read, create, update: if isOwner(userId) || isAdmin();
+        allow read: if isOwner(userId) || isAdmin();
+        allow create, update: if isOwner(userId) || isAdmin();
         allow delete: if false;
       }
     }
@@ -63,17 +66,18 @@ service cloud.firestore {
                   && (resource.data.operatorUid == request.auth.uid
                       || isMechanicOrAdmin());
 
+      // El propietario puede crear su propio Parte aunque el texto del rol
+      // local estuviera desactualizado. Nunca puede crear Partes de otro UID.
       allow create: if signedIn()
-                    && request.resource.data.operatorUid == request.auth.uid
-                    && (profile().role == 'operator' || isAdmin());
+                    && (request.resource.data.operatorUid == request.auth.uid
+                        || isAdmin());
 
-      // Permite al propietario corregir Partes antiguos que no tenian operatorUid,
-      // sin habilitar la edicion de Partes pertenecientes a otros usuarios.
+      // Permite sincronizar Partes actuales y reparar documentos antiguos
+      // que todavia no tenian operatorUid.
       allow update: if signedIn()
                     && (isAdmin()
                         || (request.resource.data.operatorUid == request.auth.uid
-                            && profile().role == 'operator'
-                            && (!("operatorUid" in resource.data)
+                            && (!('operatorUid' in resource.data)
                                 || resource.data.operatorUid == request.auth.uid)));
 
       allow delete: if false;
@@ -119,7 +123,6 @@ service cloud.firestore {
 
     match /tanks/{tankId} {
       allow read: if isMechanicOrAdmin();
-
       allow create: if isAdmin();
 
       allow update: if isAdmin()
