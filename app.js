@@ -1306,7 +1306,7 @@ async function processSyncItem(item) {
     if (currentPart?.id === syncedRecord.id) currentPart = syncedRecord;
     operatorParts = operatorParts.filter((part) => part.id !== syncedRecord.id).concat(syncedRecord);
     renderPart();
-    renderDashboard();
+    renderDashboardCards();
     renderActivity();
     return;
   }

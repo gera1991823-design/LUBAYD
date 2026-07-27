@@ -1,4 +1,4 @@
-APP LUBAYD V3.4.0 - CORRECCION DEFINITIVA DE PERMISOS DEL PARTE
+APP LUBAYD V3.5.0 - CORRECCION DEFINITIVA DE PERMISOS DEL PARTE
 
 PROBLEMA CORREGIDO
 - El Parte quedaba Pendiente con el mensaje "Missing or insufficient permissions".
@@ -9,10 +9,10 @@ CAMBIO
 - operationalParts/{parteId} es ahora la unica fuente canonica.
 - El operador puede crear y actualizar solamente su propio Parte.
 - Se permite reparar Partes antiguos que no tenian operatorUid.
-- La cola offline existente se conserva y se vuelve a intentar al abrir V3.4.
+- La cola offline existente se conserva y se vuelve a intentar al abrir V3.5.
 
 INSTALACION
-1. Reemplazar todos los archivos del repositorio con los del ZIP V3.4.
+1. Reemplazar todos los archivos del repositorio con los del ZIP V3.5.
 2. Publicar firestore.rules en Firebase > Firestore > Reglas.
 3. Publicar storage.rules en Firebase > Storage > Reglas.
 4. Abrir /reset.html y pulsar Actualizar y abrir aplicacion.

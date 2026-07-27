@@ -1,14 +1,14 @@
 "use strict";
 
-const CACHE_NAME = "lubayd-operativa-v3.4.0";
+const CACHE_NAME = "lubayd-operativa-v3.5.0";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./styles.css?v=3.4.0",
-  "./app.js?v=3.4.0",
-  "./offline-db.js?v=3.4.0",
-  "./sync-manager.js?v=3.4.0",
-  "./manifest.webmanifest?v=3.4.0",
+  "./styles.css?v=3.5.0",
+  "./app.js?v=3.5.0",
+  "./offline-db.js?v=3.5.0",
+  "./sync-manager.js?v=3.5.0",
+  "./manifest.webmanifest?v=3.5.0",
   "./logo.svg",
   "./icon-192.png",
   "./icon-512.png",
