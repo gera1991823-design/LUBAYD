@@ -240,7 +240,8 @@ function applyProfile() {
   els.userName.textContent = name;
   els.userEmail.textContent = email;
   els.userRoleBadge.textContent = roleLabel(role);
-  els.dashboardGreeting.textContent = `Hola, ${name}`;
+  const firstName = String(name || "Usuario").trim().split(/\s+/)[0];
+  els.dashboardGreeting.textContent = `¡Hola, ${firstName}!`;
   els.dashboardRole.textContent = `Rol: ${roleLabel(role)}`;
 }
 
@@ -509,16 +510,16 @@ function renderDashboardCards() {
   const role = currentProfile.role;
   const cards = [];
   if (["operator", "admin"].includes(role)) {
-    cards.push({ icon: "◷", title: "Descanso", text: currentBreak ? `En curso desde ${formatTime(currentBreak.startAtClient)}` : "Disponible para iniciar.", section: "break", action: currentBreak ? "Ver descanso" : "Iniciar descanso" });
-    cards.push({ icon: "▣", title: "Parte diario", text: currentPart ? `${currentPart.machine || "Sin maquina"} - ${currentPart.syncStatus === "pending" ? "Pendiente" : "Guardado"}` : "Completa horometros y produccion.", section: "part", action: "Abrir parte" });
+    cards.push({ kind: "break", icon: "☕", title: "Descanso", text: currentBreak ? `En curso desde ${formatTime(currentBreak.startAtClient)}` : "Iniciar o finalizar descanso.", section: "break", action: currentBreak ? "Ver descanso" : "Abrir" });
+    cards.push({ kind: "part", icon: "▣", title: "Parte", text: currentPart ? `${currentPart.machine || "Sin maquina"} · ${currentPart.syncStatus === "pending" ? "Pendiente" : "Guardado"}` : "Horometros y produccion del dia.", section: "part", action: "Abrir" });
   }
   if (["mechanic", "admin"].includes(role)) {
     const active = services.find((item) => item.status === "active");
-    cards.push({ icon: "⚒", title: "Servicio", text: active ? `${active.machine} - ${formatDuration(active.startAtClient)}` : "Selecciona un operador y registra la reparacion.", section: "service", action: "Abrir servicio" });
-    cards.push({ icon: "⛽", title: "Combustible", text: `${liters(tank.currentLiters)} disponibles`, section: "fuel", action: "Registrar carga" });
+    cards.push({ kind: "service", icon: "🔧", title: "Parte de servicio", text: active ? `${active.machine} · ${formatDuration(active.startAtClient)}` : "Registrar inicio y fin de reparacion.", section: "service", action: "Abrir" });
+    cards.push({ kind: "fuel", icon: "⛽", title: "Carga de combustible", text: `${liters(tank.currentLiters)} disponibles en el tanque principal.`, section: "fuel", action: "Registrar" });
   }
-  cards.push({ icon: "◴", title: "Actividad", text: "Consulta los ultimos movimientos disponibles para tu rol.", section: "activity", action: "Ver actividad" });
-  els.dashboardCards.innerHTML = cards.map((card) => `<article class="quick-card"><span class="quick-icon">${card.icon}</span><h3>${escapeHtml(card.title)}</h3><p>${escapeHtml(card.text)}</p><button class="primary-button" type="button" data-section-link="${card.section}">${escapeHtml(card.action)}</button></article>`).join("");
+  cards.push({ kind: "activity", icon: "+", title: role === "operator" ? "Nueva actividad" : "Actividad", text: "Consulta los ultimos movimientos disponibles para tu rol.", section: "activity", action: "Ver actividad" });
+  els.dashboardCards.innerHTML = cards.map((card) => `<article class="quick-card quick-card-${card.kind}"><span class="quick-icon">${card.icon}</span><h3>${escapeHtml(card.title)}</h3><p>${escapeHtml(card.text)}</p><button class="primary-button" type="button" data-section-link="${card.section}">${escapeHtml(card.action)}</button></article>`).join("");
   els.dashboardCards.querySelectorAll("[data-section-link]").forEach((button) => button.addEventListener("click", () => showSection(button.dataset.sectionLink)));
   renderRecentActivity();
 }
@@ -779,7 +780,21 @@ function renderTank() {
 }
 
 function renderFuelRecent() {
-  els.fuelRecentList.innerHTML = fuelLoads.slice(0, 8).map((record) => activityTemplate({ icon: "⛽", title: `${record.machine} - ${liters(record.liters)}`, detail: `${record.shift === "night" ? "Nocturna" : "Diurna"}${record.operatorName ? ` - ${record.operatorName}` : ""}`, date: record.createdAtClient, status: record.syncStatus })).join("") || '<div class="empty-state">Sin cargas registradas.</div>';
+  const rows = fuelLoads.slice(0, 8).map((record) => `
+    <tr>
+      <td>${formatDate(record.createdAtClient)}<br><small>${formatTime(record.createdAtClient)}</small></td>
+      <td>${escapeHtml(record.machine || "-")}</td>
+      <td><strong>${liters(record.liters)}</strong></td>
+      <td>${record.shift === "night" ? "Nocturna" : "Diurna"}</td>
+      <td>${escapeHtml(record.operatorName || record.userName || "-")}</td>
+    </tr>`).join("");
+  els.fuelRecentList.innerHTML = `
+    <div class="fuel-table-wrap">
+      <table class="fuel-table">
+        <thead><tr><th>Fecha</th><th>Maquina</th><th>Litros</th><th>Turno</th><th>Operador</th></tr></thead>
+        <tbody>${rows || '<tr><td class="empty-cell" colspan="5">Sin cargas registradas.</td></tr>'}</tbody>
+      </table>
+    </div>`;
 }
 
 function captureFuelPhoto() {
