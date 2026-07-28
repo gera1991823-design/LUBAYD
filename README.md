@@ -1,38 +1,23 @@
-# APP LUBAYD V3.5
+# APP LUBAYD V3.6
 
-Versión completa con diseño responsive, roles y sincronización offline corregida.
+Versión completa con el logotipo original de LUBAYD SA y una interfaz moderna para computadora y celular.
 
-## Qué corrige esta versión
+## Cambios visuales
 
-- Mantiene la pantalla de carga hasta restaurar la sesión; evita mostrar el login durante un instante al recargar.
-- Cuando el usuario entra con PIN offline y vuelve Internet, intenta recuperar automáticamente la sesión de Firebase y sincronizar.
-- Si Firebase no estaba cargado porque la app abrió sin Internet, vuelve a inicializarlo al recuperar la conexión.
-- Las fotos se comprimen antes de guardarse para reducir tiempos de subida y uso de almacenamiento.
-- La cola de sincronización conserva los errores y reintenta los pendientes.
-- Indicador visible de conexión, pendientes y sincronización en computadora y celular.
-- El mecánico no tiene acceso a Descanso ni al Parte del operador.
-- Combustible queda visible únicamente para Mecánico y Administrador.
+- Logotipo original restaurado en acceso, menú lateral, pantalla de carga e instalación PWA.
+- Menú lateral azul corporativo con selección verde.
+- Tarjetas modernas y diferenciadas para Descanso, Parte, Servicio, Combustible y Actividad.
+- Pantalla de inicio, formularios, modales y actividad reciente actualizados.
+- Mejor adaptación a celular, tablet y computadora.
+- Iconos de instalación renovados usando el logotipo original.
 
-## Roles
+## Funcionalidad conservada
 
-### operator
-- Inicio
-- Descanso
-- Parte diario y horómetros
-- Actividad reciente propia
-
-### mechanic
-- Inicio
-- Parte de servicio
-- Reloj de servicio
-- Carga de combustible
-- Actividad propia
-- No ve Descanso
-
-### admin
-- Acceso a todas las secciones
-- Usuarios y asignación de roles
-- Configuración del tanque principal
+- Roles `operator`, `mechanic` y `admin`.
+- Acceso y trabajo sin conexión mediante PIN.
+- Cola de sincronización de datos y fotografías.
+- Descansos, partes, servicios y combustible.
+- Corrección de sincronización incluida en V3.5.
 
 ## Instalación en GitHub
 
@@ -44,28 +29,6 @@ Después abrí:
 
 Presioná **Actualizar y abrir aplicación**. El proceso borra la caché de la interfaz, pero conserva IndexedDB, el PIN offline y los registros pendientes.
 
-## Firebase obligatorio
+## Firebase
 
-Publicá los contenidos de:
-
-- `firestore.rules` en Firebase > Firestore > Reglas.
-- `storage.rules` en Firebase > Storage > Reglas.
-
-Si usás Firebase CLI, el archivo `firebase.json` ya está incluido.
-
-## Configurar el tanque
-
-Antes de que un mecánico sincronice cargas de combustible, un administrador debe ingresar en **Combustible > Actualizar tanque** y definir:
-
-- Capacidad total.
-- Litros disponibles.
-
-## Asignar rol mecánico
-
-Un administrador puede hacerlo desde **Usuarios** dentro de la app. También puede editarse en Firestore:
-
-`users/{UID}/role = "mechanic"`
-
-## Acceso offline
-
-El primer ingreso en cada dispositivo requiere Internet. Después de configurar el PIN de seis números, el usuario puede abrir la app sin conexión. Si cerró completamente la sesión de Firebase o borró los datos del navegador, deberá validar otra vez por Internet antes de sincronizar.
+Este paquete no cambia las reglas de seguridad. Si las reglas de la V3.5 ya están publicadas y la sincronización funciona, no hace falta volver a publicarlas.
