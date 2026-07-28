@@ -2,7 +2,7 @@
 
 (() => {
   const DB_NAME = "lubayd-operativa-offline";
-  const DB_VERSION = 2;
+  const DB_VERSION = 3;
   const STORES = {
     profiles: "profiles",
     settings: "settings",
@@ -46,17 +46,26 @@
         return;
       }
       const request = indexedDB.open(DB_NAME, DB_VERSION);
-      request.onupgradeneeded = () => {
+      request.onupgradeneeded = (event) => {
         const db = request.result;
         createStore(db, STORES.profiles, { keyPath: "uid" }, [["email", "email"], ["lastLoginAt", "lastLoginAt"]]);
         createStore(db, STORES.settings, { keyPath: "key" });
         createStore(db, STORES.breaks, { keyPath: "id" }, [["uid", "uid"], ["uidStatus", ["uid", "status"]], ["startAtClient", "startAtClient"]]);
-        createStore(db, STORES.parts, { keyPath: "id" }, [["uid", "uid"], ["uidDate", ["uid", "dateKey"], { unique: true }], ["dateKey", "dateKey"]]);
+        createStore(db, STORES.parts, { keyPath: "id" }, [["uid", "uid"], ["uidDate", ["uid", "dateKey"]], ["dateKey", "dateKey"], ["uidDateMachine", ["uid", "dateKey", "machineKey"], { unique: true }]]);
         createStore(db, STORES.services, { keyPath: "id" }, [["mechanicUid", "mechanicUid"], ["operatorUid", "operatorUid"], ["partId", "partId"], ["status", "status"]]);
         createStore(db, STORES.fuelLoads, { keyPath: "id" }, [["uid", "uid"], ["createdAtClient", "createdAtClient"]]);
         createStore(db, STORES.operatorParts, { keyPath: "id" }, [["operatorUid", "operatorUid"], ["dateKey", "dateKey"], ["status", "status"]]);
         createStore(db, STORES.tank, { keyPath: "id" });
         createStore(db, STORES.queue, { keyPath: "id" }, [["uid", "uid"], ["status", "status"], ["createdAt", "createdAt"]]);
+
+        if (event.oldVersion > 0 && event.oldVersion < 3 && db.objectStoreNames.contains(STORES.parts)) {
+          const store = request.transaction.objectStore(STORES.parts);
+          if (store.indexNames.contains("uidDate")) store.deleteIndex("uidDate");
+          store.createIndex("uidDate", ["uid", "dateKey"], { unique: false });
+          if (!store.indexNames.contains("uidDateMachine")) {
+            store.createIndex("uidDateMachine", ["uid", "dateKey", "machineKey"], { unique: true });
+          }
+        }
       };
       request.onsuccess = () => {
         const db = request.result;
@@ -187,7 +196,13 @@
   async function getActiveBreak(uid) { return (await byIndex(STORES.breaks, "uidStatus", [uid, "active"])).sort((a, b) => String(b.startAtClient || "").localeCompare(String(a.startAtClient || "")))[0] || null; }
 
   async function putPart(record) { return put(STORES.parts, { ...record, updatedAtLocal: Date.now() }); }
-  async function getPart(uid, dateKey) { return storeAction(STORES.parts, "readonly", (store) => req(store.index("uidDate").get([uid, dateKey]))); }
+  async function getPart(uid, dateKey, machineKey = "") {
+    if (machineKey) {
+      return storeAction(STORES.parts, "readonly", (store) => req(store.index("uidDateMachine").get([uid, dateKey, machineKey])));
+    }
+    const records = await byIndex(STORES.parts, "uidDate", [uid, dateKey]);
+    return records.sort((a, b) => String(b.updatedAtClient || "").localeCompare(String(a.updatedAtClient || "")))[0] || null;
+  }
   async function getParts(uid) { return (await byIndex(STORES.parts, "uid", uid)).sort((a, b) => String(b.dateKey || "").localeCompare(String(a.dateKey || ""))); }
 
   async function putOperatorPart(record) { return put(STORES.operatorParts, { ...record, updatedAtLocal: Date.now() }); }

@@ -20,13 +20,13 @@ const els = {
   loginTab: $("#loginTab"), registerTab: $("#registerTab"), loginForm: $("#loginForm"), registerForm: $("#registerForm"),
   loginEmail: $("#loginEmail"), loginPassword: $("#loginPassword"), loginButton: $("#loginButton"),
   registerName: $("#registerName"), registerEmail: $("#registerEmail"), registerPassword: $("#registerPassword"), registerPasswordConfirm: $("#registerPasswordConfirm"), registerButton: $("#registerButton"),
-  offlineLoginPanel: $("#offlineLoginPanel"), offlineUserAvatar: $("#offlineUserAvatar"), offlineUserName: $("#offlineUserName"), offlineUserEmail: $("#offlineUserEmail"), offlinePinInput: $("#offlinePinInput"), offlineLoginButton: $("#offlineLoginButton"),
+  offlineLoginPanel: $("#offlineLoginPanel"), offlineUserAvatar: $("#offlineUserAvatar"), offlineUserName: $("#offlineUserName"), offlineUserEmail: $("#offlineUserEmail"), offlineLoginHint: $("#offlineLoginHint"), offlinePinInput: $("#offlinePinInput"), offlineLoginButton: $("#offlineLoginButton"),
   sidebar: $("#sidebar"), menuButton: $("#menuButton"), pageTitle: $("#pageTitle"), userAvatar: $("#userAvatar"), userName: $("#userName"), userEmail: $("#userEmail"), userRoleBadge: $("#userRoleBadge"),
   connectionDot: $("#connectionDot"), connectionText: $("#connectionText"), syncText: $("#syncText"), pendingCount: $("#pendingCount"), syncButton: $("#syncButton"), lockButton: $("#lockButton"),
   topSyncButton: $("#topSyncButton"), topConnectionDot: $("#topConnectionDot"), topConnectionText: $("#topConnectionText"), topSyncText: $("#topSyncText"), topPendingCount: $("#topPendingCount"),
   liveDate: $("#liveDate"), liveClock: $("#liveClock"), dashboardClock: $("#dashboardClock"), dashboardAvatar: $("#dashboardAvatar"), dashboardGreeting: $("#dashboardGreeting"), dashboardRole: $("#dashboardRole"), dashboardConnection: $("#dashboardConnection"), offlineBanner: $("#offlineBanner"), dashboardCards: $("#dashboardCards"), recentActivity: $("#recentActivity"),
   breakBadge: $("#breakBadge"), breakTitle: $("#breakTitle"), breakTimer: $("#breakTimer"), breakDescription: $("#breakDescription"), startBreakButton: $("#startBreakButton"), endBreakButton: $("#endBreakButton"), breakRecentList: $("#breakRecentList"),
-  partForm: $("#partForm"), partStatus: $("#partStatus"), establishmentInput: $("#establishmentInput"), machineInput: $("#machineInput"), partDateInput: $("#partDateInput"), horometerStages: $("#horometerStages"), trozoInput: $("#trozoInput"), pulpaInput: $("#pulpaInput"), savePartButton: $("#savePartButton"),
+  partForm: $("#partForm"), partStatus: $("#partStatus"), newPartButton: $("#newPartButton"), partSessionSelect: $("#partSessionSelect"), partSessionInfo: $("#partSessionInfo"), establishmentInput: $("#establishmentInput"), machineInput: $("#machineInput"), partDateInput: $("#partDateInput"), horometerStages: $("#horometerStages"), trozoInput: $("#trozoInput"), pulpaInput: $("#pulpaInput"), savePartButton: $("#savePartButton"),
   servicePartSelect: $("#servicePartSelect"), serviceMachine: $("#serviceMachine"), serviceOperator: $("#serviceOperator"), serviceTimer: $("#serviceTimer"), serviceStatus: $("#serviceStatus"), serviceStartedAt: $("#serviceStartedAt"), serviceStartReason: $("#serviceStartReason"), serviceEndReason: $("#serviceEndReason"), serviceStartEvidence: $("#serviceStartEvidence"), serviceEndEvidence: $("#serviceEndEvidence"), startServiceButton: $("#startServiceButton"), endServiceButton: $("#endServiceButton"),
   tankPercent: $("#tankPercent"), tankProgress: $("#tankProgress"), tankCapacity: $("#tankCapacity"), tankCurrent: $("#tankCurrent"), tankUpdated: $("#tankUpdated"), editTankButton: $("#editTankButton"), fuelRecentList: $("#fuelRecentList"), fuelForm: $("#fuelForm"), fuelMachine: $("#fuelMachine"), fuelOperator: $("#fuelOperator"), fuelLiters: $("#fuelLiters"), fuelPhotoEvidence: $("#fuelPhotoEvidence"), captureFuelPhotoButton: $("#captureFuelPhotoButton"), saveFuelButton: $("#saveFuelButton"),
   activityList: $("#activityList"), usersList: $("#usersList"),
@@ -63,6 +63,8 @@ let currentSection = "dashboard";
 let currentBreak = null;
 let breakRecords = [];
 let currentPart = null;
+let userParts = [];
+let partDraftDate = todayKey();
 let operatorParts = [];
 let currentService = null;
 let services = [];
@@ -87,6 +89,20 @@ function escapeHtml(value) {
 }
 function uuid() { return crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`; }
 function todayKey() { return new Date().toISOString().slice(0, 10); }
+function machineKey(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+function makePartId(uid, dateKey, machine) {
+  const key = machineKey(machine);
+  if (!uid || !dateKey || !key) return "";
+  return `${uid}_${dateKey}_${key}`;
+}
 function localIso() { return new Date().toISOString(); }
 function initials(name) { return String(name || "U").trim().split(/\s+/).slice(0, 2).map((item) => item[0]).join("").toUpperCase() || "U"; }
 function roleLabel(role) { return ROLE_LABELS[role] || ROLE_LABELS.operator; }
@@ -206,11 +222,17 @@ async function initializeOfflineProfile() {
 
 function renderOfflineLoginPanel() {
   const available = Boolean(lastOfflineProfile?.offlineAccessEnabled);
-  els.offlineLoginPanel.classList.toggle("hidden", !available);
-  if (!available) return;
-  els.offlineUserName.textContent = lastOfflineProfile.name || "Usuario";
-  els.offlineUserEmail.textContent = lastOfflineProfile.email || "";
-  els.offlineUserAvatar.textContent = initials(lastOfflineProfile.name || lastOfflineProfile.email);
+  els.offlineLoginPanel.classList.remove("hidden");
+  els.offlineLoginPanel.classList.toggle("unavailable", !available);
+  els.offlinePinInput.disabled = !available;
+  els.offlineLoginButton.disabled = !available;
+  els.offlineLoginHint.textContent = available
+    ? "Usa el PIN configurado en este dispositivo."
+    : "Primero ingresa una vez con Internet y configura tu PIN de 6 numeros.";
+  els.offlineUserName.textContent = available ? (lastOfflineProfile.name || "Usuario") : "Dispositivo no configurado";
+  els.offlineUserEmail.textContent = available ? (lastOfflineProfile.email || "") : "El acceso offline se habilita luego del primer ingreso";
+  els.offlineUserAvatar.textContent = available ? initials(lastOfflineProfile.name || lastOfflineProfile.email) : "—";
+  if (!available) els.offlinePinInput.value = "";
 }
 
 async function boot() {
@@ -359,6 +381,7 @@ function showSection(section) {
   $$('[data-section]').forEach((node) => node.classList.toggle("active", node.dataset.section === section));
   els.pageTitle.textContent = SECTION_TITLES[section] || "Inicio";
   els.sidebar.classList.remove("open");
+  if (section === "part") renderPart();
   if (section === "service") loadOperatorParts().catch(console.warn);
   if (section === "fuel") loadFuelSection().catch(console.warn);
   if (section === "users") loadUsers().catch(console.warn);
@@ -392,6 +415,9 @@ function bindEvents() {
   els.startBreakButton.addEventListener("click", startBreak);
   els.endBreakButton.addEventListener("click", endBreak);
   els.partForm.addEventListener("submit", savePart);
+  els.newPartButton.addEventListener("click", startNewPart);
+  els.partSessionSelect.addEventListener("change", selectPartSession);
+  els.partDateInput.addEventListener("change", handlePartDateChange);
   els.servicePartSelect.addEventListener("change", selectServicePart);
   els.startServiceButton.addEventListener("click", startService);
   els.endServiceButton.addEventListener("click", endService);
@@ -426,6 +452,8 @@ function switchAuth(mode) {
   els.registerTab.classList.toggle("active", !login);
   els.loginForm.classList.toggle("active", login);
   els.registerForm.classList.toggle("active", !login);
+  els.offlineLoginPanel.classList.toggle("hidden", !login);
+  if (login) renderOfflineLoginPanel();
 }
 
 async function loginOnline(event) {
@@ -457,7 +485,7 @@ async function registerOnline(event) {
 }
 
 async function loginOffline() {
-  if (!lastOfflineProfile) return;
+  if (!lastOfflineProfile?.offlineAccessEnabled) { showAuthMessage("Primero debes ingresar una vez con Internet y configurar el PIN offline."); return; }
   setBusy(els.offlineLoginButton, true, "Validando...");
   try {
     const valid = await OfflineDB.verifyPin(lastOfflineProfile, els.offlinePinInput.value);
@@ -521,13 +549,15 @@ async function loadAllLocalData() {
   if (!currentUser) return;
   breakRecords = await OfflineDB.getBreaks(currentUser.uid).catch(() => []);
   currentBreak = breakRecords.find((record) => record.status === "active") || null;
-  currentPart = await OfflineDB.getPart(currentUser.uid, todayKey()).catch(() => null);
-  if (currentPart) currentPart = normalizePartRecord(currentPart);
+  userParts = (await OfflineDB.getParts(currentUser.uid).catch(() => [])).map(normalizePartRecord);
+  const todayParts = partsForDate(todayKey());
+  currentPart = todayParts[0] || null;
+  partDraftDate = currentPart?.dateKey || todayKey();
   services = await OfflineDB.getServicesForMechanic(currentUser.uid).catch(() => []);
   fuelLoads = currentProfile?.role === "admin" ? await OfflineDB.getAllFuelLoads().catch(() => []) : await OfflineDB.getFuelLoads(currentUser.uid).catch(() => []);
   tank = await OfflineDB.getTank().catch(() => null) || tank;
   operatorParts = await OfflineDB.getOperatorParts(todayKey()).catch(() => []);
-  await repairPendingPart().catch((error) => console.warn("Reparacion de parte pendiente", error));
+  await repairPendingParts().catch((error) => console.warn("Reparacion de partes pendientes", error));
   updateConnection();
   await updateSyncUi();
 }
@@ -555,15 +585,23 @@ async function loadBreaksFromServer() {
 
 async function loadPartFromServer() {
   if (!currentUser || currentProfile?.role === "mechanic") return;
-  const id = `${currentUser.uid}_${todayKey()}`;
-  const snap = await sdk.getDoc(sdk.doc(db, "operationalParts", id));
-  if (snap.exists()) {
-    const record = normalizePartRecord({ id, ...snap.data(), uid: currentUser.uid, operatorUid: snap.data().operatorUid || currentUser.uid, syncStatus: "synced" });
+  const selectedId = currentPart?.id || "";
+  const q = sdk.query(
+    sdk.collection(db, "operationalParts"),
+    sdk.where("operatorUid", "==", currentUser.uid)
+  );
+  const snap = await sdk.getDocs(q);
+  const localPendingIds = new Set(userParts.filter((part) => part.syncStatus === "pending").map((part) => part.id));
+  for (const item of snap.docs) {
+    if (localPendingIds.has(item.id)) continue;
+    const data = item.data();
+    const record = normalizePartRecord({ id: item.id, ...data, uid: currentUser.uid, operatorUid: data.operatorUid || currentUser.uid, syncStatus: "synced" });
     await OfflineDB.putPart(record);
     await OfflineDB.putOperatorPart(record);
-    currentPart = record;
   }
-}
+  userParts = (await OfflineDB.getParts(currentUser.uid)).map(normalizePartRecord);
+  currentPart = userParts.find((part) => part.id === selectedId) || partsForDate(partDraftDate)[0] || null;
+} 
 
 async function loadOperatorParts() {
   const date = todayKey();
@@ -648,7 +686,9 @@ function renderDashboardCards() {
   const cards = [];
   if (["operator", "admin"].includes(role)) {
     cards.push({ kind: "break", icon: "☕", title: "Descanso", text: currentBreak ? `En curso desde ${formatTime(currentBreak.startAtClient)}` : "Iniciar o finalizar descanso.", section: "break", action: currentBreak ? "Ver descanso" : "Abrir" });
-    cards.push({ kind: "part", icon: "▣", title: "Parte", text: currentPart ? `${currentPart.machine || "Sin maquina"} · ${currentPart.syncStatus === "pending" ? "Pendiente" : "Guardado"}` : "Horometros y produccion del dia.", section: "part", action: "Abrir" });
+    const todayParts = partsForDate(todayKey());
+    const pendingParts = todayParts.filter((part) => part.syncStatus === "pending").length;
+    cards.push({ kind: "part", icon: "▣", title: "Partes diarios", text: todayParts.length ? `${todayParts.length} parte${todayParts.length === 1 ? "" : "s"} hoy${pendingParts ? ` · ${pendingParts} pendiente${pendingParts === 1 ? "" : "s"}` : ""}` : "Crea un parte por maquina para la jornada.", section: "part", action: "Nuevo parte" });
   }
   if (["mechanic", "admin"].includes(role)) {
     const active = services.find((item) => item.status === "active");
@@ -656,8 +696,11 @@ function renderDashboardCards() {
     cards.push({ kind: "fuel", icon: "⛽", title: "Carga de combustible", text: `${liters(tank.currentLiters)} disponibles en el tanque principal.`, section: "fuel", action: "Registrar" });
   }
   cards.push({ kind: "activity", icon: "+", title: role === "operator" ? "Nueva actividad" : "Actividad", text: "Consulta los ultimos movimientos disponibles para tu rol.", section: "activity", action: "Ver actividad" });
-  els.dashboardCards.innerHTML = cards.map((card) => `<article class="quick-card quick-card-${card.kind}"><span class="quick-icon">${card.icon}</span><h3>${escapeHtml(card.title)}</h3><p>${escapeHtml(card.text)}</p><button class="primary-button" type="button" data-section-link="${card.section}">${escapeHtml(card.action)}</button></article>`).join("");
-  els.dashboardCards.querySelectorAll("[data-section-link]").forEach((button) => button.addEventListener("click", () => showSection(button.dataset.sectionLink)));
+  els.dashboardCards.innerHTML = cards.map((card) => `<article class="quick-card quick-card-${card.kind}"><span class="quick-icon">${card.icon}</span><h3>${escapeHtml(card.title)}</h3><p>${escapeHtml(card.text)}</p><button class="primary-button" type="button" data-section-link="${card.section}" ${card.kind === "part" ? 'data-new-part="true"' : ""}>${escapeHtml(card.action)}</button></article>`).join("");
+  els.dashboardCards.querySelectorAll("[data-section-link]").forEach((button) => button.addEventListener("click", () => {
+    if (button.dataset.newPart === "true") startNewPart();
+    else showSection(button.dataset.sectionLink);
+  }));
   renderRecentActivity();
 }
 
@@ -671,7 +714,7 @@ function buildActivityRecords() {
   const items = [];
   if (["operator", "admin"].includes(role)) {
     breakRecords.forEach((record) => items.push({ icon: "◷", title: record.status === "active" ? "Inicio de descanso" : "Descanso completado", detail: record.status === "active" ? "Descanso en curso" : `Duracion ${formatDuration(record.startAtClient, record.endAtClient)}`, date: record.startAtClient, status: record.syncStatus }));
-    if (currentPart) items.push({ icon: "▣", title: "Parte diario", detail: `${currentPart.machine || "Sin maquina"} - Trozo ${currentPart.production?.trozo || 0} / Pulpa ${currentPart.production?.pulpa || 0}`, date: currentPart.updatedAtClient || currentPart.createdAtClient, status: currentPart.syncStatus });
+    userParts.forEach((part) => items.push({ icon: "▣", title: "Parte diario", detail: `${part.machine || "Sin maquina"} - Trozo ${part.production?.trozo || 0} / Pulpa ${part.production?.pulpa || 0}`, date: part.updatedAtClient || part.createdAtClient, status: part.syncStatus }));
   }
   if (["mechanic", "admin"].includes(role)) {
     services.forEach((record) => items.push({ icon: "⚒", title: record.status === "active" ? "Servicio iniciado" : "Servicio finalizado", detail: `${record.operatorName || "Operador"} - ${record.machine || "Maquina"}`, date: record.startAtClient, status: record.syncStatus }));
@@ -787,14 +830,22 @@ async function endBreak() {
   }});
 }
 
+function partsForDate(dateKey) {
+  return userParts
+    .filter((part) => part.dateKey === dateKey)
+    .sort((a, b) => String(b.updatedAtClient || b.createdAtClient || "").localeCompare(String(a.updatedAtClient || a.createdAtClient || "")));
+}
+
 function normalizePartRecord(source = {}) {
   const operatorUid = String(source.operatorUid || source.uid || currentUser?.uid || "").trim();
   if (!operatorUid) throw new Error("El parte no tiene un usuario asociado. Vuelve a iniciar sesion y reintenta.");
 
-  const dateKey = String(source.dateKey || els.partDateInput?.value || todayKey());
+  const dateKey = String(source.dateKey || partDraftDate || els.partDateInput?.value || todayKey());
+  const machine = String(source.machine || "").trim();
   const sourceId = String(source.id || "");
+  const generatedId = makePartId(operatorUid, dateKey, machine);
   const id = (!sourceId || sourceId.includes("undefined") || sourceId.includes("null"))
-    ? `${operatorUid}_${dateKey}`
+    ? (generatedId || `${operatorUid}_${dateKey}_${uuid()}`)
     : sourceId;
 
   return {
@@ -805,7 +856,8 @@ function normalizePartRecord(source = {}) {
     operatorName: source.operatorName || currentProfile?.name || currentUser?.email || "Operador",
     dateKey,
     establishment: source.establishment || "LAS CANIAS",
-    machine: source.machine || "",
+    machine,
+    machineKey: machineKey(machine),
     status: source.status || "active",
     horometers: source.horometers && typeof source.horometers === "object" ? source.horometers : {},
     production: {
@@ -818,33 +870,38 @@ function normalizePartRecord(source = {}) {
   };
 }
 
-async function repairPendingPart() {
-  if (!currentPart || currentPart.syncStatus === "synced" || !currentUser) return;
-  const repaired = normalizePartRecord(currentPart);
-  currentPart = repaired;
-  await OfflineDB.putPart(repaired);
-  await OfflineDB.putOperatorPart(repaired);
-  await queueForSync({
-    id: `part:${repaired.id}`,
-    uid: repaired.operatorUid,
-    type: "part-upsert",
-    payload: repaired
-  });
+async function repairPendingParts() {
+  const pendingParts = userParts.filter((part) => part.syncStatus !== "synced");
+  for (const source of pendingParts) {
+    const repaired = normalizePartRecord(source);
+    await OfflineDB.putPart(repaired);
+    await OfflineDB.putOperatorPart(repaired);
+    await queueForSync({ id: `part:${repaired.id}`, uid: repaired.operatorUid, type: "part-upsert", payload: repaired });
+  }
+  userParts = (await OfflineDB.getParts(currentUser.uid).catch(() => userParts)).map(normalizePartRecord);
+  if (currentPart) currentPart = userParts.find((part) => part.id === currentPart.id) || currentPart;
 }
 
-function ensurePart() {
-  if (currentPart) {
-    currentPart = normalizePartRecord(currentPart);
-    return currentPart;
+function createPartDraft() {
+  const dateKey = els.partDateInput.value || partDraftDate || todayKey();
+  const machine = els.machineInput.value;
+  if (!machine) throw new Error("Selecciona la maquina antes de registrar horometros.");
+  const id = makePartId(currentUser.uid, dateKey, machine);
+  const duplicate = userParts.find((part) => part.id === id || (part.dateKey === dateKey && machineKey(part.machine) === machineKey(machine)));
+  if (duplicate) {
+    currentPart = duplicate;
+    partDraftDate = duplicate.dateKey;
+    renderPart();
+    throw new Error("Ya existe un parte para esta maquina y fecha. Se abrio el parte existente.");
   }
   currentPart = normalizePartRecord({
-    id: `${currentUser.uid}_${els.partDateInput.value || todayKey()}`,
+    id,
     uid: currentUser.uid,
     operatorUid: currentUser.uid,
     operatorName: currentProfile.name,
-    dateKey: els.partDateInput.value || todayKey(),
-    establishment: "LAS CANIAS",
-    machine: "",
+    dateKey,
+    establishment: els.establishmentInput.value || "LAS CANIAS",
+    machine,
     status: "active",
     horometers: {},
     production: { trozo: 0, pulpa: 0 },
@@ -852,16 +909,75 @@ function ensurePart() {
     updatedAtClient: localIso(),
     syncStatus: "pending"
   });
+  userParts = userParts.filter((part) => part.id !== currentPart.id).concat(currentPart);
   return currentPart;
 }
 
+function ensurePart() {
+  if (currentPart) {
+    currentPart = normalizePartRecord(currentPart);
+    return currentPart;
+  }
+  return createPartDraft();
+}
+
+function startNewPart() {
+  currentPart = null;
+  partDraftDate = todayKey();
+  els.partForm.reset();
+  els.establishmentInput.value = "LAS CANIAS";
+  els.partDateInput.value = partDraftDate;
+  renderPart();
+  showSection("part");
+  showToast("Nuevo parte", "Selecciona la maquina y completa la jornada.");
+}
+
+function selectPartSession() {
+  const id = els.partSessionSelect.value;
+  if (!id) {
+    startNewPart();
+    return;
+  }
+  const selected = userParts.find((part) => part.id === id);
+  if (!selected) return;
+  currentPart = selected;
+  partDraftDate = selected.dateKey;
+  renderPart();
+}
+
+function handlePartDateChange() {
+  if (currentPart) return;
+  partDraftDate = els.partDateInput.value || todayKey();
+  renderPartSessionSelector();
+}
+
+function renderPartSessionSelector() {
+  const dateKey = currentPart?.dateKey || partDraftDate || todayKey();
+  const records = partsForDate(dateKey);
+  els.partSessionSelect.innerHTML = '<option value="">+ Nuevo parte</option>' + records.map((part) => {
+    const state = part.syncStatus === "pending" ? "Pendiente" : "Guardado";
+    return `<option value="${escapeHtml(part.id)}">${escapeHtml(part.machine || "Sin maquina")} · ${state}</option>`;
+  }).join("");
+  els.partSessionSelect.value = currentPart?.id || "";
+  els.partSessionInfo.textContent = records.length
+    ? `${records.length} parte${records.length === 1 ? "" : "s"} para ${formatDate(`${dateKey}T12:00:00`)}`
+    : `No hay partes para ${formatDate(`${dateKey}T12:00:00`)}.`;
+}
+
 function renderPart() {
-  els.partDateInput.value = currentPart?.dateKey || todayKey();
+  const editing = Boolean(currentPart);
+  const dateKey = currentPart?.dateKey || partDraftDate || todayKey();
+  els.partDateInput.value = dateKey;
+  els.partDateInput.max = todayKey();
   els.establishmentInput.value = currentPart?.establishment || "LAS CANIAS";
   els.machineInput.value = currentPart?.machine || "";
   els.trozoInput.value = currentPart?.production?.trozo ?? "";
   els.pulpaInput.value = currentPart?.production?.pulpa ?? "";
-  els.partStatus.textContent = currentPart ? (currentPart.syncStatus === "pending" ? "Pendiente" : "Guardado") : "Borrador";
+  els.machineInput.disabled = editing;
+  els.partDateInput.disabled = editing;
+  els.partStatus.textContent = currentPart ? (currentPart.syncStatus === "pending" ? "Pendiente" : "Guardado") : "Nuevo";
+  els.partStatus.className = `badge ${currentPart?.syncStatus === "pending" ? "warning" : currentPart ? "active" : "neutral"}`;
+  renderPartSessionSelector();
   els.horometerStages.innerHTML = HOROMETER_CONFIG.map((config, index) => {
     const stage = currentPart?.horometers?.[config.key] || {};
     const evidence = stage.evidence;
@@ -870,7 +986,9 @@ function renderPart() {
 }
 
 function captureHorometer(key) {
-  const part = ensurePart();
+  let part;
+  try { part = ensurePart(); }
+  catch (error) { showToast("No se pudo iniciar el parte", error.message, "error"); return; }
   const input = document.querySelector(`[data-horometer-value="${key}"]`);
   const value = input?.value;
   if (!value) { showToast("Falta el horometro", "Ingresa el valor antes de tomar la evidencia.", "error"); return; }
@@ -880,29 +998,35 @@ function captureHorometer(key) {
     part.updatedAtClient = localIso();
     part.syncStatus = "pending";
     currentPart = part;
+    userParts = userParts.filter((item) => item.id !== part.id).concat(part);
     await OfflineDB.putPart(part);
+    await OfflineDB.putOperatorPart(part);
     renderPart();
   }});
 }
 
 async function savePart(event) {
   event.preventDefault();
-  const part = ensurePart();
   if (!els.machineInput.value) { showToast("Selecciona la maquina", "La maquina es obligatoria.", "error"); return; }
+  let part;
+  try { part = ensurePart(); }
+  catch (error) { showToast("No se pudo guardar", error.message, "error"); return; }
   document.querySelectorAll("[data-horometer-value]").forEach((input) => {
     if (input.value) {
       const key = input.dataset.horometerValue;
       part.horometers[key] = { ...(part.horometers[key] || {}), value: Number(input.value) };
     }
   });
-  part.dateKey = els.partDateInput.value || todayKey();
-  part.id = `${currentUser.uid}_${part.dateKey}`;
+  part.dateKey = currentPart?.dateKey || els.partDateInput.value || partDraftDate || todayKey();
   part.establishment = els.establishmentInput.value;
-  part.machine = els.machineInput.value;
+  part.machine = currentPart?.machine || els.machineInput.value;
+  part.machineKey = machineKey(part.machine);
+  part.id = currentPart?.id || makePartId(currentUser.uid, part.dateKey, part.machine);
   part.production = { trozo: Number(els.trozoInput.value || 0), pulpa: Number(els.pulpaInput.value || 0) };
   part.updatedAtClient = localIso();
   part.syncStatus = "pending";
   currentPart = normalizePartRecord(part);
+  userParts = userParts.filter((item) => item.id !== currentPart.id).concat(currentPart);
   await OfflineDB.putPart(currentPart);
   await OfflineDB.putOperatorPart(currentPart);
   await queueForSync({ id: `part:${currentPart.id}`, uid: currentPart.operatorUid, type: "part-upsert", payload: currentPart });
@@ -1303,6 +1427,7 @@ async function processSyncItem(item) {
     const syncedRecord = { ...record, syncStatus: "synced" };
     await OfflineDB.putPart(syncedRecord);
     await OfflineDB.putOperatorPart(syncedRecord);
+    userParts = userParts.filter((part) => part.id !== syncedRecord.id).concat(syncedRecord);
     if (currentPart?.id === syncedRecord.id) currentPart = syncedRecord;
     operatorParts = operatorParts.filter((part) => part.id !== syncedRecord.id).concat(syncedRecord);
     renderPart();

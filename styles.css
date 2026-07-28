@@ -1442,7 +1442,7 @@ body {
 }
 
 /* ============================================================
-   LUBAYD V3.7 - tema verde predominante
+   LUBAYD V3.8 - tema verde predominante
    ============================================================ */
 :root {
   --green-950: #00371f;
@@ -1746,4 +1746,110 @@ body {
   .quick-card {
     box-shadow: 0 8px 24px rgba(0,72,38,.075);
   }
+}
+
+/* V3.8 - acceso offline visible y sesiones de partes por maquina */
+.offline-login-panel {
+  border: 1px solid rgba(8, 122, 67, .18);
+  border-radius: 18px;
+  padding: 18px;
+  background: linear-gradient(145deg, #f4fbf6, #ffffff);
+  box-shadow: 0 10px 28px rgba(4, 92, 50, .08);
+}
+.offline-login-panel.unavailable {
+  background: #f7f9f8;
+  border-style: dashed;
+  box-shadow: none;
+}
+.offline-login-panel.unavailable .saved-user-card,
+.offline-login-panel.unavailable .field {
+  opacity: .64;
+}
+.offline-login-panel.unavailable .offline-badge {
+  background: #e9eeeb;
+  color: #5e6d64;
+}
+.offline-login-panel input:disabled,
+.offline-login-panel button:disabled {
+  cursor: not-allowed;
+}
+.auth-card > .offline-login-panel.hidden { display: none !important; }
+
+.page-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.compact-button {
+  width: auto;
+  min-height: 42px;
+  padding: 10px 16px;
+  white-space: nowrap;
+}
+.part-session-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 380px);
+  gap: 24px;
+  align-items: end;
+  margin-bottom: 16px;
+  border: 1px solid rgba(8, 122, 67, .18);
+  background: linear-gradient(135deg, #f3fbf6, #ffffff);
+}
+.part-session-copy h3 {
+  margin: 4px 0 6px;
+  font-size: 21px;
+}
+.part-session-copy p {
+  margin: 0;
+  color: var(--muted);
+}
+.part-session-select { margin: 0; }
+.part-session-select select {
+  border-color: rgba(8, 122, 67, .28);
+  background-color: #fff;
+  font-weight: 700;
+}
+#machineInput:disabled,
+#partDateInput:disabled {
+  background: #eef4f0;
+  color: #536158;
+  opacity: 1;
+}
+.badge.warning {
+  background: #fff4d8;
+  color: #8a5b00;
+  border-color: #f0d697;
+}
+
+@media (max-width: 720px) {
+  .auth-card { gap: 0; }
+  .offline-login-panel {
+    margin-top: 16px;
+    padding: 14px;
+    border-radius: 15px;
+  }
+  .offline-login-heading { align-items: flex-start; }
+  .saved-user-card { padding: 11px; }
+  .part-page-heading {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .page-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .page-actions .compact-button {
+    flex: 1;
+  }
+  .part-session-panel {
+    grid-template-columns: 1fr;
+    gap: 14px;
+    padding: 15px;
+  }
+  .part-session-copy h3 { font-size: 18px; }
+  .part-session-copy p { font-size: 12px; }
+  .part-session-select select { min-height: 48px; }
 }
