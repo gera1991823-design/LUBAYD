@@ -10,10 +10,10 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="LUBAYD Operativa">
   <title>LUBAYD SA | Gestion de trabajos en campo</title>
-  <link rel="manifest" href="./manifest.webmanifest?v=3.8.0">
+  <link rel="manifest" href="./manifest.webmanifest?v=3.9.0">
   <link rel="icon" href="./icon-192.png">
   <link rel="apple-touch-icon" href="./icon-192.png">
-  <link rel="stylesheet" href="./styles.css?v=3.8.0">
+  <link rel="stylesheet" href="./styles.css?v=3.9.0">
 </head>
 <body class="booting">
   <div id="toastRegion" class="toast-region" aria-live="polite"></div>
@@ -107,7 +107,7 @@
         <div class="sync-pill"><span id="syncText">Sin pendientes</span><strong id="pendingCount" class="hidden">0</strong></div>
         <button id="syncButton" class="sidebar-button" type="button">Sincronizar ahora</button>
         <button id="lockButton" class="sidebar-button" type="button">Cerrar sesion</button>
-        <small>Version 3.8.0</small>
+        <small>Version 3.9.0</small>
       </div>
     </aside>
 
@@ -176,7 +176,7 @@
           </article>
           <article class="panel-card">
             <div class="panel-heading"><div><span class="eyebrow">PRODUCCION</span><h3>Cantidades realizadas</h3></div></div>
-            <div class="form-grid two"><label class="field"><span>Trozo</span><input id="trozoInput" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0"></label><label class="field"><span>Pulpa</span><input id="pulpaInput" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0"></label></div>
+            <div class="form-grid two"><label class="field"><span>Troza</span><input id="trozoInput" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0"></label><label class="field"><span>Pulpa</span><input id="pulpaInput" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0"></label></div>
           </article>
           <button id="savePartButton" class="primary-button full-width" type="submit">Guardar parte</button>
         </form>
@@ -184,10 +184,11 @@
 
       <section id="serviceSection" class="content-section">
         <div class="page-heading"><div><span class="eyebrow">MECANICO</span><h1>Parte de servicio</h1><p>El mecanico puede editar solamente la seccion de servicio del operador seleccionado.</p></div><span class="secure-chip">Edicion restringida</span></div>
-        <article class="panel-card">
-          <div class="form-grid two">
+        <article class="panel-card service-part-selector-card">
+          <div class="service-part-selector">
             <label class="field"><span>Parte / operador</span><select id="servicePartSelect"><option value="">Seleccionar parte activo</option></select></label>
             <div class="service-summary"><span>Maquina</span><strong id="serviceMachine">-</strong><span>Operador</span><strong id="serviceOperator">-</strong></div>
+            <button id="newServiceButton" class="secondary-button service-new-button" type="button" disabled>+ Nuevo servicio</button>
           </div>
         </article>
         <div class="service-layout">
@@ -205,6 +206,10 @@
             <button id="endServiceButton" class="danger-button full-width" type="button" disabled>Finalizar servicio</button>
           </article>
         </div>
+        <article class="panel-card service-history-card">
+          <div class="panel-heading"><div><span class="eyebrow">SERVICIOS ASOCIADOS</span><h3>Historial del Parte</h3><p>Cada inicio y finalizacion se guarda como una sesion independiente.</p></div><span id="serviceSessionCount" class="badge neutral">0 servicios</span></div>
+          <div id="serviceSessionList" class="service-session-list"><div class="empty-state compact">Selecciona un Parte para ver sus servicios.</div></div>
+        </article>
       </section>
 
       <section id="fuelSection" class="content-section">
@@ -286,13 +291,13 @@
 
   <div id="processingOverlay" class="processing-overlay hidden"><div class="processing-card"><div class="boot-spinner"></div><strong id="processingTitle">Guardando...</strong><span id="processingMessage">No cierres la aplicacion.</span></div></div>
 
-  <script defer src="./offline-db.js?v=3.8.0"></script>
-  <script defer src="./sync-manager.js?v=3.8.0"></script>
-  <script defer src="./app.js?v=3.8.0"></script>
+  <script defer src="./offline-db.js?v=3.9.0"></script>
+  <script defer src="./sync-manager.js?v=3.9.0"></script>
+  <script defer src="./app.js?v=3.9.0"></script>
   <script>
     if ('serviceWorker' in navigator && location.protocol === 'https:') {
       window.addEventListener('load', function () {
-        navigator.serviceWorker.register('./service-worker.js?v=3.8.0').then(function (registration) {
+        navigator.serviceWorker.register('./service-worker.js?v=3.9.0').then(function (registration) {
           registration.update().catch(function () {});
         }).catch(function (error) { console.warn('Service Worker', error); });
       });

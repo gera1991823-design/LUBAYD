@@ -1853,3 +1853,58 @@ body {
   .part-session-copy p { font-size: 12px; }
   .part-session-select select { min-height: 48px; }
 }
+
+
+/* V3.9 - Troza y multiples sesiones de servicio por Parte */
+.service-part-selector {
+  display: grid;
+  grid-template-columns: minmax(260px, 1.4fr) minmax(230px, .8fr) auto;
+  gap: 14px;
+  align-items: end;
+}
+.service-part-selector .field { margin: 0; }
+.service-new-button { min-height: 48px; white-space: nowrap; }
+.service-history-card { margin-top: 18px; }
+.service-session-list { display: grid; gap: 10px; }
+.service-session-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: center;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: #fbfdfb;
+}
+.service-session-item.is-active {
+  border-color: var(--green-600);
+  background: var(--green-050);
+  box-shadow: inset 4px 0 0 var(--green-600);
+}
+.service-session-title { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 6px; }
+.service-session-number { font-weight: 850; color: var(--green-900); }
+.service-session-status { display: inline-flex; padding: 4px 8px; border-radius: 999px; font-size: 10px; font-weight: 850; }
+.service-session-status.active { color: #8a271f; background: #fde8e5; }
+.service-session-status.synced { color: var(--green-800); background: var(--green-100); }
+.service-session-main strong, .service-session-main small { display: block; }
+.service-session-main small { margin-top: 5px; color: var(--muted); }
+.service-session-duration { min-width: 100px; text-align: right; }
+.service-session-duration span, .service-session-duration strong { display: block; }
+.service-session-duration span { color: var(--muted); font-size: 11px; }
+.service-session-duration strong { margin-top: 4px; font-variant-numeric: tabular-nums; }
+.empty-state.compact { padding: 18px; }
+
+@media (max-width: 900px) {
+  .service-part-selector { grid-template-columns: 1fr 1fr; }
+  .service-part-selector .field { grid-column: 1 / -1; }
+  .service-new-button { width: 100%; }
+}
+
+@media (max-width: 620px) {
+  .service-part-selector { grid-template-columns: 1fr; }
+  .service-part-selector .field { grid-column: auto; }
+  .service-summary { width: 100%; }
+  .service-session-item { grid-template-columns: 1fr; gap: 9px; }
+  .service-session-duration { min-width: 0; text-align: left; display: flex; gap: 8px; align-items: baseline; }
+  .service-session-duration strong { margin-top: 0; }
+}

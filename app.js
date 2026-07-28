@@ -27,7 +27,7 @@ const els = {
   liveDate: $("#liveDate"), liveClock: $("#liveClock"), dashboardClock: $("#dashboardClock"), dashboardAvatar: $("#dashboardAvatar"), dashboardGreeting: $("#dashboardGreeting"), dashboardRole: $("#dashboardRole"), dashboardConnection: $("#dashboardConnection"), offlineBanner: $("#offlineBanner"), dashboardCards: $("#dashboardCards"), recentActivity: $("#recentActivity"),
   breakBadge: $("#breakBadge"), breakTitle: $("#breakTitle"), breakTimer: $("#breakTimer"), breakDescription: $("#breakDescription"), startBreakButton: $("#startBreakButton"), endBreakButton: $("#endBreakButton"), breakRecentList: $("#breakRecentList"),
   partForm: $("#partForm"), partStatus: $("#partStatus"), newPartButton: $("#newPartButton"), partSessionSelect: $("#partSessionSelect"), partSessionInfo: $("#partSessionInfo"), establishmentInput: $("#establishmentInput"), machineInput: $("#machineInput"), partDateInput: $("#partDateInput"), horometerStages: $("#horometerStages"), trozoInput: $("#trozoInput"), pulpaInput: $("#pulpaInput"), savePartButton: $("#savePartButton"),
-  servicePartSelect: $("#servicePartSelect"), serviceMachine: $("#serviceMachine"), serviceOperator: $("#serviceOperator"), serviceTimer: $("#serviceTimer"), serviceStatus: $("#serviceStatus"), serviceStartedAt: $("#serviceStartedAt"), serviceStartReason: $("#serviceStartReason"), serviceEndReason: $("#serviceEndReason"), serviceStartEvidence: $("#serviceStartEvidence"), serviceEndEvidence: $("#serviceEndEvidence"), startServiceButton: $("#startServiceButton"), endServiceButton: $("#endServiceButton"),
+  servicePartSelect: $("#servicePartSelect"), serviceMachine: $("#serviceMachine"), serviceOperator: $("#serviceOperator"), serviceTimer: $("#serviceTimer"), serviceStatus: $("#serviceStatus"), serviceStartedAt: $("#serviceStartedAt"), serviceStartReason: $("#serviceStartReason"), serviceEndReason: $("#serviceEndReason"), serviceStartEvidence: $("#serviceStartEvidence"), serviceEndEvidence: $("#serviceEndEvidence"), newServiceButton: $("#newServiceButton"), serviceSessionCount: $("#serviceSessionCount"), serviceSessionList: $("#serviceSessionList"), startServiceButton: $("#startServiceButton"), endServiceButton: $("#endServiceButton"),
   tankPercent: $("#tankPercent"), tankProgress: $("#tankProgress"), tankCapacity: $("#tankCapacity"), tankCurrent: $("#tankCurrent"), tankUpdated: $("#tankUpdated"), editTankButton: $("#editTankButton"), fuelRecentList: $("#fuelRecentList"), fuelForm: $("#fuelForm"), fuelMachine: $("#fuelMachine"), fuelOperator: $("#fuelOperator"), fuelLiters: $("#fuelLiters"), fuelPhotoEvidence: $("#fuelPhotoEvidence"), captureFuelPhotoButton: $("#captureFuelPhotoButton"), saveFuelButton: $("#saveFuelButton"),
   activityList: $("#activityList"), usersList: $("#usersList"),
   captureModal: $("#captureModal"), captureTitle: $("#captureTitle"), captureSubtitle: $("#captureSubtitle"), capturePreview: $("#capturePreview"), captureFileInput: $("#captureFileInput"), captureGpsCard: $("#captureGpsCard"), captureGpsStatus: $("#captureGpsStatus"), captureGpsButton: $("#captureGpsButton"), captureMapLink: $("#captureMapLink"), confirmCaptureButton: $("#confirmCaptureButton"),
@@ -68,6 +68,8 @@ let partDraftDate = todayKey();
 let operatorParts = [];
 let currentService = null;
 let services = [];
+let selectedPartServices = [];
+let serviceDraftMode = false;
 let fuelLoads = [];
 let tank = { id: "main", capacityLiters: 0, currentLiters: 0 };
 let fuelPhoto = null;
@@ -419,6 +421,7 @@ function bindEvents() {
   els.partSessionSelect.addEventListener("change", selectPartSession);
   els.partDateInput.addEventListener("change", handlePartDateChange);
   els.servicePartSelect.addEventListener("change", selectServicePart);
+  els.newServiceButton.addEventListener("click", beginNewServiceSession);
   els.startServiceButton.addEventListener("click", startService);
   els.endServiceButton.addEventListener("click", endService);
   els.captureFuelPhotoButton.addEventListener("click", captureFuelPhoto);
@@ -714,7 +717,7 @@ function buildActivityRecords() {
   const items = [];
   if (["operator", "admin"].includes(role)) {
     breakRecords.forEach((record) => items.push({ icon: "◷", title: record.status === "active" ? "Inicio de descanso" : "Descanso completado", detail: record.status === "active" ? "Descanso en curso" : `Duracion ${formatDuration(record.startAtClient, record.endAtClient)}`, date: record.startAtClient, status: record.syncStatus }));
-    userParts.forEach((part) => items.push({ icon: "▣", title: "Parte diario", detail: `${part.machine || "Sin maquina"} - Trozo ${part.production?.trozo || 0} / Pulpa ${part.production?.pulpa || 0}`, date: part.updatedAtClient || part.createdAtClient, status: part.syncStatus }));
+    userParts.forEach((part) => items.push({ icon: "▣", title: "Parte diario", detail: `${part.machine || "Sin maquina"} - Troza ${part.production?.troza ?? part.production?.trozo ?? 0} / Pulpa ${part.production?.pulpa || 0}`, date: part.updatedAtClient || part.createdAtClient, status: part.syncStatus }));
   }
   if (["mechanic", "admin"].includes(role)) {
     services.forEach((record) => items.push({ icon: "⚒", title: record.status === "active" ? "Servicio iniciado" : "Servicio finalizado", detail: `${record.operatorName || "Operador"} - ${record.machine || "Maquina"}`, date: record.startAtClient, status: record.syncStatus }));
@@ -861,7 +864,8 @@ function normalizePartRecord(source = {}) {
     status: source.status || "active",
     horometers: source.horometers && typeof source.horometers === "object" ? source.horometers : {},
     production: {
-      trozo: Number(source.production?.trozo || 0),
+      // Compatibilidad: los Partes antiguos guardaban la propiedad "trozo".
+      troza: Number(source.production?.troza ?? source.production?.trozo ?? 0),
       pulpa: Number(source.production?.pulpa || 0)
     },
     createdAtClient: source.createdAtClient || localIso(),
@@ -904,7 +908,7 @@ function createPartDraft() {
     machine,
     status: "active",
     horometers: {},
-    production: { trozo: 0, pulpa: 0 },
+    production: { troza: 0, pulpa: 0 },
     createdAtClient: localIso(),
     updatedAtClient: localIso(),
     syncStatus: "pending"
@@ -971,7 +975,7 @@ function renderPart() {
   els.partDateInput.max = todayKey();
   els.establishmentInput.value = currentPart?.establishment || "LAS CANIAS";
   els.machineInput.value = currentPart?.machine || "";
-  els.trozoInput.value = currentPart?.production?.trozo ?? "";
+  els.trozoInput.value = currentPart?.production?.troza ?? currentPart?.production?.trozo ?? "";
   els.pulpaInput.value = currentPart?.production?.pulpa ?? "";
   els.machineInput.disabled = editing;
   els.partDateInput.disabled = editing;
@@ -1022,7 +1026,7 @@ async function savePart(event) {
   part.machine = currentPart?.machine || els.machineInput.value;
   part.machineKey = machineKey(part.machine);
   part.id = currentPart?.id || makePartId(currentUser.uid, part.dateKey, part.machine);
-  part.production = { trozo: Number(els.trozoInput.value || 0), pulpa: Number(els.pulpaInput.value || 0) };
+  part.production = { troza: Number(els.trozoInput.value || 0), pulpa: Number(els.pulpaInput.value || 0) };
   part.updatedAtClient = localIso();
   part.syncStatus = "pending";
   currentPart = normalizePartRecord(part);
@@ -1047,21 +1051,79 @@ function populateFuelOperators() {
   els.fuelOperator.innerHTML = '<option value="">Sin operador seleccionado</option>' + Array.from(unique.entries()).map(([uid, name]) => `<option value="${uid}">${escapeHtml(name || uid)}</option>`).join("");
 }
 
+function normalizeServiceRecord(source = {}) {
+  const startAtClient = source.startAtClient || localIso();
+  return {
+    ...source,
+    id: source.id || uuid(),
+    partId: source.partId || "",
+    partDateKey: source.partDateKey || source.dateKey || "",
+    operatorUid: source.operatorUid || "",
+    operatorName: source.operatorName || "Operador",
+    machine: source.machine || "",
+    mechanicUid: source.mechanicUid || currentUser?.uid || "",
+    mechanicName: source.mechanicName || currentProfile?.name || "Mecanico",
+    serviceNumber: Number(source.serviceNumber || 0),
+    status: source.status || "active",
+    startReason: source.startReason || "",
+    endReason: source.endReason || "",
+    startAtClient,
+    endAtClient: source.endAtClient || null,
+    startEvidence: source.startEvidence || null,
+    endEvidence: source.endEvidence || null,
+    syncStatus: source.syncStatus === "synced" ? "synced" : "pending"
+  };
+}
+
+function assignServiceNumbers(records = []) {
+  const chronological = [...records].sort((a, b) => String(a.startAtClient || "").localeCompare(String(b.startAtClient || "")));
+  const used = new Set(chronological.map((item) => Number(item.serviceNumber || 0)).filter((number) => number > 0));
+  let candidate = 1;
+  chronological.forEach((record) => {
+    if (Number(record.serviceNumber || 0) > 0) return;
+    while (used.has(candidate)) candidate += 1;
+    record.serviceNumber = candidate;
+    used.add(candidate);
+    candidate += 1;
+  });
+  return chronological.sort((a, b) => String(b.startAtClient || "").localeCompare(String(a.startAtClient || "")));
+}
+
+function nextServiceNumber(records = selectedPartServices) {
+  return Math.max(records.length, ...records.map((item) => Number(item.serviceNumber || 0)), 0) + 1;
+}
+
 async function selectServicePart() {
   const partId = els.servicePartSelect.value;
   const part = operatorParts.find((item) => item.id === partId);
   els.serviceMachine.textContent = part?.machine || "-";
   els.serviceOperator.textContent = part?.operatorName || "-";
-  if (!part) { currentService = null; renderService(); return; }
-  const local = await OfflineDB.getServicesForPart(partId);
-  currentService = local.find((item) => item.status === "active") || local[0] || null;
+  selectedPartServices = [];
+  serviceDraftMode = false;
+
+  if (!part) {
+    currentService = null;
+    renderService();
+    return;
+  }
+
+  const local = (await OfflineDB.getServicesForPart(partId)).map(normalizeServiceRecord);
+  selectedPartServices = assignServiceNumbers(local);
+
   if (firebaseReady && navigator.onLine && !localSession) {
     const q = sdk.query(sdk.collection(db, "services"), sdk.where("partId", "==", partId));
     const snap = await sdk.getDocs(q);
-    for (const item of snap.docs) await OfflineDB.putService({ id: item.id, ...item.data(), syncStatus: "synced" });
-    const records = await OfflineDB.getServicesForPart(partId);
-    currentService = records.find((item) => item.status === "active") || records[0] || currentService;
+    for (const item of snap.docs) {
+      await OfflineDB.putService(normalizeServiceRecord({ id: item.id, ...item.data(), syncStatus: "synced" }));
+    }
+    selectedPartServices = assignServiceNumbers((await OfflineDB.getServicesForPart(partId)).map(normalizeServiceRecord));
   }
+
+  currentService = selectedPartServices.find((item) => item.status === "active")
+    || selectedPartServices[0]
+    || null;
+  serviceDraftMode = selectedPartServices.length === 0;
+  if (serviceDraftMode) clearServiceForm();
   renderService();
 }
 
@@ -1072,28 +1134,142 @@ function evidenceBox(element, evidence, emptyText) {
   element.innerHTML = `${source ? `<img src="${source}" alt="Evidencia">` : ""}<div><strong>Evidencia registrada</strong><br><a href="${mapUrl(evidence.location)}" target="_blank" rel="noopener">Ver ubicacion</a><br><small>${formatDateTime(evidence.capturedAtClient)}</small></div>`;
 }
 
+function serviceSessionTemplate(record) {
+  const active = record.status === "active";
+  const number = Number(record.serviceNumber || 0) || "-";
+  const duration = active
+    ? formatDuration(record.startAtClient)
+    : formatDuration(record.startAtClient, record.endAtClient);
+  const status = active ? "En curso" : "Finalizado";
+  const statusClass = active ? "active" : "synced";
+  return `<article class="service-session-item ${active ? "is-active" : ""}">
+    <div class="service-session-main">
+      <div class="service-session-title">
+        <span class="service-session-number">Servicio ${escapeHtml(number)}</span>
+        <span class="service-session-status ${statusClass}">${status}</span>
+      </div>
+      <strong>${escapeHtml(record.startReason || "Sin motivo registrado")}</strong>
+      <small>${formatDate(record.startAtClient)} · ${formatTime(record.startAtClient)}${record.endAtClient ? ` a ${formatTime(record.endAtClient)}` : ""}</small>
+    </div>
+    <div class="service-session-duration"><span>Duracion</span><strong>${duration}</strong></div>
+  </article>`;
+}
+
+function renderServiceSessionList() {
+  const total = selectedPartServices.length;
+  if (els.serviceSessionCount) {
+    els.serviceSessionCount.textContent = `${total} servicio${total === 1 ? "" : "s"}`;
+  }
+  if (!els.serviceSessionList) return;
+  els.serviceSessionList.innerHTML = total
+    ? selectedPartServices.map(serviceSessionTemplate).join("")
+    : '<div class="empty-state compact">Este Parte todavia no tiene servicios registrados.</div>';
+}
+
+function clearServiceForm() {
+  els.serviceStartReason.value = "";
+  els.serviceEndReason.value = "";
+  evidenceBox(els.serviceStartEvidence, null, "Foto y ubicacion pendientes");
+  evidenceBox(els.serviceEndEvidence, null, "Foto y ubicacion pendientes");
+}
+
+function beginNewServiceSession() {
+  const part = operatorParts.find((item) => item.id === els.servicePartSelect.value);
+  const active = selectedPartServices.find((item) => item.status === "active");
+  if (!part) {
+    showToast("Selecciona un Parte", "El nuevo servicio debe quedar asociado a un Parte diario.", "error");
+    return;
+  }
+  if (active) {
+    currentService = active;
+    serviceDraftMode = false;
+    renderService();
+    showToast("Servicio en curso", "Finaliza el servicio activo antes de iniciar otro.", "error");
+    return;
+  }
+  currentService = null;
+  serviceDraftMode = true;
+  clearServiceForm();
+  renderService();
+  els.serviceStartReason.focus();
+  showToast("Nuevo servicio", `Se creara el servicio ${nextServiceNumber()} para este Parte.`);
+}
+
 function renderService() {
   const part = operatorParts.find((item) => item.id === els.servicePartSelect.value);
-  if (part) { els.serviceMachine.textContent = part.machine || "-"; els.serviceOperator.textContent = part.operatorName || "-"; }
+  if (part) {
+    els.serviceMachine.textContent = part.machine || "-";
+    els.serviceOperator.textContent = part.operatorName || "-";
+  }
+
+  const activeRecord = selectedPartServices.find((item) => item.status === "active") || null;
+  if (activeRecord) currentService = activeRecord;
   const active = currentService?.status === "active";
-  els.serviceStatus.textContent = active ? "Servicio en curso" : currentService?.status === "completed" ? "Servicio finalizado" : "Sin servicio activo";
-  els.serviceStartedAt.textContent = currentService?.startAtClient ? `Iniciado ${formatDateTime(currentService.startAtClient)}` : "Selecciona un parte para comenzar.";
-  els.serviceStartReason.value = currentService?.startReason || "";
-  els.serviceEndReason.value = currentService?.endReason || "";
-  evidenceBox(els.serviceStartEvidence, currentService?.startEvidence, "Foto y ubicacion pendientes");
-  evidenceBox(els.serviceEndEvidence, currentService?.endEvidence, "Foto y ubicacion pendientes");
-  els.startServiceButton.disabled = !part || active;
+  const completed = currentService?.status === "completed" && !serviceDraftMode;
+
+  els.serviceStatus.textContent = active
+    ? `Servicio ${currentService.serviceNumber || ""} en curso`.trim()
+    : serviceDraftMode
+      ? `Nuevo servicio ${nextServiceNumber()} listo para iniciar`
+      : completed
+        ? `Servicio ${currentService.serviceNumber || ""} finalizado`.trim()
+        : "Sin servicio activo";
+
+  els.serviceStartedAt.textContent = active || completed
+    ? `Iniciado ${formatDateTime(currentService.startAtClient)}`
+    : part
+      ? "Completa el motivo y registra la evidencia para iniciar."
+      : "Selecciona un Parte para comenzar.";
+
+  if (!serviceDraftMode) els.serviceStartReason.value = currentService?.startReason || "";
+  if (active || completed) els.serviceEndReason.value = currentService?.endReason || "";
+  else if (!serviceDraftMode) els.serviceEndReason.value = "";
+  evidenceBox(els.serviceStartEvidence, serviceDraftMode ? null : currentService?.startEvidence, "Foto y ubicacion pendientes");
+  evidenceBox(els.serviceEndEvidence, active || completed ? currentService?.endEvidence : null, "Foto y ubicacion pendientes");
+
+  els.serviceStartReason.disabled = !part || active || completed;
+  els.serviceEndReason.disabled = !active;
+  els.startServiceButton.disabled = !part || active || completed || !serviceDraftMode;
   els.endServiceButton.disabled = !active;
+  els.newServiceButton.disabled = !part || active;
+  els.newServiceButton.textContent = active ? "Servicio en curso" : "+ Nuevo servicio";
+  renderServiceSessionList();
 }
 
 async function startService() {
   const part = operatorParts.find((item) => item.id === els.servicePartSelect.value);
-  if (!part) { showToast("Selecciona un parte", "Debes elegir el operador y la maquina.", "error"); return; }
+  if (!part) { showToast("Selecciona un Parte", "Debes elegir el operador y la maquina.", "error"); return; }
+  if (selectedPartServices.some((item) => item.status === "active")) {
+    showToast("Servicio en curso", "Finaliza el servicio actual antes de iniciar uno nuevo.", "error");
+    return;
+  }
+  if (!serviceDraftMode) {
+    beginNewServiceSession();
+    return;
+  }
   if (!els.serviceStartReason.value.trim()) { showToast("Falta el motivo", "Describe la falla o reparacion.", "error"); return; }
+
   openCapture({ title: "Inicio de reparacion", subtitle: "Foto y ubicacion obligatorias.", requireGps: true, onConfirm: async (evidence) => {
-    const record = { id: uuid(), partId: part.id, operatorUid: part.operatorUid, operatorName: part.operatorName, machine: part.machine, mechanicUid: currentUser.uid, mechanicName: currentProfile.name, status: "active", startReason: els.serviceStartReason.value.trim(), startAtClient: localIso(), startEvidence: evidence, syncStatus: "pending" };
+    const record = normalizeServiceRecord({
+      id: uuid(),
+      partId: part.id,
+      partDateKey: part.dateKey,
+      operatorUid: part.operatorUid,
+      operatorName: part.operatorName,
+      machine: part.machine,
+      mechanicUid: currentUser.uid,
+      mechanicName: currentProfile.name,
+      serviceNumber: nextServiceNumber(),
+      status: "active",
+      startReason: els.serviceStartReason.value.trim(),
+      startAtClient: localIso(),
+      startEvidence: evidence,
+      syncStatus: "pending"
+    });
     currentService = record;
-    services.unshift(record);
+    serviceDraftMode = false;
+    selectedPartServices = [record, ...selectedPartServices.filter((item) => item.id !== record.id)];
+    services = [record, ...services.filter((item) => item.id !== record.id)];
     await OfflineDB.putService(record);
     await queueForSync({ id: `service:${record.id}`, uid: currentUser.uid, type: "service-upsert", payload: record });
     renderAll();
@@ -1106,11 +1282,21 @@ async function endService() {
   if (!currentService || currentService.status !== "active") return;
   if (!els.serviceEndReason.value.trim()) { showToast("Falta el detalle", "Describe el trabajo realizado.", "error"); return; }
   openCapture({ title: "Finalizacion de reparacion", subtitle: "Foto y ubicacion obligatorias.", requireGps: true, onConfirm: async (evidence) => {
-    currentService = { ...currentService, status: "completed", endReason: els.serviceEndReason.value.trim(), endAtClient: localIso(), endEvidence: evidence, syncStatus: "pending" };
+    currentService = normalizeServiceRecord({
+      ...currentService,
+      status: "completed",
+      endReason: els.serviceEndReason.value.trim(),
+      endAtClient: localIso(),
+      endEvidence: evidence,
+      syncStatus: "pending"
+    });
+    selectedPartServices = selectedPartServices.map((item) => item.id === currentService.id ? currentService : item);
     services = services.map((item) => item.id === currentService.id ? currentService : item);
     await OfflineDB.putService(currentService);
     await queueForSync({ id: `service:${currentService.id}`, uid: currentUser.uid, type: "service-upsert", payload: currentService });
+    serviceDraftMode = false;
     renderAll();
+    showToast("Servicio finalizado", "Quedo guardado como una sesion independiente asociada al Parte.");
     await updateSyncUi();
     syncNow(false).catch(console.warn);
   }});
@@ -1442,7 +1628,14 @@ async function processSyncItem(item) {
     const remote = { ...cleanRecord(record), syncStatus: "synced", syncedAt: sdk.serverTimestamp() };
     await sdk.setDoc(sdk.doc(db, "services", record.id), remote, { merge: true });
     await sdk.setDoc(sdk.doc(db, "operationalParts", record.partId, "services", record.id), remote, { merge: true });
-    await OfflineDB.putService({ ...record, syncStatus: "synced" });
+    const syncedService = { ...record, syncStatus: "synced" };
+    await OfflineDB.putService(syncedService);
+    services = services.map((service) => service.id === syncedService.id ? syncedService : service);
+    selectedPartServices = selectedPartServices.map((service) => service.id === syncedService.id ? syncedService : service);
+    if (currentService?.id === syncedService.id) currentService = syncedService;
+    renderService();
+    renderDashboardCards();
+    renderActivity();
     return;
   }
   if (item.type === "fuel-load") {
