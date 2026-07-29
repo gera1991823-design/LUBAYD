@@ -5623,3 +5623,426 @@ a {
   .gps-capture-card .secondary-button,
   .gps-capture-card .gps-skip-button { min-height: 42px; }
 }
+
+
+/* V5.7 - refinamiento móvil profesional iPhone + Android */
+
+:root {
+  --mobile-card-radius: 18px;
+  --mobile-shadow-soft: 0 12px 26px rgba(7, 55, 31, .08);
+  --mobile-shadow-strong: 0 16px 34px rgba(7, 55, 31, .12);
+}
+
+@media (max-width: 860px) {
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    background: linear-gradient(180deg, #f5faf6 0%, #eef6f0 100%);
+    overscroll-behavior-y: contain;
+  }
+
+  .main-content {
+    padding: 0 10px calc(96px + env(safe-area-inset-bottom));
+    background: linear-gradient(180deg, #f5faf6 0%, #eef6f0 100%);
+  }
+
+  .topbar {
+    min-height: 62px;
+    margin-inline: -10px;
+    padding-inline: 10px;
+    border-radius: 0 0 18px 18px;
+    box-shadow: 0 8px 24px rgba(0, 74, 43, .18);
+  }
+
+  .topbar-brand-logo {
+    width: 96px !important;
+    height: 40px !important;
+  }
+
+  .topbar h2,
+  .topbar-welcome-copy > span {
+    font-size: 15px !important;
+    letter-spacing: -.01em;
+  }
+
+  .topbar-welcome-copy small,
+  .mobile-greeting-copy small,
+  .dashboard-heading-user small,
+  .page-heading p,
+  .panel-heading p,
+  .report-page-title p {
+    font-size: 11px !important;
+    line-height: 1.35;
+  }
+
+  .topbar-actions,
+  .mobile-hero-actions { gap: 8px; }
+
+  .topbar .icon-button,
+  .topbar-logout-button,
+  .mobile-profile-button,
+  .mobile-logout-button,
+  .notification-button {
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    border-radius: 12px;
+  }
+
+  .topbar-logout-button .ui-icon,
+  .mobile-logout-button .ui-icon,
+  .notification-button .ui-icon,
+  .topbar .icon-button .ui-icon,
+  .mobile-profile-button .ui-icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  .dashboard-grid,
+  .graphical-kpis,
+  .report-kpi-grid,
+  .report-secondary-grid,
+  .report-primary-grid,
+  .dashboard-pro-grid,
+  .dashboard-pro-lower-grid,
+  .production-pro-grid,
+  .capture-grid,
+  .gps-action-grid,
+  .form-grid,
+  .pro-form-grid,
+  .two-column-grid,
+  .service-layout,
+  .fuel-layout,
+  .report-dashboard-grid {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+
+  .dashboard-section,
+  .dashboard-card,
+  .panel-card,
+  .content-section,
+  .report-chart-card,
+  .report-table-card,
+  .report-kpi-card,
+  .operator-activity-card,
+  .break-control-card,
+  .capture-card,
+  .maintenance-card,
+  .fleet-summary-card,
+  .pro-tank-card,
+  .pro-upcoming-card,
+  .pro-part-form,
+  .pro-service-summary,
+  .activity-list > .activity-card,
+  .operator-record-list > article,
+  .admin-parts-list > article,
+  .admin-records-list > article {
+    border-radius: var(--mobile-card-radius) !important;
+    box-shadow: var(--mobile-shadow-soft) !important;
+  }
+
+  .dashboard-card,
+  .report-kpi-card,
+  .metric-card,
+  .pro-metric-card {
+    min-height: 0 !important;
+    padding: 12px !important;
+  }
+
+  .dashboard-card-heading,
+  .report-chart-heading,
+  .panel-heading,
+  .page-heading,
+  .report-page-title,
+  .admin-parts-header,
+  .admin-records-header,
+  .chat-contacts-header,
+  .chat-conversation-header {
+    gap: 8px;
+  }
+
+  .metric-icon,
+  .report-kpi-icon,
+  .mini-report-icon,
+  .operator-record-icon,
+  .admin-parts-icon,
+  .admin-records-icon,
+  .chat-welcome-icon,
+  .production-field-icon {
+    width: 42px !important;
+    height: 42px !important;
+    min-width: 42px !important;
+    border-radius: 14px !important;
+  }
+
+  .metric-icon .ui-icon,
+  .report-kpi-icon .ui-icon,
+  .mini-report-icon .ui-icon,
+  .operator-record-icon .ui-icon,
+  .production-field-icon .ui-icon {
+    width: 20px !important;
+    height: 20px !important;
+  }
+
+  .pro-icon,
+  .admin-parts-icon svg,
+  .admin-records-icon svg,
+  .report-kpi-icon svg,
+  .metric-icon svg { width: 20px; height: 20px; }
+
+  .dashboard-card strong,
+  .report-kpi-card strong,
+  .metric-card strong,
+  .pro-metric-card strong,
+  .break-clock-value,
+  .pro-tank-copy strong,
+  .fleet-summary-card strong {
+    font-size: 18px !important;
+  }
+
+  .dashboard-card span,
+  .metric-card span,
+  .report-kpi-card span,
+  .pro-metric-card span,
+  .panel-card p,
+  .content-section p,
+  .report-chart-card p {
+    font-size: 11px !important;
+    line-height: 1.35;
+  }
+
+  .break-clock-layout,
+  .pro-tank-layout,
+  .mobile-dashboard-hero,
+  .dashboard-flow-summary {
+    gap: 12px !important;
+  }
+
+  .break-clock-art {
+    width: min(48vw, 190px) !important;
+    height: min(48vw, 190px) !important;
+    margin-inline: auto;
+  }
+
+  .break-clock-ring {
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  .break-clock-value {
+    font-size: clamp(16px, 5vw, 22px) !important;
+  }
+
+  .part-progress-strip,
+  .pro-stage-list {
+    grid-template-columns: repeat(2, minmax(0,1fr)) !important;
+    gap: 8px !important;
+  }
+
+  .part-progress-step,
+  .pro-service-session-list > article,
+  .part-session-select,
+  .part-session-copy,
+  .evidence-box,
+  .pro-evidence-box,
+  .production-field-card {
+    border-radius: 14px !important;
+  }
+
+  .field input,
+  .field select,
+  .field textarea,
+  .auth-form input,
+  .auth-form select,
+  .chat-input-wrap input,
+  .direct-chat-composer textarea {
+    min-height: 46px;
+    font-size: 16px !important;
+    border-radius: 13px;
+  }
+
+  .field textarea,
+  .direct-chat-composer textarea { min-height: 108px; }
+
+  .primary-button,
+  .secondary-button,
+  .danger-button,
+  .compact-button,
+  .dashboard-action-button,
+  .pro-save-button,
+  .pro-new-button,
+  .chat-send-button,
+  .chat-back-button,
+  .gps-skip-button {
+    min-height: 42px;
+    border-radius: 13px;
+    font-size: 13px;
+    padding-inline: 14px;
+  }
+
+  .dashboard-action-button .ui-icon,
+  .pro-save-button .ui-icon,
+  .pro-new-button .ui-icon,
+  .chat-send-button .ui-icon,
+  .chat-back-button .ui-icon,
+  .gps-skip-button .ui-icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  .capture-preview img,
+  .profile-photo-large,
+  .profile-photo-frame {
+    border-radius: 16px !important;
+  }
+
+  .profile-photo-large {
+    width: 72px !important;
+    height: 72px !important;
+  }
+
+  .mobile-bottom-nav {
+    min-height: 64px !important;
+    padding: 5px 7px calc(5px + env(safe-area-inset-bottom)) !important;
+    border-top-left-radius: 18px;
+    border-top-right-radius: 18px;
+    box-shadow: 0 -10px 26px rgba(0, 74, 43, .18) !important;
+  }
+
+  .mobile-nav-item {
+    padding: 6px 2px !important;
+    border-radius: 12px !important;
+    gap: 3px !important;
+  }
+
+  .mobile-nav-item .ui-icon,
+  body[data-role="admin"] .mobile-nav-item .ui-icon {
+    width: 18px !important;
+    height: 18px !important;
+  }
+
+  .mobile-nav-item small {
+    font-size: 8px !important;
+    letter-spacing: .01em;
+  }
+
+  .direct-chat-shell {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+    height: auto !important;
+    min-height: calc(100dvh - 168px - var(--mobile-nav-height, 64px) - env(safe-area-inset-bottom));
+  }
+
+  .chat-contacts-panel,
+  .chat-conversation-panel {
+    border-radius: 18px !important;
+    box-shadow: var(--mobile-shadow-soft) !important;
+  }
+
+  .chat-messages,
+  .direct-chat-messages {
+    padding: 12px !important;
+    gap: 10px !important;
+  }
+
+  .report-chart-card canvas,
+  .dashboard-fuel-chart canvas,
+  .dashboard-fleet-chart canvas {
+    max-height: 220px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .main-content { padding-inline: 8px; }
+  .topbar {
+    min-height: 58px;
+    margin-inline: -8px;
+    padding-inline: 8px;
+    border-radius: 0 0 16px 16px;
+  }
+
+  .sidebar { width: min(88vw, 300px) !important; }
+
+  .page-heading h2,
+  .panel-heading h3,
+  .report-page-title h2,
+  .chat-page-heading h2,
+  .admin-parts-heading h2,
+  .admin-records-heading h2 {
+    font-size: 17px !important;
+  }
+
+  .dashboard-grid { grid-template-columns: repeat(2, minmax(0,1fr)) !important; }
+  .dashboard-grid > :last-child:nth-child(odd) { grid-column: 1 / -1; }
+
+  .dashboard-card,
+  .metric-card,
+  .pro-metric-card,
+  .report-kpi-card {
+    padding: 11px !important;
+  }
+
+  .metric-icon,
+  .report-kpi-icon,
+  .mini-report-icon,
+  .operator-record-icon,
+  .production-field-icon {
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    border-radius: 12px !important;
+  }
+
+  .metric-icon .ui-icon,
+  .report-kpi-icon .ui-icon,
+  .mini-report-icon .ui-icon,
+  .operator-record-icon .ui-icon,
+  .production-field-icon .ui-icon {
+    width: 18px !important;
+    height: 18px !important;
+  }
+
+  .dashboard-card strong,
+  .report-kpi-card strong,
+  .metric-card strong,
+  .pro-metric-card strong {
+    font-size: 16px !important;
+  }
+
+  .report-filter-grid,
+  .modern-report-filters,
+  .admin-parts-filters,
+  .admin-records-filters,
+  .admin-service-filters,
+  .activity-date-filter {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+
+  .part-progress-strip,
+  .pro-stage-list { grid-template-columns: 1fr 1fr !important; }
+
+  .break-clock-art {
+    width: min(54vw, 170px) !important;
+    height: min(54vw, 170px) !important;
+  }
+
+  .capture-card,
+  .break-control-card,
+  .maintenance-card,
+  .content-section,
+  .panel-card,
+  .report-chart-card,
+  .report-table-card,
+  .chat-contacts-panel,
+  .chat-conversation-panel {
+    padding: 12px !important;
+  }
+}
+
+@media (max-width: 360px) {
+  .dashboard-grid { grid-template-columns: 1fr !important; }
+  .part-progress-strip,
+  .pro-stage-list { grid-template-columns: 1fr !important; }
+  .mobile-nav-item small { font-size: 7px !important; }
+}
