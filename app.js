@@ -24,7 +24,7 @@ const els = {
   sidebar: $("#sidebar"), menuButton: $("#menuButton"), pageTitle: $("#pageTitle"), userAvatar: $("#userAvatar"), userName: $("#userName"), userEmail: $("#userEmail"), userRoleBadge: $("#userRoleBadge"),
   connectionDot: $("#connectionDot"), connectionText: $("#connectionText"), syncText: $("#syncText"), pendingCount: $("#pendingCount"), syncButton: $("#syncButton"), lockButton: $("#lockButton"),
   topSyncButton: $("#topSyncButton"), topConnectionDot: $("#topConnectionDot"), topConnectionText: $("#topConnectionText"), topSyncText: $("#topSyncText"), topPendingCount: $("#topPendingCount"),
-  liveDate: $("#liveDate"), liveClock: $("#liveClock"), dashboardClock: $("#dashboardClock"), dashboardAvatar: $("#dashboardAvatar"), dashboardGreeting: $("#dashboardGreeting"), dashboardRole: $("#dashboardRole"), dashboardConnection: $("#dashboardConnection"), offlineBanner: $("#offlineBanner"), dashboardCards: $("#dashboardCards"), recentActivity: $("#recentActivity"),
+  liveDate: $("#liveDate"), liveClock: $("#liveClock"), dashboardClock: $("#dashboardClock"), dashboardAvatar: $("#dashboardAvatar"), dashboardGreeting: $("#dashboardGreeting"), dashboardRole: $("#dashboardRole"), dashboardConnection: $("#dashboardConnection"), offlineBanner: $("#offlineBanner"), dashboardCards: $("#dashboardCards"), recentActivity: $("#recentActivity"), upcomingBreaks: $("#upcomingBreaks"), topbarRoleName: $("#topbarRoleName"), mobileGreeting: $("#mobileGreeting"), mobileDate: $("#mobileDate"), mobileSyncButton: $("#mobileSyncButton"), mobilePendingCount: $("#mobilePendingCount"), mobileMoreButton: $("#mobileMoreButton"), metricJourneys: $("#metricJourneys"), metricServices: $("#metricServices"), metricFuel: $("#metricFuel"), metricHours: $("#metricHours"), dashboardTankGauge: $("#dashboardTankGauge"), dashboardTankPercent: $("#dashboardTankPercent"), dashboardTankRatio: $("#dashboardTankRatio"), dashboardTankCapacity: $("#dashboardTankCapacity"), flowTankStart: $("#flowTankStart"), flowLoadedToday: $("#flowLoadedToday"), flowTankBalance: $("#flowTankBalance"),
   breakBadge: $("#breakBadge"), breakTitle: $("#breakTitle"), breakTimer: $("#breakTimer"), breakDescription: $("#breakDescription"), startBreakButton: $("#startBreakButton"), endBreakButton: $("#endBreakButton"), breakRecentList: $("#breakRecentList"),
   partForm: $("#partForm"), partStatus: $("#partStatus"), newPartButton: $("#newPartButton"), partSessionSelect: $("#partSessionSelect"), partSessionInfo: $("#partSessionInfo"), establishmentInput: $("#establishmentInput"), machineInput: $("#machineInput"), partDateInput: $("#partDateInput"), horometerStages: $("#horometerStages"), trozoInput: $("#trozoInput"), pulpaInput: $("#pulpaInput"), savePartButton: $("#savePartButton"),
   servicePartSelect: $("#servicePartSelect"), serviceMachine: $("#serviceMachine"), serviceOperator: $("#serviceOperator"), serviceTimer: $("#serviceTimer"), serviceStatus: $("#serviceStatus"), serviceStartedAt: $("#serviceStartedAt"), serviceStartReason: $("#serviceStartReason"), serviceEndReason: $("#serviceEndReason"), serviceStartEvidence: $("#serviceStartEvidence"), serviceEndEvidence: $("#serviceEndEvidence"), newServiceButton: $("#newServiceButton"), serviceSessionCount: $("#serviceSessionCount"), serviceSessionList: $("#serviceSessionList"), startServiceButton: $("#startServiceButton"), endServiceButton: $("#endServiceButton"),
@@ -101,6 +101,10 @@ const REPORT_CACHE_KEY = "lubayd-admin-reports-v1";
 
 function escapeHtml(value) {
   return String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
+}
+
+function iconSvg(name, className = "ui-icon") {
+  return `<svg class="${className}" aria-hidden="true"><use href="#icon-${name}"></use></svg>`;
 }
 function uuid() { return crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`; }
 function todayKey() { return new Date().toISOString().slice(0, 10); }
@@ -375,7 +379,9 @@ function applyProfile() {
   els.userRoleBadge.textContent = roleLabel(role);
   const firstName = String(name || "Usuario").trim().split(/\s+/)[0];
   els.dashboardGreeting.textContent = `¡Hola, ${firstName}!`;
-  els.dashboardRole.textContent = `Rol: ${roleLabel(role)}`;
+  els.dashboardRole.textContent = roleLabel(role);
+  if (els.topbarRoleName) els.topbarRoleName.textContent = roleLabel(role);
+  if (els.mobileGreeting) els.mobileGreeting.textContent = `Hola, ${firstName}`;
 }
 
 function allowedSections() { return ROLE_SECTIONS[currentProfile?.role || "operator"] || ROLE_SECTIONS.operator; }
@@ -411,6 +417,7 @@ function startClock() {
     els.liveDate.textContent = now.toLocaleDateString("es-UY", { weekday: "long", day: "2-digit", month: "long" });
     els.liveClock.textContent = now.toLocaleTimeString("es-UY", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
     els.dashboardClock.textContent = now.toLocaleTimeString("es-UY", { hour: "2-digit", minute: "2-digit" });
+    if (els.mobileDate) els.mobileDate.textContent = now.toLocaleDateString("es-UY", { day: "2-digit", month: "short", year: "numeric" });
     renderTimers();
   };
   update();
@@ -429,6 +436,8 @@ function bindEvents() {
   els.clearReportsButton?.addEventListener("click", resetReportFilters);
   els.offlineLoginButton.addEventListener("click", loginOffline);
   els.menuButton.addEventListener("click", () => els.sidebar.classList.toggle("open"));
+  els.mobileMoreButton?.addEventListener("click", () => els.sidebar.classList.toggle("open"));
+  els.mobileSyncButton?.addEventListener("click", () => syncNow(true));
   els.syncButton.addEventListener("click", () => syncNow(true));
   els.topSyncButton?.addEventListener("click", () => syncNow(true));
   els.lockButton.addEventListener("click", lockApplication);
@@ -785,6 +794,7 @@ async function sendChatMessage(event) {
 
 function renderAll() {
   renderDashboardCards();
+  renderDashboardOverview();
   renderBreak();
   renderPart();
   renderService();
@@ -835,37 +845,102 @@ async function updateSyncUi(state = null) {
     els.topPendingCount.textContent = String(count);
     els.topPendingCount.classList.toggle("hidden", count === 0);
   }
+  if (els.mobilePendingCount) {
+    els.mobilePendingCount.textContent = String(count);
+    els.mobilePendingCount.classList.toggle("hidden", count === 0);
+  }
   if (els.topSyncText) {
     els.topSyncText.textContent = text;
     els.topSyncText.title = lastSyncError || "";
   }
 }
 
-function renderDashboardCards() {
+function recordIsToday(value) {
+  if (!value) return false;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value).slice(0, 10) === todayKey();
+  const localKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+  return localKey === todayKey();
+}
+
+function partOperatingHours(part) {
+  const initial = Number(part?.horometers?.initial?.value);
+  const final = Number(part?.horometers?.final?.value);
+  if (!Number.isFinite(initial) || !Number.isFinite(final) || final < initial) return 0;
+  return final - initial;
+}
+
+function formatHours(value) {
+  const number = Number(value || 0);
+  return `${number.toLocaleString("es-UY", { minimumFractionDigits: number % 1 ? 1 : 0, maximumFractionDigits: 1 })} h`;
+}
+
+function renderDashboardOverview() {
   if (!currentProfile) return;
+  const todayParts = userParts.filter((part) => part.dateKey === todayKey());
+  const todayServices = services.filter((record) => recordIsToday(record.endAtClient || record.startAtClient));
+  const completedServices = todayServices.filter((record) => record.status !== "active");
+  const todayFuel = fuelLoads.filter((record) => recordIsToday(record.createdAtClient));
+  const fuelTotal = todayFuel.reduce((sum, record) => sum + Number(record.liters || 0), 0);
+  const hours = todayParts.reduce((sum, part) => sum + partOperatingHours(part), 0);
+
+  if (els.metricJourneys) els.metricJourneys.textContent = String(todayParts.length);
+  if (els.metricServices) els.metricServices.textContent = String(completedServices.length);
+  if (els.metricFuel) els.metricFuel.textContent = liters(fuelTotal);
+  if (els.metricHours) els.metricHours.textContent = formatHours(hours);
+
+  const capacity = Number(tank?.capacityLiters || 0);
+  const current = Number(tank?.currentLiters || 0);
+  const percent = capacity > 0 ? Math.max(0, Math.min(100, current / capacity * 100)) : 0;
+  if (els.dashboardTankGauge) {
+    els.dashboardTankGauge.style.setProperty("--tank-level", `${percent * 1.8}deg`);
+    els.dashboardTankGauge.closest(".tank-overview-card")?.style.setProperty("--mobile-level", `${percent}%`);
+  }
+  if (els.dashboardTankPercent) els.dashboardTankPercent.textContent = `${Math.round(percent)}%`;
+  if (els.dashboardTankRatio) els.dashboardTankRatio.textContent = `${liters(current)} / ${liters(capacity)}`;
+  if (els.dashboardTankCapacity) els.dashboardTankCapacity.textContent = liters(capacity);
+  if (els.flowTankStart) els.flowTankStart.textContent = liters(current + fuelTotal);
+  if (els.flowLoadedToday) els.flowLoadedToday.textContent = liters(fuelTotal);
+  if (els.flowTankBalance) els.flowTankBalance.textContent = liters(current);
+
+  renderUpcomingBreaks(todayParts);
+}
+
+function renderUpcomingBreaks(todayParts = []) {
+  if (!els.upcomingBreaks) return;
+  if (currentBreak) {
+    els.upcomingBreaks.innerHTML = `<div class="upcoming-item"><span class="upcoming-icon">${iconSvg("bed")}</span><div><strong>Descanso en curso</strong><span>Iniciado a las ${formatTime(currentBreak.startAtClient)}</span></div><b>Activo</b></div>`;
+    return;
+  }
+  const machines = todayParts.map((part) => part.machine).filter(Boolean).slice(0, 3);
+  if (!machines.length) {
+    els.upcomingBreaks.innerHTML = '<div class="empty-state compact">Sin descansos programados para hoy.</div>';
+    return;
+  }
+  els.upcomingBreaks.innerHTML = machines.map((machine) => `<div class="upcoming-item"><span class="upcoming-icon">${iconSvg("bed")}</span><div><strong>${escapeHtml(machine)}</strong><span>Sin descanso activo</span></div><b>--:--</b></div>`).join("");
+}
+
+function renderDashboardCards() {
+  if (!currentProfile || !els.dashboardCards) return;
   const role = currentProfile.role;
   const cards = [];
   if (["operator", "admin"].includes(role)) {
-    cards.push({ kind: "break", icon: "☕", title: "Descanso", text: currentBreak ? `En curso desde ${formatTime(currentBreak.startAtClient)}` : "Iniciar o finalizar descanso.", section: "break", action: currentBreak ? "Ver descanso" : "Abrir" });
-    const todayParts = partsForDate(todayKey());
-    const pendingParts = todayParts.filter((part) => part.syncStatus === "pending").length;
-    cards.push({ kind: "part", icon: "▣", title: "Partes diarios", text: todayParts.length ? `${todayParts.length} parte${todayParts.length === 1 ? "" : "s"} hoy${pendingParts ? ` · ${pendingParts} pendiente${pendingParts === 1 ? "" : "s"}` : ""}` : "Crea un parte por maquina para la jornada.", section: "part", action: "Nuevo parte" });
+    cards.push({ kind: "break", icon: "bed", title: "Descanso", section: "break" });
+    cards.push({ kind: "part", icon: "clipboard", title: "Parte", section: "part", newPart: true });
   }
-  if (["mechanic", "admin"].includes(role)) {
-    const active = services.find((item) => item.status === "active");
-    cards.push({ kind: "service", icon: "🔧", title: "Parte de servicio", text: active ? `${active.machine} · ${formatDuration(active.startAtClient)}` : "Registrar inicio y fin de reparacion.", section: "service", action: "Abrir" });
-    cards.push({ kind: "fuel", icon: "⛽", title: "Carga de combustible", text: `${liters(tank.currentLiters)} disponibles en el tanque principal.`, section: "fuel", action: "Registrar" });
-  }
-  if (role === "admin") {
-    cards.push({ kind: "reports", icon: "▥", title: "Panel de control", text: "Descansos, combustible y horas de servicio en un solo lugar.", section: "reports", action: "Ver reportes" });
-  }
-  cards.push({ kind: "activity", icon: "+", title: role === "operator" ? "Nueva actividad" : "Actividad", text: "Consulta los ultimos movimientos disponibles para tu rol.", section: "activity", action: "Ver actividad" });
-  els.dashboardCards.innerHTML = cards.map((card) => `<article class="quick-card quick-card-${card.kind}"><span class="quick-icon">${card.icon}</span><h3>${escapeHtml(card.title)}</h3><p>${escapeHtml(card.text)}</p><button class="primary-button" type="button" data-section-link="${card.section}" ${card.kind === "part" ? 'data-new-part="true"' : ""}>${escapeHtml(card.action)}</button></article>`).join("");
+  if (["mechanic", "admin"].includes(role)) cards.push({ kind: "service", icon: "wrench", title: "Servicio", section: "service" });
+  if (["mechanic", "admin"].includes(role)) cards.push({ kind: "fuel", icon: "fuel", title: "Combustible", section: "fuel" });
+  cards.push({ kind: "chat", icon: "chat", title: "Chat", section: "chat" });
+  if (role === "admin") cards.push({ kind: "reports", icon: "chart", title: "Reportes", section: "reports" });
+  else cards.push({ kind: "activity", icon: "activity", title: "Actividad", section: "activity" });
+
+  els.dashboardCards.innerHTML = cards.map((card) => `<button class="quick-access-card quick-card-${card.kind}" type="button" data-section-link="${card.section}" ${card.newPart ? 'data-new-part="true"' : ""}><span class="quick-access-icon">${iconSvg(card.icon)}</span><strong>${escapeHtml(card.title)}</strong></button>`).join("");
   els.dashboardCards.querySelectorAll("[data-section-link]").forEach((button) => button.addEventListener("click", () => {
     if (button.dataset.newPart === "true") startNewPart();
     else showSection(button.dataset.sectionLink);
   }));
   renderRecentActivity();
+  renderDashboardOverview();
 }
 
 function renderRecentActivity() {
@@ -877,18 +952,19 @@ function buildActivityRecords() {
   const role = currentProfile?.role;
   const items = [];
   if (["operator", "admin"].includes(role)) {
-    breakRecords.forEach((record) => items.push({ icon: "◷", title: record.status === "active" ? "Inicio de descanso" : "Descanso completado", detail: record.status === "active" ? "Descanso en curso" : `Duracion ${formatDuration(record.startAtClient, record.endAtClient)}`, date: record.startAtClient, status: record.syncStatus }));
-    userParts.forEach((part) => items.push({ icon: "▣", title: "Parte diario", detail: `${part.machine || "Sin maquina"} - Troza ${part.production?.troza ?? part.production?.trozo ?? 0} / Pulpa ${part.production?.pulpa || 0}`, date: part.updatedAtClient || part.createdAtClient, status: part.syncStatus }));
+    breakRecords.forEach((record) => items.push({ icon: "bed", title: record.status === "active" ? "Inicio de descanso" : "Descanso completado", detail: record.status === "active" ? "Descanso en curso" : `Duración ${formatDuration(record.startAtClient, record.endAtClient)}`, date: record.startAtClient, status: record.syncStatus }));
+    userParts.forEach((part) => items.push({ icon: "clipboard", title: "Parte diario enviado", detail: `${part.machine || "Sin máquina"} · Troza ${part.production?.troza ?? part.production?.trozo ?? 0} / Pulpa ${part.production?.pulpa || 0}`, date: part.updatedAtClient || part.createdAtClient, status: part.syncStatus }));
   }
   if (["mechanic", "admin"].includes(role)) {
-    services.forEach((record) => items.push({ icon: "⚒", title: record.status === "active" ? "Servicio iniciado" : "Servicio finalizado", detail: `${record.operatorName || "Operador"} - ${record.machine || "Maquina"}`, date: record.startAtClient, status: record.syncStatus }));
-    fuelLoads.forEach((record) => items.push({ icon: "⛽", title: "Carga de combustible", detail: `${record.machine} - ${liters(record.liters)} - ${record.shift === "night" ? "Nocturna" : "Diurna"}`, date: record.createdAtClient, status: record.syncStatus }));
+    services.forEach((record) => items.push({ icon: "wrench", title: record.status === "active" ? "Servicio iniciado" : "Servicio completado", detail: `${record.operatorName || "Operador"} · ${record.machine || "Máquina"}`, date: record.startAtClient, status: record.syncStatus }));
+    fuelLoads.forEach((record) => items.push({ icon: "fuel", title: "Carga de combustible", detail: `${record.machine} · ${liters(record.liters)} · ${record.shift === "night" ? "Nocturna" : "Diurna"}`, date: record.createdAtClient, status: record.syncStatus }));
   }
   return items.sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")));
 }
 
 function activityTemplate(item) {
-  return `<div class="activity-item"><span class="activity-icon">${item.icon}</span><div class="activity-copy"><strong>${escapeHtml(item.title)}</strong><span>${escapeHtml(item.detail)}</span></div><div class="activity-meta"><span>${formatDate(item.date)}</span><strong>${formatTime(item.date)}</strong>${item.status === "pending" ? "<small>Pendiente</small>" : ""}</div></div>`;
+  const syncedLabel = item.status === "pending" ? "Pendiente" : "Completado";
+  return `<div class="activity-item"><span class="activity-icon">${iconSvg(item.icon)}</span><div class="activity-copy"><strong>${escapeHtml(item.title)}</strong><span>${escapeHtml(item.detail)}</span></div><div class="activity-meta"><span>${formatDate(item.date)}</span><strong>${formatTime(item.date)}</strong><small class="activity-status ${item.status === "pending" ? "pending" : ""}">${syncedLabel}</small></div></div>`;
 }
 
 
@@ -1172,7 +1248,7 @@ function renderBreak() {
   els.breakDescription.textContent = active ? `Iniciado ${formatDateTime(currentBreak.startAtClient)}` : "Puedes iniciar tu descanso.";
   els.startBreakButton.disabled = active;
   els.endBreakButton.disabled = !active;
-  els.breakRecentList.innerHTML = breakRecords.slice(0, 5).map((record) => activityTemplate({ icon: "◷", title: record.status === "active" ? "Descanso activo" : "Descanso completado", detail: record.status === "active" ? "En curso" : formatDuration(record.startAtClient, record.endAtClient), date: record.startAtClient, status: record.syncStatus })).join("") || '<div class="empty-state">Sin descansos registrados.</div>';
+  els.breakRecentList.innerHTML = breakRecords.slice(0, 5).map((record) => activityTemplate({ icon: "bed", title: record.status === "active" ? "Descanso activo" : "Descanso completado", detail: record.status === "active" ? "En curso" : formatDuration(record.startAtClient, record.endAtClient), date: record.startAtClient, status: record.syncStatus })).join("") || '<div class="empty-state">Sin descansos registrados.</div>';
 }
 
 function renderTimers() {
@@ -1755,6 +1831,7 @@ function renderTank() {
   els.tankCapacity.textContent = liters(capacity);
   els.tankCurrent.textContent = liters(current);
   els.tankUpdated.textContent = tank?.updatedAtClient ? `Ultima actualizacion: ${formatDateTime(tank.updatedAtClient)}` : "Sin datos del tanque.";
+  renderDashboardOverview();
 }
 
 function renderFuelRecent() {
