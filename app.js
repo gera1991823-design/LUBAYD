@@ -39,6 +39,7 @@ const els = {
   chatMessages: $("#chatMessages"), chatForm: $("#chatForm"), chatInput: $("#chatInput"), chatSendButton: $("#chatSendButton"), chatStatusText: $("#chatStatusText"), chatConnectionBadge: $("#chatConnectionBadge"), directChatShell: $("#directChatShell"), chatUserSearch: $("#chatUserSearch"), chatContactList: $("#chatContactList"), chatDirectoryStatus: $("#chatDirectoryStatus"), chatUnreadTotal: $("#chatUnreadTotal"), chatBackButton: $("#chatBackButton"), chatRecipientAvatar: $("#chatRecipientAvatar"), chatRecipientName: $("#chatRecipientName"), chatRecipientMeta: $("#chatRecipientMeta"),
   reportsConnectionBadge: $("#reportsConnectionBadge"), refreshReportsButton: $("#refreshReportsButton"), reportDateFrom: $("#reportDateFrom"), reportDateTo: $("#reportDateTo"), reportOperator: $("#reportOperator"), reportMachine: $("#reportMachine"), reportShift: $("#reportShift"), applyReportsButton: $("#applyReportsButton"), clearReportsButton: $("#clearReportsButton"), reportsLastUpdated: $("#reportsLastUpdated"),
   reportFuelTotal: $("#reportFuelTotal"), reportFuelDetail: $("#reportFuelDetail"), reportServiceHours: $("#reportServiceHours"), reportServiceDetail: $("#reportServiceDetail"), reportMachineCount: $("#reportMachineCount"), reportDominantShift: $("#reportDominantShift"), fuelByShiftChart: $("#fuelByShiftChart"), reportSummaryChart: $("#reportSummaryChart"), breaksByDayChart: $("#breaksByDayChart"), breaksByOperatorChart: $("#breaksByOperatorChart"), fuelByDayChart: $("#fuelByDayChart"), fuelByOperatorChart: $("#fuelByOperatorChart"), fuelByMachineChart: $("#fuelByMachineChart"), serviceByMachineChart: $("#serviceByMachineChart"), reportServiceTable: $("#reportServiceTable"), reportServiceTableCount: $("#reportServiceTableCount"),
+  recordDetailModal: $("#recordDetailModal"), recordDetailTitle: $("#recordDetailTitle"), recordDetailBody: $("#recordDetailBody"),
   captureModal: $("#captureModal"), captureTitle: $("#captureTitle"), captureSubtitle: $("#captureSubtitle"), capturePreview: $("#capturePreview"), captureFileInput: $("#captureFileInput"), captureGpsCard: $("#captureGpsCard"), captureGpsStatus: $("#captureGpsStatus"), captureGpsButton: $("#captureGpsButton"), captureGpsSkipButton: $("#captureGpsSkipButton"), captureGpsRequirement: $("#captureGpsRequirement"), captureGpsHelp: $("#captureGpsHelp"), captureMapLink: $("#captureMapLink"), confirmCaptureButton: $("#confirmCaptureButton"),
   pinModal: $("#pinModal"), pinInput: $("#pinInput"), pinConfirm: $("#pinConfirm"), pinError: $("#pinError"), savePinButton: $("#savePinButton"), skipPinButton: $("#skipPinButton"),
   tankModal: $("#tankModal"), tankCapacityInput: $("#tankCapacityInput"), tankCurrentInput: $("#tankCurrentInput"), saveTankButton: $("#saveTankButton"),
@@ -129,6 +130,71 @@ function escapeHtml(value) {
 function iconSvg(name, className = "ui-icon") {
   return `<svg class="${className}" aria-hidden="true"><use href="#icon-${name}"></use></svg>`;
 }
+
+function isPartReadOnly(part) {
+  return Boolean(part && (
+    part.locked === true ||
+    part.status === "completed" ||
+    part.finalizedAtClient ||
+    part.horometers?.final?.value !== undefined
+  ));
+}
+
+function closeRecordDetail() {
+  els.recordDetailModal?.classList.add("hidden");
+  if (els.recordDetailBody) els.recordDetailBody.innerHTML = "";
+}
+
+function detailMetric(label, value) {
+  return `<div class="record-detail-metric"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value ?? "-")}</strong></div>`;
+}
+
+function recordEvidencePreview(evidence, label = "Evidencia") {
+  if (!evidence) return '<div class="record-evidence-empty">Sin evidencia registrada</div>';
+  const photoSource = evidence.photoUrl || (evidence.photoBlob ? URL.createObjectURL(evidence.photoBlob) : "");
+  const locationMarkup = evidence.location
+    ? `<a class="record-map-link" href="${mapUrl(evidence.location)}" target="_blank" rel="noopener">${iconSvg("map-pin")} Ver ubicación</a>`
+    : '<span class="record-location-missing">Sin ubicación GPS</span>';
+  return `<div class="record-evidence-card">${photoSource ? `<a href="${escapeHtml(photoSource)}" target="_blank" rel="noopener"><img src="${escapeHtml(photoSource)}" alt="${escapeHtml(label)}" loading="lazy"></a>` : '<div class="record-evidence-placeholder">Sin foto</div>'}<div class="record-evidence-copy"><strong>${escapeHtml(label)}</strong><small>${escapeHtml(formatDateTime(evidence.capturedAtClient))}</small>${locationMarkup}</div></div>`;
+}
+
+function openPartReadOnly(part) {
+  if (!part || !els.recordDetailModal || !els.recordDetailBody) return;
+  const production = part.production || {};
+  const hours = partOperatingHours(part);
+  const horometers = HOROMETER_CONFIG.map((config) => {
+    const stage = part.horometers?.[config.key] || {};
+    return `<section class="record-detail-section"><div class="record-detail-section-heading"><div><span>${escapeHtml(config.help)}</span><h3>${escapeHtml(config.label)}</h3></div><strong>${stage.value ?? "-"}</strong></div>${recordEvidencePreview(stage.evidence, config.label)}</section>`;
+  }).join("");
+  els.recordDetailTitle.textContent = `Parte · ${part.machine || "Máquina"}`;
+  els.recordDetailBody.innerHTML = `<div class="record-detail-banner"><span class="record-readonly-badge">Solo lectura</span><div><strong>${escapeHtml(part.operatorName || currentProfile?.name || "Operador")}</strong><small>${escapeHtml(formatDate(part.dateKey || part.createdAtClient))} · ${escapeHtml(part.establishment || "-")}</small></div></div><div class="record-detail-metrics">${detailMetric("Máquina", part.machine || "-")}${detailMetric("Horas operadas", hours ? `${reportNumber(hours,1)} h` : "Sin cierre")}${detailMetric("Troza", production.troza ?? production.trozo ?? 0)}${detailMetric("Pulpa", production.pulpa ?? 0)}</div><div class="record-detail-grid">${horometers}</div>`;
+  els.recordDetailModal.classList.remove("hidden");
+}
+
+function openServiceReadOnly(record) {
+  if (!record || !els.recordDetailModal || !els.recordDetailBody) return;
+  const completed = Boolean(record.endAtClient || record.status === "completed");
+  const duration = completed ? formatDuration(record.startAtClient, record.endAtClient) : formatDuration(record.startAtClient);
+  els.recordDetailTitle.textContent = `Servicio · ${record.machine || "Máquina"}`;
+  els.recordDetailBody.innerHTML = `<div class="record-detail-banner"><span class="record-readonly-badge">Solo lectura</span><div><strong>${escapeHtml(record.mechanicName || currentProfile?.name || "Mecánico")}</strong><small>${escapeHtml(formatDateTime(record.startAtClient))}</small></div></div><div class="record-detail-metrics">${detailMetric("Máquina", record.machine || "-")}${detailMetric("Operador", record.operatorName || "-")}${detailMetric("Estado", completed ? "Finalizado" : "En curso")}${detailMetric("Duración", duration)}</div><div class="record-service-copy"><section><span>Motivo de reparación</span><p>${escapeHtml(record.startReason || "Sin motivo registrado")}</p></section><section><span>Trabajo realizado</span><p>${escapeHtml(record.endReason || (completed ? "Sin detalle registrado" : "Servicio en curso"))}</p></section></div><div class="record-detail-grid record-service-evidence"><section class="record-detail-section"><h3>Inicio del servicio</h3>${recordEvidencePreview(record.startEvidence, "Evidencia inicial")}</section><section class="record-detail-section"><h3>Finalización del servicio</h3>${recordEvidencePreview(record.endEvidence, "Evidencia final")}</section></div>`;
+  els.recordDetailModal.classList.remove("hidden");
+}
+
+function openRecordDetail(type, id) {
+  if (!id) return;
+  if (type === "part") {
+    const part = userParts.find((item) => item.id === id) || operatorParts.find((item) => item.id === id);
+    if (part) openPartReadOnly(part);
+    else showToast("Registro no disponible", "No se encontró el Parte en este dispositivo.", "error");
+    return;
+  }
+  if (type === "service") {
+    const service = services.find((item) => item.id === id) || selectedPartServices.find((item) => item.id === id);
+    if (service) openServiceReadOnly(service);
+    else showToast("Registro no disponible", "No se encontró el Servicio en este dispositivo.", "error");
+  }
+}
+
 function uuid() { return crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`; }
 function todayKey() { return new Date().toISOString().slice(0, 10); }
 function machineKey(value) {
@@ -579,6 +645,8 @@ function bindEvents() {
   els.saveTankButton.addEventListener("click", saveTank);
   $$('[data-close-tank]').forEach((button) => button.addEventListener("click", () => els.tankModal.classList.add("hidden")));
   $$('[data-close-modal]').forEach((button) => button.addEventListener("click", closeCapture));
+  $$('[data-close-record-detail]').forEach((button) => button.addEventListener("click", closeRecordDetail));
+  window.addEventListener("keydown", (event) => { if (event.key === "Escape" && !els.recordDetailModal?.classList.contains("hidden")) closeRecordDetail(); });
   els.captureFileInput.addEventListener("change", handleCaptureFile);
   els.captureGpsButton.addEventListener("click", acquireGps);
   els.captureGpsSkipButton?.addEventListener("click", skipGpsCapture);
@@ -597,6 +665,8 @@ function bindEvents() {
     if (roleSave) saveUserRole(roleSave.dataset.saveRole);
     const photoUpload = event.target.closest("[data-upload-user-photo]");
     if (photoUpload) openProfilePhotoPicker(photoUpload.dataset.uploadUserPhoto);
+    const viewRecord = event.target.closest("[data-view-record]");
+    if (viewRecord) openRecordDetail(viewRecord.dataset.viewRecord, viewRecord.dataset.recordId);
   });
 }
 
@@ -1538,7 +1608,7 @@ function buildActivityRecords() {
   const items = [];
   if (role === "operator") {
     breakRecords.forEach((record) => items.push({ type: "break", personUid: record.uid, personName: record.userName || currentProfile?.name || "Operador", icon: "bed", title: record.status === "active" ? "Inicio de descanso" : "Descanso completado", detail: record.status === "active" ? "Descanso en curso" : `Duración ${formatDuration(record.startAtClient, record.endAtClient)}`, date: record.startAtClient, status: record.syncStatus }));
-    userParts.forEach((part) => items.push({ type: "part", personUid: part.operatorUid || part.uid, personName: part.operatorName || currentProfile?.name || "Operador", machine: part.machine || "", icon: "clipboard", title: "Parte diario enviado", detail: `${part.machine || "Sin máquina"} · Troza ${part.production?.troza ?? part.production?.trozo ?? 0} / Pulpa ${part.production?.pulpa || 0}`, date: part.updatedAtClient || part.createdAtClient, status: part.syncStatus }));
+    userParts.forEach((part) => items.push({ type: "part", recordId: part.id, personUid: part.operatorUid || part.uid, personName: part.operatorName || currentProfile?.name || "Operador", machine: part.machine || "", icon: "clipboard", title: "Parte diario enviado", detail: `${part.machine || "Sin máquina"} · Troza ${part.production?.troza ?? part.production?.trozo ?? 0} / Pulpa ${part.production?.pulpa || 0}`, date: part.updatedAtClient || part.createdAtClient, status: part.syncStatus }));
   }
   if (role === "admin") {
     breakRecords.forEach((record) => items.push({
@@ -1553,6 +1623,7 @@ function buildActivityRecords() {
     }));
     operatorParts.forEach((part) => items.push({
       type: "part",
+      recordId: part.id,
       personUid: part.operatorUid || part.uid || "",
       personName: part.operatorName || "Operador",
       machine: part.machine || "",
@@ -1566,6 +1637,7 @@ function buildActivityRecords() {
   if (["mechanic", "admin"].includes(role)) {
     services.forEach((record) => items.push({
       type: "service",
+      recordId: record.id,
       personUid: record.mechanicUid || "",
       personName: record.mechanicName || "Mecánico",
       machine: record.machine || "",
@@ -1592,7 +1664,8 @@ function buildActivityRecords() {
 
 function activityTemplate(item) {
   const syncedLabel = item.status === "pending" ? "Pendiente" : "Completado";
-  return `<div class="activity-item"><span class="activity-icon">${iconSvg(item.icon)}</span><div class="activity-copy"><strong>${escapeHtml(item.title)}</strong><span>${escapeHtml(item.detail)}</span></div><div class="activity-meta"><span>${formatDate(item.date)}</span><strong>${formatTime(item.date)}</strong><small class="activity-status ${item.status === "pending" ? "pending" : ""}">${syncedLabel}</small></div></div>`;
+  const canView = Boolean(item.recordId && ["part", "service"].includes(item.type));
+  return `<div class="activity-item"><span class="activity-icon">${iconSvg(item.icon)}</span><div class="activity-copy"><strong>${escapeHtml(item.title)}</strong><span>${escapeHtml(item.detail)}</span></div><div class="activity-meta"><span>${formatDate(item.date)}</span><strong>${formatTime(item.date)}</strong><small class="activity-status ${item.status === "pending" ? "pending" : ""}">${syncedLabel}</small></div>${canView ? `<button class="activity-detail-button" type="button" data-view-record="${escapeHtml(item.type)}" data-record-id="${escapeHtml(item.recordId)}">Ver detalle</button>` : ""}</div>`;
 }
 
 
@@ -2038,12 +2111,8 @@ function renderActivity() {
       const hours = partOperatingHours(part);
       const status = part.syncStatus === "pending" ? "Pendiente" : part.status === "active" ? "En progreso" : "Completado";
       const statusClass = part.syncStatus === "pending" ? "pending" : part.status === "active" ? "warning" : "complete";
-      return `<article class="operator-record-card"><span class="operator-record-icon">${iconSvg("tractor")}</span><div class="operator-record-copy"><strong>${escapeHtml(part.machine || "Máquina sin definir")}</strong><span>${iconSvg("calendar")} ${escapeHtml(formatDate(part.dateKey || part.createdAtClient))}</span><span>${iconSvg("clock")} ${hours ? `${reportNumber(hours, 1)} h operadas` : "Sin cierre de horómetro"}</span></div><span class="record-status ${statusClass}">${status}</span><button class="record-chevron" type="button" data-open-part="${escapeHtml(part.id || "")}" aria-label="Abrir Parte">${iconSvg("chevron-right")}</button></article>`;
+      return `<article class="operator-record-card"><span class="operator-record-icon">${iconSvg("tractor")}</span><div class="operator-record-copy"><strong>${escapeHtml(part.machine || "Máquina sin definir")}</strong><span>${iconSvg("calendar")} ${escapeHtml(formatDate(part.dateKey || part.createdAtClient))}</span><span>${iconSvg("clock")} ${hours ? `${reportNumber(hours, 1)} h operadas` : "Sin cierre de horómetro"}</span></div><span class="record-status ${statusClass}">${status}</span><button class="record-chevron" type="button" data-view-record="part" data-record-id="${escapeHtml(part.id || "")}" aria-label="Ver Parte en modo consulta">${iconSvg("chevron-right")}</button></article>`;
     }).join("") : '<div class="empty-state">No hay Partes para la fecha seleccionada.</div>';
-    els.operatorPartsActivity.querySelectorAll("[data-open-part]").forEach((button) => button.addEventListener("click", () => {
-      const part = userParts.find((item) => item.id === button.dataset.openPart);
-      if (part) { currentPart = part; showSection("part"); renderPart(); }
-    }));
   }
   if (els.operatorBreaksActivity) {
     els.operatorBreaksActivity.innerHTML = breaks.length ? breaks.map((record) => {
@@ -2415,6 +2484,7 @@ function renderAdminServices() {
 
 function renderPart() {
   const editing = Boolean(currentPart);
+  const readOnly = isPartReadOnly(currentPart);
   const dateKey = currentPart?.dateKey || partDraftDate || todayKey();
   els.partDateInput.value = dateKey;
   els.partDateInput.max = todayKey();
@@ -2422,19 +2492,26 @@ function renderPart() {
   els.machineInput.value = currentPart?.machine || "";
   els.trozoInput.value = currentPart?.production?.troza ?? currentPart?.production?.trozo ?? "";
   els.pulpaInput.value = currentPart?.production?.pulpa ?? "";
-  els.machineInput.disabled = editing;
-  els.partDateInput.disabled = editing;
-  els.partStatus.textContent = currentPart ? (currentPart.syncStatus === "pending" ? "Pendiente" : "Guardado") : "Nuevo";
-  els.partStatus.className = `badge ${currentPart?.syncStatus === "pending" ? "warning" : currentPart ? "active" : "neutral"}`;
+  els.machineInput.disabled = editing || readOnly;
+  els.partDateInput.disabled = editing || readOnly;
+  els.establishmentInput.disabled = readOnly;
+  els.trozoInput.disabled = readOnly;
+  els.pulpaInput.disabled = readOnly;
+  els.partForm?.classList.toggle("is-readonly", readOnly);
+  els.savePartButton.disabled = readOnly;
+  els.savePartButton.textContent = readOnly ? "Parte finalizado · Solo lectura" : "Guardar Parte";
+  els.partStatus.textContent = readOnly ? "Solo lectura" : currentPart ? (currentPart.syncStatus === "pending" ? "Pendiente" : "Guardado") : "Nuevo";
+  els.partStatus.className = `badge ${readOnly ? "neutral" : currentPart?.syncStatus === "pending" ? "warning" : currentPart ? "active" : "neutral"}`;
   renderPartSessionSelector();
   els.horometerStages.innerHTML = HOROMETER_CONFIG.map((config, index) => {
     const stage = currentPart?.horometers?.[config.key] || {};
     const evidence = stage.evidence;
-    return `<article class="stage-card stage-card-pro"><div class="stage-title"><span class="stage-number">${index + 1}</span><span class="stage-title-copy"><strong>${escapeHtml(config.label)}</strong><small>${escapeHtml(config.help)}</small></span></div><label class="field stage-value-field"><span>Valor</span><input type="number" inputmode="decimal" step="0.1" min="0" data-horometer-value="${config.key}" value="${escapeHtml(stage.value ?? "")}" placeholder="0"></label><div class="stage-actions"><button class="secondary-button stage-capture-button" type="button" data-horometer-capture="${config.key}">${evidence ? "Repetir foto" : "Foto y GPS opcional"}</button><span class="stage-status ${evidence ? "ready" : ""}">${evidence ? "Completo" : "Pendiente"}</span></div>${evidence ? `<div class="stage-evidence">${evidence.photoUrl || evidence.photoBlob ? `<img src="${evidence.photoUrl || URL.createObjectURL(evidence.photoBlob)}" alt="${escapeHtml(config.label)}">` : ""}${evidence.location ? `<a href="${mapUrl(evidence.location)}" target="_blank" rel="noopener">Ver ubicacion en mapa</a>` : `<span class="evidence-location-missing">Sin ubicacion GPS</span>`}</div>` : ""}</article>`;
+    return `<article class="stage-card stage-card-pro ${readOnly ? "is-readonly" : ""}"><div class="stage-title"><span class="stage-number">${index + 1}</span><span class="stage-title-copy"><strong>${escapeHtml(config.label)}</strong><small>${escapeHtml(config.help)}</small></span></div><label class="field stage-value-field"><span>Valor</span><input type="number" inputmode="decimal" step="0.1" min="0" data-horometer-value="${config.key}" value="${escapeHtml(stage.value ?? "")}" placeholder="0" ${readOnly ? "disabled" : ""}></label><div class="stage-actions"><button class="secondary-button stage-capture-button" type="button" data-horometer-capture="${config.key}" ${readOnly ? "disabled" : ""}>${readOnly ? "Evidencia registrada" : evidence ? "Repetir foto" : "Foto y GPS opcional"}</button><span class="stage-status ${evidence ? "ready" : ""}">${evidence ? "Completo" : "Pendiente"}</span></div>${evidence ? `<div class="stage-evidence">${evidence.photoUrl || evidence.photoBlob ? `<img src="${evidence.photoUrl || URL.createObjectURL(evidence.photoBlob)}" alt="${escapeHtml(config.label)}">` : ""}${evidence.location ? `<a href="${mapUrl(evidence.location)}" target="_blank" rel="noopener">Ver ubicacion en mapa</a>` : `<span class="evidence-location-missing">Sin ubicacion GPS</span>`}</div>` : ""}</article>`;
   }).join("");
 }
 
 function captureHorometer(key) {
+  if (isPartReadOnly(currentPart)) { showToast("Parte finalizado", "Este Parte está disponible únicamente para consulta.", "error"); return; }
   let part;
   try { part = ensurePart(); }
   catch (error) { showToast("No se pudo iniciar el parte", error.message, "error"); return; }
@@ -2456,6 +2533,7 @@ function captureHorometer(key) {
 
 async function savePart(event) {
   event.preventDefault();
+  if (isPartReadOnly(currentPart)) { showToast("Parte finalizado", "Este Parte no puede modificarse.", "error"); return; }
   if (!els.machineInput.value) { showToast("Selecciona la maquina", "La maquina es obligatoria.", "error"); return; }
   let part;
   try { part = ensurePart(); }
@@ -2473,6 +2551,9 @@ async function savePart(event) {
   part.id = currentPart?.id || makePartId(currentUser.uid, part.dateKey, part.machine);
   part.production = { troza: Number(els.trozoInput.value || 0), pulpa: Number(els.pulpaInput.value || 0) };
   part.updatedAtClient = localIso();
+  part.finalizedAtClient = part.finalizedAtClient || localIso();
+  part.status = "completed";
+  part.locked = true;
   part.syncStatus = "pending";
   currentPart = normalizePartRecord(part);
   userParts = userParts.filter((item) => item.id !== currentPart.id).concat(currentPart);
@@ -2610,7 +2691,7 @@ function serviceSessionTemplate(record) {
       <strong>${escapeHtml(record.startReason || "Sin motivo registrado")}</strong>
       <small>${formatDate(record.startAtClient)} · ${formatTime(record.startAtClient)}${record.endAtClient ? ` a ${formatTime(record.endAtClient)}` : ""}</small>
     </div>
-    <div class="service-session-duration"><span>Duracion</span><strong>${duration}</strong></div>
+    <div class="service-session-duration"><span>Duracion</span><strong>${duration}</strong><button class="service-view-button" type="button" data-view-record="service" data-record-id="${escapeHtml(record.id || "")}">Ver detalle</button></div>
   </article>`;
 }
 
