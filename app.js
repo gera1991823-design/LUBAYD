@@ -26,27 +26,31 @@ const els = {
   connectionDot: $("#connectionDot"), connectionText: $("#connectionText"), syncText: $("#syncText"), pendingCount: $("#pendingCount"), syncButton: $("#syncButton"), lockButton: $("#lockButton"),
   topSyncButton: $("#topSyncButton"), topConnectionDot: $("#topConnectionDot"), topConnectionText: $("#topConnectionText"), topSyncText: $("#topSyncText"), topPendingCount: $("#topPendingCount"),
   liveDate: $("#liveDate"), liveClock: $("#liveClock"), dashboardClock: $("#dashboardClock"), dashboardAvatar: $("#dashboardAvatar"), dashboardGreeting: $("#dashboardGreeting"), dashboardRole: $("#dashboardRole"), dashboardConnection: $("#dashboardConnection"), offlineBanner: $("#offlineBanner"), dashboardCards: $("#dashboardCards"), recentActivity: $("#recentActivity"), upcomingBreaks: $("#upcomingBreaks"), topbarRoleName: $("#topbarRoleName"), mobileGreeting: $("#mobileGreeting"), mobileDate: $("#mobileDate"), mobileSyncButton: $("#mobileSyncButton"), mobilePendingCount: $("#mobilePendingCount"), mobileMoreButton: $("#mobileMoreButton"), metricJourneys: $("#metricJourneys"), metricServices: $("#metricServices"), metricFuel: $("#metricFuel"), metricHours: $("#metricHours"), dashboardTankGauge: $("#dashboardTankGauge"), dashboardTankPercent: $("#dashboardTankPercent"), dashboardTankRatio: $("#dashboardTankRatio"), dashboardTankCapacity: $("#dashboardTankCapacity"), dashboardTankVolume: $("#dashboardTankVolume"), dashboardTankProgress: $("#dashboardTankProgress"), dashboardFuelChart: $("#dashboardFuelChart"), dashboardFleetChart: $("#dashboardFleetChart"), metricFuelTrend: $("#metricFuelTrend"), metricHoursTrend: $("#metricHoursTrend"), flowTankStart: $("#flowTankStart"), flowLoadedToday: $("#flowLoadedToday"), flowTankBalance: $("#flowTankBalance"),
-  breakBadge: $("#breakBadge"), breakTitle: $("#breakTitle"), breakTimer: $("#breakTimer"), breakDescription: $("#breakDescription"), startBreakButton: $("#startBreakButton"), endBreakButton: $("#endBreakButton"), breakRecentList: $("#breakRecentList"), breakStatusVisual: $("#breakStatusVisual"),
+  breakBadge: $("#breakBadge"), breakTitle: $("#breakTitle"), breakTimer: $("#breakTimer"), breakDescription: $("#breakDescription"), startBreakButton: $("#startBreakButton"), endBreakButton: $("#endBreakButton"), breakRecentList: $("#breakRecentList"),
   partForm: $("#partForm"), partStatus: $("#partStatus"), newPartButton: $("#newPartButton"), partSessionSelect: $("#partSessionSelect"), partSessionInfo: $("#partSessionInfo"), establishmentInput: $("#establishmentInput"), machineInput: $("#machineInput"), partDateInput: $("#partDateInput"), horometerStages: $("#horometerStages"), trozoInput: $("#trozoInput"), pulpaInput: $("#pulpaInput"), savePartButton: $("#savePartButton"),
+  adminPartsPanel: $("#adminPartsPanel"), adminPartsList: $("#adminPartsList"), adminPartsCount: $("#adminPartsCount"), adminPartsStatus: $("#adminPartsStatus"), refreshAdminPartsButton: $("#refreshAdminPartsButton"), adminPartsSearch: $("#adminPartsSearch"), adminPartsDateFilter: $("#adminPartsDateFilter"), adminPartsOperatorFilter: $("#adminPartsOperatorFilter"),
+  adminBreaksPanel: $("#adminBreaksPanel"), adminBreaksList: $("#adminBreaksList"), adminBreaksCount: $("#adminBreaksCount"), adminBreaksStatus: $("#adminBreaksStatus"), refreshAdminBreaksButton: $("#refreshAdminBreaksButton"), adminBreaksSearch: $("#adminBreaksSearch"), adminBreaksDateFilter: $("#adminBreaksDateFilter"), adminBreaksOperatorFilter: $("#adminBreaksOperatorFilter"), adminBreaksStatusFilter: $("#adminBreaksStatusFilter"),
+  adminServicesPanel: $("#adminServicesPanel"), adminServicesList: $("#adminServicesList"), adminServicesCount: $("#adminServicesCount"), adminServicesStatus: $("#adminServicesStatus"), refreshAdminServicesButton: $("#refreshAdminServicesButton"), adminServicesSearch: $("#adminServicesSearch"), adminServicesDateFilter: $("#adminServicesDateFilter"), adminServicesOperatorFilter: $("#adminServicesOperatorFilter"), adminServicesMechanicFilter: $("#adminServicesMechanicFilter"), adminServicesMachineFilter: $("#adminServicesMachineFilter"), adminServicesStatusFilter: $("#adminServicesStatusFilter"),
   servicePartSelect: $("#servicePartSelect"), serviceMachine: $("#serviceMachine"), serviceOperator: $("#serviceOperator"), serviceTimer: $("#serviceTimer"), serviceStatus: $("#serviceStatus"), serviceStartedAt: $("#serviceStartedAt"), serviceStartReason: $("#serviceStartReason"), serviceEndReason: $("#serviceEndReason"), serviceStartEvidence: $("#serviceStartEvidence"), serviceEndEvidence: $("#serviceEndEvidence"), newServiceButton: $("#newServiceButton"), serviceSessionCount: $("#serviceSessionCount"), serviceSessionList: $("#serviceSessionList"), startServiceButton: $("#startServiceButton"), endServiceButton: $("#endServiceButton"),
   tankPercent: $("#tankPercent"), tankProgress: $("#tankProgress"), tankCapacity: $("#tankCapacity"), tankCurrent: $("#tankCurrent"), tankUpdated: $("#tankUpdated"), editTankButton: $("#editTankButton"), fuelRecentList: $("#fuelRecentList"), fuelForm: $("#fuelForm"), fuelMachine: $("#fuelMachine"), fuelOperator: $("#fuelOperator"), fuelLiters: $("#fuelLiters"), fuelPhotoEvidence: $("#fuelPhotoEvidence"), captureFuelPhotoButton: $("#captureFuelPhotoButton"), saveFuelButton: $("#saveFuelButton"),
   activityList: $("#activityList"), operatorActivityTabs: $("#operatorActivityTabs"), operatorPartsActivity: $("#operatorPartsActivity"), operatorBreaksActivity: $("#operatorBreaksActivity"), generalActivityList: $("#generalActivityList"), activityDateFilter: $("#activityDateFilter"), usersList: $("#usersList"),
+  adminActivityControls: $("#adminActivityControls"), adminActivityType: $("#adminActivityType"), adminActivityPerson: $("#adminActivityPerson"), adminActivityDate: $("#adminActivityDate"), adminActivitySearch: $("#adminActivitySearch"), adminActivityRefresh: $("#adminActivityRefresh"), adminActivityTotal: $("#adminActivityTotal"), adminActivityParts: $("#adminActivityParts"), adminActivityBreaks: $("#adminActivityBreaks"), adminActivityServices: $("#adminActivityServices"), adminActivityFuel: $("#adminActivityFuel"),
   cleanupParts: $("#cleanupParts"), cleanupServices: $("#cleanupServices"), cleanupFuel: $("#cleanupFuel"), cleanupTank: $("#cleanupTank"), cleanupConfirmInput: $("#cleanupConfirmInput"), cleanupDataButton: $("#cleanupDataButton"),
   chatMessages: $("#chatMessages"), chatForm: $("#chatForm"), chatInput: $("#chatInput"), chatSendButton: $("#chatSendButton"), chatStatusText: $("#chatStatusText"), chatConnectionBadge: $("#chatConnectionBadge"),
-  reportsConnectionBadge: $("#reportsConnectionBadge"), refreshReportsButton: $("#refreshReportsButton"), reportDateFrom: $("#reportDateFrom"), reportDateTo: $("#reportDateTo"), reportOperator: $("#reportOperator"), reportMachine: $("#reportMachine"), applyReportsButton: $("#applyReportsButton"), clearReportsButton: $("#clearReportsButton"), reportsLastUpdated: $("#reportsLastUpdated"),
-  reportBreakCount: $("#reportBreakCount"), reportBreakDetail: $("#reportBreakDetail"), reportBreakAverage: $("#reportBreakAverage"), reportFuelTotal: $("#reportFuelTotal"), reportFuelDetail: $("#reportFuelDetail"), reportServiceHours: $("#reportServiceHours"), reportServiceDetail: $("#reportServiceDetail"), reportMachineCount: $("#reportMachineCount"), reportSummaryChart: $("#reportSummaryChart"), breaksByDayChart: $("#breaksByDayChart"), breaksByOperatorChart: $("#breaksByOperatorChart"), fuelByDayChart: $("#fuelByDayChart"), fuelByOperatorChart: $("#fuelByOperatorChart"), fuelByMachineChart: $("#fuelByMachineChart"), serviceByMachineChart: $("#serviceByMachineChart"), reportServiceTable: $("#reportServiceTable"), reportServiceTableCount: $("#reportServiceTableCount"),
+  reportsConnectionBadge: $("#reportsConnectionBadge"), refreshReportsButton: $("#refreshReportsButton"), reportDateFrom: $("#reportDateFrom"), reportDateTo: $("#reportDateTo"), reportOperator: $("#reportOperator"), reportMachine: $("#reportMachine"), reportShift: $("#reportShift"), applyReportsButton: $("#applyReportsButton"), clearReportsButton: $("#clearReportsButton"), reportsLastUpdated: $("#reportsLastUpdated"),
+  reportFuelTotal: $("#reportFuelTotal"), reportFuelDetail: $("#reportFuelDetail"), reportServiceHours: $("#reportServiceHours"), reportServiceDetail: $("#reportServiceDetail"), reportMachineCount: $("#reportMachineCount"), reportDominantShift: $("#reportDominantShift"), fuelByShiftChart: $("#fuelByShiftChart"), reportSummaryChart: $("#reportSummaryChart"), breaksByDayChart: $("#breaksByDayChart"), breaksByOperatorChart: $("#breaksByOperatorChart"), fuelByDayChart: $("#fuelByDayChart"), fuelByOperatorChart: $("#fuelByOperatorChart"), fuelByMachineChart: $("#fuelByMachineChart"), serviceByMachineChart: $("#serviceByMachineChart"), reportServiceTable: $("#reportServiceTable"), reportServiceTableCount: $("#reportServiceTableCount"),
   captureModal: $("#captureModal"), captureTitle: $("#captureTitle"), captureSubtitle: $("#captureSubtitle"), capturePreview: $("#capturePreview"), captureFileInput: $("#captureFileInput"), captureGpsCard: $("#captureGpsCard"), captureGpsStatus: $("#captureGpsStatus"), captureGpsButton: $("#captureGpsButton"), captureMapLink: $("#captureMapLink"), confirmCaptureButton: $("#confirmCaptureButton"),
   pinModal: $("#pinModal"), pinInput: $("#pinInput"), pinConfirm: $("#pinConfirm"), pinError: $("#pinError"), savePinButton: $("#savePinButton"), skipPinButton: $("#skipPinButton"),
   tankModal: $("#tankModal"), tankCapacityInput: $("#tankCapacityInput"), tankCurrentInput: $("#tankCurrentInput"), saveTankButton: $("#saveTankButton"),
   processingOverlay: $("#processingOverlay"), processingTitle: $("#processingTitle"), processingMessage: $("#processingMessage"), toastRegion: $("#toastRegion")
 };
 
-const SECTION_TITLES = { dashboard: "Inicio", break: "Descanso", part: "Parte", service: "Servicio", fuel: "Combustible", activity: "Actividad", chat: "Chat", reports: "Reportes", users: "Usuarios" };
+const SECTION_TITLES = { dashboard: "Inicio", break: "Descansos", part: "Partes", service: "Servicios", fuel: "Combustible", activity: "Actividad", chat: "Chat", reports: "Reportes", users: "Usuarios" };
 const ROLE_LABELS = { operator: "Operador", mechanic: "Mecanico", admin: "Administrador" };
 const ROLE_SECTIONS = {
   operator: ["dashboard", "break", "part", "activity"],
   mechanic: ["dashboard", "service", "fuel", "activity", "chat"],
-  admin: ["dashboard", "break", "part", "service", "fuel", "activity", "chat", "reports", "users"]
+  admin: ["dashboard", "part", "service", "break", "reports", "users"]
 };
 const HOROMETER_CONFIG = [
   { key: "initial", label: "Horometro inicial", help: "Inicio de la jornada" },
@@ -92,13 +96,19 @@ let lastSyncError = "";
 let syncRetryHandle = null;
 let chatMessages = [];
 let chatUnsubscribe = null;
+let partsUnsubscribe = null;
+let legacyAdminParts = [];
+let adminPartsLoading = false;
 let chatInitialLoadDone = false;
 let reportUsers = [];
+let reportParts = [];
 let reportBreaks = [];
 let reportFuelLoads = [];
 let reportServices = [];
 let reportLoadedAt = null;
 let reportLoading = false;
+let adminRecordUnsubscribers = [];
+let adminProfiles = new Map();
 let operatorActivityTab = "parts";
 const REPORT_CACHE_KEY = "lubayd-admin-reports-v1";
 const DATA_RESET_SETTING_KEY = "lastAppliedOperationalResetAt";
@@ -438,8 +448,27 @@ function showSection(section) {
   $$('[data-section]').forEach((node) => node.classList.toggle("active", node.dataset.section === section));
   els.pageTitle.textContent = SECTION_TITLES[section] || "Inicio";
   els.sidebar.classList.remove("open");
-  if (section === "part") renderPart();
-  if (section === "service") loadOperatorParts().catch(console.warn);
+  if (section === "part") {
+    if (currentProfile?.role === "admin") {
+      renderAdminParts();
+      loadOperatorParts(true).catch((error) => {
+        setAdminPartsStatus(`No se pudieron actualizar los Partes: ${friendlyError(error)}`, true);
+        showToast("Error al cargar Partes", friendlyError(error), "error");
+      });
+    } else renderPart();
+  }
+  if (section === "break") {
+    if (currentProfile?.role === "admin") {
+      renderAdminBreaks();
+      loadBreaksFromServer().then(renderAdminBreaks).catch((error) => setAdminBreaksStatus(`No se pudieron actualizar los descansos: ${friendlyError(error)}`, true));
+    } else renderBreak();
+  }
+  if (section === "service") {
+    if (currentProfile?.role === "admin") {
+      renderAdminServices();
+      loadServicesFromServer().then(renderAdminServices).catch((error) => setAdminServicesStatus(`No se pudieron actualizar los servicios: ${friendlyError(error)}`, true));
+    } else loadOperatorParts().catch(console.warn);
+  }
   if (section === "fuel") loadFuelSection().catch(console.warn);
   if (section === "users") loadUsers().catch(console.warn);
   if (section === "activity") renderActivity();
@@ -470,6 +499,32 @@ function bindEvents() {
   els.refreshReportsButton?.addEventListener("click", () => loadAdminReports(true));
   els.applyReportsButton?.addEventListener("click", renderAdminReports);
   els.clearReportsButton?.addEventListener("click", resetReportFilters);
+  [els.adminActivityType, els.adminActivityPerson, els.adminActivityDate].filter(Boolean).forEach((element) => element.addEventListener("change", renderActivity));
+  els.adminActivitySearch?.addEventListener("input", renderActivity);
+  els.adminActivityRefresh?.addEventListener("click", async () => {
+    setBusy(els.adminActivityRefresh, true, "Actualizando...");
+    try { await refreshServerData(); showToast("Registros actualizados", "Se consultaron todos los registros operativos."); }
+    catch (error) { showToast("No se pudo actualizar", friendlyError(error), "error"); }
+    finally { setBusy(els.adminActivityRefresh, false); }
+  });
+  els.refreshAdminPartsButton?.addEventListener("click", () => loadOperatorParts(true).catch((error) => showToast("No se pudieron actualizar los Partes", friendlyError(error), "error")));
+  els.adminPartsSearch?.addEventListener("input", renderAdminParts);
+  els.adminPartsDateFilter?.addEventListener("change", renderAdminParts);
+  els.adminPartsOperatorFilter?.addEventListener("change", renderAdminParts);
+  els.refreshAdminBreaksButton?.addEventListener("click", async () => {
+    setBusy(els.refreshAdminBreaksButton, true, "Actualizando...");
+    try { await loadBreaksFromServer(); renderAdminBreaks(); }
+    catch (error) { setAdminBreaksStatus(`No se pudieron actualizar los descansos: ${friendlyError(error)}`, true); }
+    finally { setBusy(els.refreshAdminBreaksButton, false); }
+  });
+  [els.adminBreaksSearch, els.adminBreaksDateFilter, els.adminBreaksOperatorFilter, els.adminBreaksStatusFilter].filter(Boolean).forEach((element) => element.addEventListener(element.tagName === "INPUT" && element.type === "search" ? "input" : "change", renderAdminBreaks));
+  els.refreshAdminServicesButton?.addEventListener("click", async () => {
+    setBusy(els.refreshAdminServicesButton, true, "Actualizando...");
+    try { await loadServicesFromServer(); renderAdminServices(); }
+    catch (error) { setAdminServicesStatus(`No se pudieron actualizar los servicios: ${friendlyError(error)}`, true); }
+    finally { setBusy(els.refreshAdminServicesButton, false); }
+  });
+  [els.adminServicesSearch, els.adminServicesDateFilter, els.adminServicesOperatorFilter, els.adminServicesMechanicFilter, els.adminServicesMachineFilter, els.adminServicesStatusFilter].filter(Boolean).forEach((element) => element.addEventListener(element.tagName === "INPUT" && element.type === "search" ? "input" : "change", renderAdminServices));
   els.operatorActivityTabs?.querySelectorAll("[data-activity-tab]").forEach((button) => button.addEventListener("click", () => { operatorActivityTab = button.dataset.activityTab || "parts"; renderActivity(); }));
   els.activityDateFilter?.addEventListener("change", renderActivity);
   els.offlineLoginButton.addEventListener("click", loginOffline);
@@ -579,6 +634,8 @@ async function loginOffline() {
 async function lockApplication() {
   if (!currentProfile) return;
   stopChatSubscription();
+  stopPartsSubscription();
+  stopAdminRecordSubscriptions();
   await OfflineDB.setLocked(currentProfile.uid, true).catch(() => {});
   lastOfflineProfile = { ...currentProfile, locked: true };
   localSession = false;
@@ -627,16 +684,23 @@ function friendlyError(error) {
 
 async function loadAllLocalData() {
   if (!currentUser) return;
-  breakRecords = await OfflineDB.getBreaks(currentUser.uid).catch(() => []);
-  currentBreak = breakRecords.find((record) => record.status === "active") || null;
+  const isAdmin = currentProfile?.role === "admin";
+  breakRecords = isAdmin && OfflineDB.getAllBreaks
+    ? await OfflineDB.getAllBreaks().catch(() => [])
+    : await OfflineDB.getBreaks(currentUser.uid).catch(() => []);
+  currentBreak = breakRecords.find((record) => record.uid === currentUser.uid && record.status === "active") || null;
   userParts = (await OfflineDB.getParts(currentUser.uid).catch(() => [])).map(normalizePartRecord);
   const todayParts = partsForDate(todayKey());
   currentPart = todayParts[0] || null;
   partDraftDate = currentPart?.dateKey || todayKey();
-  services = await OfflineDB.getServicesForMechanic(currentUser.uid).catch(() => []);
-  fuelLoads = currentProfile?.role === "admin" ? await OfflineDB.getAllFuelLoads().catch(() => []) : await OfflineDB.getFuelLoads(currentUser.uid).catch(() => []);
+  services = isAdmin
+    ? await OfflineDB.getAllServices().catch(() => [])
+    : await OfflineDB.getServicesForMechanic(currentUser.uid).catch(() => []);
+  fuelLoads = isAdmin
+    ? await OfflineDB.getAllFuelLoads().catch(() => [])
+    : await OfflineDB.getFuelLoads(currentUser.uid).catch(() => []);
   tank = await OfflineDB.getTank().catch(() => null) || tank;
-  operatorParts = await OfflineDB.getOperatorParts(todayKey()).catch(() => []);
+  operatorParts = await OfflineDB.getOperatorParts(isAdmin ? undefined : todayKey()).catch(() => []);
   chatMessages = await OfflineDB.getChatMessages(150).catch(() => []);
   await repairPendingParts().catch((error) => console.warn("Reparacion de partes pendientes", error));
   updateConnection();
@@ -648,26 +712,81 @@ async function refreshServerData() {
   await applyGlobalOperationalReset();
   const role = currentProfile?.role || "operator";
   const tasks = [];
-  if (["operator", "admin"].includes(role)) tasks.push(loadBreaksFromServer(), loadPartFromServer());
-  if (["mechanic", "admin"].includes(role)) tasks.push(loadOperatorParts(), loadServicesFromServer(), loadFuelSection());
+  if (role === "operator") tasks.push(loadBreaksFromServer(), loadPartFromServer());
+  if (role === "mechanic") tasks.push(loadOperatorParts(), loadServicesFromServer(), loadFuelSection());
+  if (role === "admin") tasks.push(loadBreaksFromServer(), loadOperatorParts(true), loadServicesFromServer(), loadFuelSection());
   await Promise.all(tasks);
-  await subscribeToChat().catch((error) => console.warn("Chat", error));
+  if (role === "admin") await subscribeToAdminRecords().catch((error) => console.warn("Registros administrativos", error));
+  if (role !== "admin") await subscribeToChat().catch((error) => console.warn("Chat", error));
   renderAll();
 }
 
 async function loadBreaksFromServer() {
-  const q = sdk.query(sdk.collection(db, "users", currentUser.uid, "breaks"), sdk.orderBy("startAtClient", "desc"), sdk.limit(30));
-  const snap = await sdk.getDocs(q);
-  for (const docSnap of snap.docs) {
-    const record = { id: docSnap.id, ...docSnap.data(), uid: currentUser.uid, syncStatus: "synced" };
-    await OfflineDB.putBreak(record);
+  const isAdmin = currentProfile?.role === "admin";
+  if (!isAdmin) {
+    const q = sdk.query(sdk.collection(db, "users", currentUser.uid, "breaks"), sdk.orderBy("startAtClient", "desc"), sdk.limit(100));
+    const snap = await sdk.getDocs(q);
+    for (const docSnap of snap.docs) {
+      const record = { id: docSnap.id, ...docSnap.data(), uid: currentUser.uid, operatorUid: currentUser.uid, userName: currentProfile?.name || "Operador", syncStatus: "synced" };
+      await OfflineDB.putBreak(record);
+    }
+    breakRecords = await OfflineDB.getBreaks(currentUser.uid);
+    currentBreak = breakRecords.find((record) => record.uid === currentUser.uid && record.status === "active") || null;
+    return;
   }
-  breakRecords = await OfflineDB.getBreaks(currentUser.uid);
-  currentBreak = breakRecords.find((record) => record.status === "active") || null;
+
+  const usersSnapshot = await sdk.getDocs(sdk.collection(db, "users"));
+  adminProfiles = new Map(usersSnapshot.docs.map((docSnap) => [docSnap.id, { uid: docSnap.id, ...docSnap.data() }]));
+  const merged = new Map();
+
+  try {
+    const canonicalSnapshot = await sdk.getDocs(sdk.collection(db, "operationalBreaks"));
+    canonicalSnapshot.docs.forEach((docSnap) => {
+      const data = docSnap.data() || {};
+      merged.set(docSnap.id, { id: docSnap.id, ...data, uid: data.uid || data.operatorUid || "", operatorUid: data.operatorUid || data.uid || "", syncStatus: "synced", _source: "canonical" });
+    });
+  } catch (error) {
+    console.warn("No se pudo leer operationalBreaks; se revisaran las subcolecciones heredadas.", error);
+  }
+
+  for (const userDoc of usersSnapshot.docs) {
+    const profile = userDoc.data() || {};
+    try {
+      const breaksSnapshot = await sdk.getDocs(sdk.collection(db, "users", userDoc.id, "breaks"));
+      for (const breakDoc of breaksSnapshot.docs) {
+        const data = breakDoc.data() || {};
+        const record = {
+          id: breakDoc.id,
+          ...data,
+          uid: userDoc.id,
+          operatorUid: userDoc.id,
+          userName: data.userName || profile.name || profile.email || "Operador",
+          userRole: profile.role || "operator",
+          syncStatus: "synced"
+        };
+        const current = merged.get(record.id);
+        if (!current || String(record.endAtClient || record.startAtClient || "") >= String(current.endAtClient || current.startAtClient || "")) merged.set(record.id, record);
+        if (!current || current._source !== "canonical") {
+          try {
+            await sdk.setDoc(sdk.doc(db, "operationalBreaks", record.id), { ...cleanRecord(record), syncedAt: sdk.serverTimestamp() }, { merge: true });
+          } catch (migrationError) {
+            console.warn(`No se pudo migrar el descanso ${record.id}`, migrationError);
+          }
+        }
+      }
+    } catch (error) {
+      console.warn(`No se pudieron leer los descansos de ${userDoc.id}`, error);
+    }
+  }
+
+  for (const record of merged.values()) await OfflineDB.putBreak(record);
+  breakRecords = Array.from(merged.values()).sort((a, b) => String(b.startAtClient || "").localeCompare(String(a.startAtClient || "")));
+  currentBreak = breakRecords.find((record) => record.uid === currentUser.uid && record.status === "active") || null;
 }
 
 async function loadPartFromServer() {
   if (!currentUser || currentProfile?.role === "mechanic") return;
+  if (currentProfile?.role === "admin") { await loadOperatorParts(true); return; }
   const selectedId = currentPart?.id || "";
   const q = sdk.query(
     sdk.collection(db, "operationalParts"),
@@ -686,26 +805,215 @@ async function loadPartFromServer() {
   currentPart = userParts.find((part) => part.id === selectedId) || partsForDate(partDraftDate)[0] || null;
 } 
 
-async function loadOperatorParts() {
-  const date = todayKey();
-  if (firebaseReady && navigator.onLine && !localSession) {
-    const q = sdk.query(sdk.collection(db, "operationalParts"), sdk.where("dateKey", "==", date));
-    const snap = await sdk.getDocs(q);
-    for (const item of snap.docs) await OfflineDB.putOperatorPart({ id: item.id, ...item.data(), syncStatus: "synced" });
+async function loadLegacyPartsForAdmin() {
+  if (!firebaseReady || !navigator.onLine || localSession || currentProfile?.role !== "admin") return [];
+  const records = [];
+  const usersSnapshot = await sdk.getDocs(sdk.collection(db, "users"));
+  for (const userDoc of usersSnapshot.docs) {
+    const profile = userDoc.data() || {};
+    try {
+      const legacySnapshot = await sdk.getDocs(sdk.collection(db, "users", userDoc.id, "parts"));
+      for (const partDoc of legacySnapshot.docs) {
+        const data = partDoc.data() || {};
+        const record = normalizePartRecord({
+          id: data.id || partDoc.id,
+          ...data,
+          uid: userDoc.id,
+          operatorUid: data.operatorUid || userDoc.id,
+          operatorName: data.operatorName || profile.name || profile.email || "Operador",
+          syncStatus: "synced",
+          _source: "legacy"
+        });
+        records.push(record);
+      }
+    } catch (error) {
+      console.warn(`No se pudieron leer los Partes heredados de ${userDoc.id}`, error);
+    }
   }
-  operatorParts = await OfflineDB.getOperatorParts(date);
-  populateServiceParts();
-  populateFuelOperators();
+  return records;
+}
+
+function mergePartCollections(...collections) {
+  const map = new Map();
+  collections.flat().filter(Boolean).forEach((part) => {
+    const current = map.get(part.id);
+    const candidateDate = String(part.updatedAtClient || part.createdAtClient || "");
+    const currentDate = String(current?.updatedAtClient || current?.createdAtClient || "");
+    if (!current || candidateDate >= currentDate || part._source === "canonical") map.set(part.id, part);
+  });
+  return Array.from(map.values()).sort((a, b) => String(b.updatedAtClient || b.createdAtClient || "").localeCompare(String(a.updatedAtClient || a.createdAtClient || "")));
+}
+
+async function migrateLegacyPartsToCanonical(records, canonicalIds) {
+  if (currentProfile?.role !== "admin" || !navigator.onLine || localSession) return;
+  for (const record of records) {
+    if (canonicalIds.has(record.id)) continue;
+    try {
+      const remote = { ...cleanRecord(record), _source: "canonical", syncStatus: "synced", migratedAtClient: localIso(), syncedAt: sdk.serverTimestamp() };
+      delete remote.updatedAtLocal;
+      await sdk.setDoc(sdk.doc(db, "operationalParts", record.id), remote, { merge: true });
+      record._source = "canonical";
+      canonicalIds.add(record.id);
+    } catch (error) {
+      console.warn(`No se pudo migrar el Parte heredado ${record.id}`, error);
+    }
+  }
+}
+
+function setAdminPartsStatus(message, isError = false) {
+  if (!els.adminPartsStatus) return;
+  els.adminPartsStatus.textContent = message;
+  els.adminPartsStatus.classList.toggle("error", Boolean(isError));
+}
+
+async function loadOperatorParts(force = false) {
+  const date = todayKey();
+  const isAdmin = currentProfile?.role === "admin";
+  if (adminPartsLoading && !force) return;
+  if (isAdmin) {
+    adminPartsLoading = true;
+    if (els.refreshAdminPartsButton) els.refreshAdminPartsButton.disabled = true;
+    setAdminPartsStatus(navigator.onLine ? "Consultando Partes en Firebase..." : "Sin conexión: mostrando la última copia guardada en este dispositivo.");
+  }
+  try {
+    if (firebaseReady && navigator.onLine && !localSession) {
+      const source = isAdmin
+        ? sdk.collection(db, "operationalParts")
+        : sdk.query(sdk.collection(db, "operationalParts"), sdk.where("dateKey", "==", date));
+      const snap = await sdk.getDocs(source);
+      const canonical = snap.docs.map((item) => normalizePartRecord({ id: item.id, ...item.data(), syncStatus: "synced", _source: "canonical" }));
+
+      if (isAdmin) {
+        const canonicalIds = new Set(canonical.map((part) => part.id));
+        legacyAdminParts = await loadLegacyPartsForAdmin();
+        await migrateLegacyPartsToCanonical(legacyAdminParts, canonicalIds);
+        const merged = mergePartCollections(canonical, legacyAdminParts);
+        if (OfflineDB.replaceOperatorParts) await OfflineDB.replaceOperatorParts(merged);
+        else for (const record of merged) await OfflineDB.putOperatorPart(record);
+        operatorParts = merged;
+        reportParts = merged;
+        setAdminPartsStatus(`${canonical.length} Parte${canonical.length === 1 ? "" : "s"} en operationalParts${legacyAdminParts.length ? ` · ${legacyAdminParts.length} registro${legacyAdminParts.length === 1 ? "" : "s"} heredado${legacyAdminParts.length === 1 ? "" : "s"} revisado${legacyAdminParts.length === 1 ? "" : "s"}` : ""}.`);
+      } else {
+        for (const record of canonical) await OfflineDB.putOperatorPart(record);
+        operatorParts = await OfflineDB.getOperatorParts(date);
+      }
+    } else {
+      operatorParts = await OfflineDB.getOperatorParts(isAdmin ? undefined : date);
+    }
+    populateServiceParts();
+    populateFuelOperators();
+    renderAdminParts();
+    renderDashboardCards();
+    await subscribeToOperationalParts().catch((error) => console.warn("Partes en tiempo real", error));
+  } finally {
+    adminPartsLoading = false;
+    if (els.refreshAdminPartsButton) els.refreshAdminPartsButton.disabled = false;
+  }
+}
+
+function stopPartsSubscription() {
+  if (typeof partsUnsubscribe === "function") partsUnsubscribe();
+  partsUnsubscribe = null;
+}
+
+async function subscribeToOperationalParts() {
+  if (!currentUser || !["mechanic", "admin"].includes(currentProfile?.role)) return;
+  if (!navigator.onLine || localSession) return;
+  if (partsUnsubscribe) return;
+  await importFirebase();
+  const isAdmin = currentProfile.role === "admin";
+  const date = todayKey();
+  const source = isAdmin
+    ? sdk.collection(db, "operationalParts")
+    : sdk.query(sdk.collection(db, "operationalParts"), sdk.where("dateKey", "==", date));
+
+  partsUnsubscribe = sdk.onSnapshot(source, async (snapshot) => {
+    const canonical = snapshot.docs.map((item) => normalizePartRecord({ id: item.id, ...item.data(), syncStatus: "synced", _source: "canonical" }));
+    if (isAdmin) {
+      const merged = mergePartCollections(canonical, legacyAdminParts);
+      if (OfflineDB.replaceOperatorParts) await OfflineDB.replaceOperatorParts(merged);
+      else for (const record of merged) await OfflineDB.putOperatorPart(record);
+      operatorParts = merged;
+      reportParts = merged;
+      setAdminPartsStatus(`${canonical.length} Parte${canonical.length === 1 ? "" : "s"} sincronizado${canonical.length === 1 ? "" : "s"} en tiempo real.`);
+    } else {
+      for (const record of canonical) await OfflineDB.putOperatorPart(record);
+      operatorParts = await OfflineDB.getOperatorParts(date);
+    }
+    populateServiceParts();
+    populateFuelOperators();
+    renderAdminParts();
+    renderDashboardCards();
+    if (currentSection === "activity") renderActivity();
+    if (currentSection === "service") renderService();
+  }, (error) => {
+    console.warn("Suscripcion de Partes", error);
+    if (isAdmin) setAdminPartsStatus(`Firebase rechazó la lectura en tiempo real: ${friendlyError(error)}`, true);
+    stopPartsSubscription();
+  });
 }
 
 async function loadServicesFromServer() {
   if (!firebaseReady || !navigator.onLine || localSession || !["mechanic", "admin"].includes(currentProfile?.role)) return;
   let q;
-  if (currentProfile.role === "admin") q = sdk.query(sdk.collection(db, "services"), sdk.orderBy("startAtClient", "desc"), sdk.limit(40));
+  if (currentProfile.role === "admin") q = sdk.collection(db, "services");
   else q = sdk.query(sdk.collection(db, "services"), sdk.where("mechanicUid", "==", currentUser.uid));
   const snap = await sdk.getDocs(q);
   for (const item of snap.docs) await OfflineDB.putService({ id: item.id, ...item.data(), syncStatus: "synced" });
   services = currentProfile.role === "admin" ? await OfflineDB.getAllServices() : await OfflineDB.getServicesForMechanic(currentUser.uid);
+}
+
+
+function stopAdminRecordSubscriptions() {
+  adminRecordUnsubscribers.forEach((unsubscribe) => { try { unsubscribe?.(); } catch (_) {} });
+  adminRecordUnsubscribers = [];
+}
+
+async function subscribeToAdminRecords() {
+  if (currentProfile?.role !== "admin" || !navigator.onLine || localSession || adminRecordUnsubscribers.length) return;
+  await importFirebase();
+
+  const subscribe = (reference, handler, label) => {
+    const unsubscribe = sdk.onSnapshot(reference, handler, (error) => {
+      console.warn(`Suscripcion ${label}`, error);
+      showToast("Actualizacion en tiempo real", `No se pudo actualizar ${label}: ${friendlyError(error)}`, "error");
+    });
+    adminRecordUnsubscribers.push(unsubscribe);
+  };
+
+  subscribe(sdk.collection(db, "operationalBreaks"), async (snapshot) => {
+    const records = snapshot.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data(), syncStatus: "synced" }));
+    for (const record of records) await OfflineDB.putBreak(record);
+    breakRecords = records.sort((a, b) => String(b.startAtClient || "").localeCompare(String(a.startAtClient || "")));
+    reportBreaks = breakRecords;
+    currentBreak = breakRecords.find((record) => record.uid === currentUser.uid && record.status === "active") || null;
+    renderDashboardCards();
+    renderAdminBreaks();
+    if (currentSection === "activity") renderActivity();
+    if (currentSection === "reports") renderAdminReports();
+  }, "descansos");
+
+  subscribe(sdk.collection(db, "services"), async (snapshot) => {
+    const records = snapshot.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data(), syncStatus: "synced" }));
+    for (const record of records) await OfflineDB.putService(record);
+    services = records.sort((a, b) => String(b.startAtClient || "").localeCompare(String(a.startAtClient || "")));
+    reportServices = services;
+    renderDashboardCards();
+    renderAdminServices();
+    if (currentSection === "activity") renderActivity();
+    if (currentSection === "reports") renderAdminReports();
+  }, "servicios");
+
+  subscribe(sdk.collection(db, "fuelLoads"), async (snapshot) => {
+    const records = snapshot.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data(), syncStatus: "synced" }));
+    for (const record of records) await OfflineDB.putFuelLoad(record);
+    fuelLoads = records.sort((a, b) => String(b.createdAtClient || "").localeCompare(String(a.createdAtClient || "")));
+    reportFuelLoads = fuelLoads;
+    renderDashboardCards();
+    renderFuelRecent();
+    if (currentSection === "activity") renderActivity();
+    if (currentSection === "reports") renderAdminReports();
+  }, "cargas de combustible");
 }
 
 
@@ -843,13 +1151,19 @@ async function sendChatMessage(event) {
 function renderAll() {
   renderDashboardCards();
   renderDashboardOverview();
-  renderBreak();
-  renderPart();
-  renderService();
+  if (currentProfile?.role === "admin") {
+    renderAdminBreaks();
+    renderAdminParts();
+    renderAdminServices();
+  } else {
+    renderBreak();
+    renderPart();
+    renderService();
+    renderActivity();
+    renderChat();
+  }
   renderTank();
   renderFuelRecent();
-  renderActivity();
-  renderChat();
   updateConnection();
 }
 
@@ -869,7 +1183,7 @@ function updateConnection() {
   els.dashboardConnection.textContent = connectionDetail;
   els.offlineBanner.classList.toggle("hidden", online);
   renderChat();
-  if (online && currentUser && !localSession) subscribeToChat().catch(console.warn);
+  if (online && currentUser && !localSession && currentProfile?.role !== "admin") subscribeToChat().catch(console.warn);
 }
 
 async function updateSyncUi(state = null) {
@@ -928,12 +1242,13 @@ function renderDashboardFuelChart(records){
   if(!els.dashboardFuelChart) return; const h=Array.from({length:24},()=>0); records.forEach(r=>{const d=new Date(r.createdAtClient||Date.now()); if(!Number.isNaN(d.getTime())) h[d.getHours()]+=Number(r.liters||0);}); let sum=0; const data=h.map((v,i)=>({hour:i,value:sum+=v})); const W=720,H=270,m={l:52,r:20,t:24,b:38},pw=W-m.l-m.r,ph=H-m.t-m.b,max=Math.max(500,Math.ceil(Math.max(...data.map(x=>x.value),1)/500)*500); const X=i=>m.l+i/23*pw,Y=v=>m.t+ph-v/max*ph; const pts=data.map(d=>`${X(d.hour).toFixed(1)},${Y(d.value).toFixed(1)}`).join(' '); const area=`M ${X(0)} ${m.t+ph} L ${pts.replaceAll(' ',' L ')} L ${X(23)} ${m.t+ph} Z`; const peak=data.reduce((p,c)=>c.value>=p.value?c:p,data[0]); const grid=[0,.25,.5,.75,1].map(f=>{const y=m.t+ph-f*ph;return `<line x1="${m.l}" y1="${y}" x2="${W-m.r}" y2="${y}" class="dashboard-chart-grid"/><text x="${m.l-10}" y="${y+4}" text-anchor="end" class="dashboard-chart-axis">${Math.round(max*f).toLocaleString('es-UY')}</text>`}).join(''); const labels=[0,4,8,12,16,20,23].map(v=>`<text x="${X(v)}" y="${H-12}" text-anchor="middle" class="dashboard-chart-axis">${String(v).padStart(2,'0')}:00</text>`).join(''); const px=X(peak.hour),py=Y(peak.value); els.dashboardFuelChart.innerHTML=`<svg class="dashboard-chart-svg" viewBox="0 0 ${W} ${H}"><defs><linearGradient id="fuelArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#15984f" stop-opacity=".35"/><stop offset="1" stop-color="#15984f" stop-opacity=".02"/></linearGradient></defs>${grid}${labels}<path d="${area}" fill="url(#fuelArea)"/><polyline points="${pts}" class="dashboard-chart-line"/><circle cx="${px}" cy="${py}" r="6" class="dashboard-chart-peak"/><g class="dashboard-chart-tooltip" transform="translate(${Math.min(W-116,Math.max(55,px-52))} ${Math.max(8,py-68)})"><rect width="104" height="52" rx="10"/><text x="52" y="19" text-anchor="middle">${String(peak.hour).padStart(2,'0')}:00</text><text x="52" y="40" text-anchor="middle" class="value">${Math.round(peak.value).toLocaleString('es-UY')} L</text></g></svg>`;
 }
 function renderDashboardFleetChart(parts,serviceRows,fuelRows){
-  if(!els.dashboardFleetChart) return; const all=new Set(); [...userParts,...services,...fuelLoads].forEach(x=>x?.machine&&all.add(x.machine)); const service=new Set(serviceRows.filter(x=>x.status==='active').map(x=>x.machine).filter(Boolean)); const active=new Set([...parts.map(x=>x.machine),...fuelRows.map(x=>x.machine)].filter(Boolean)); service.forEach(x=>active.delete(x)); const resting=new Set(currentBreak&&currentPart?.machine?[currentPart.machine]:[]); resting.forEach(x=>active.delete(x)); const total=all.size, rows=[['Operativas',active.size,'#0b9c4b'],['En servicio',service.size,'#68bc67'],['En descanso',resting.size,'#efbd35'],['Sin actividad',Math.max(0,total-active.size-service.size-resting.size),'#cbd4ce']]; const den=Math.max(total,1),r=46,c=2*Math.PI*r; let o=0; const seg=rows.map(x=>{const l=c*x[1]/den,n=`<circle cx="64" cy="64" r="${r}" fill="none" stroke="${x[2]}" stroke-width="18" stroke-dasharray="${l} ${c-l}" stroke-dashoffset="${-o}" transform="rotate(-90 64 64)"/>`;o+=l;return n}).join(''); const legend=rows.map(x=>`<div class="fleet-legend-row"><i style="--fleet-color:${x[2]}"></i><span>${x[0]}</span><strong>${x[1]}</strong><small>${Math.round(x[1]/den*100)}%</small></div>`).join(''); els.dashboardFleetChart.innerHTML=`<svg viewBox="0 0 128 128" class="fleet-donut-svg"><circle cx="64" cy="64" r="46" fill="none" stroke="#eef2ef" stroke-width="18"/>${seg}<circle cx="64" cy="64" r="34" fill="#fff"/><text x="64" y="60" text-anchor="middle" class="fleet-total">${total}</text><text x="64" y="78" text-anchor="middle" class="fleet-caption">Unidades</text></svg><div class="fleet-legend">${legend}</div>`;
+  if(!els.dashboardFleetChart) return; const all=new Set(); [...parts,...serviceRows,...fuelRows].forEach(x=>x?.machine&&all.add(x.machine)); const service=new Set(serviceRows.filter(x=>x.status==='active').map(x=>x.machine).filter(Boolean)); const active=new Set([...parts.map(x=>x.machine),...fuelRows.map(x=>x.machine)].filter(Boolean)); service.forEach(x=>active.delete(x)); const resting=new Set(currentBreak&&currentPart?.machine?[currentPart.machine]:[]); resting.forEach(x=>active.delete(x)); const total=all.size, rows=[['Operativas',active.size,'#0b9c4b'],['En servicio',service.size,'#68bc67'],['En descanso',resting.size,'#efbd35'],['Sin actividad',Math.max(0,total-active.size-service.size-resting.size),'#cbd4ce']]; const den=Math.max(total,1),r=46,c=2*Math.PI*r; let o=0; const seg=rows.map(x=>{const l=c*x[1]/den,n=`<circle cx="64" cy="64" r="${r}" fill="none" stroke="${x[2]}" stroke-width="18" stroke-dasharray="${l} ${c-l}" stroke-dashoffset="${-o}" transform="rotate(-90 64 64)"/>`;o+=l;return n}).join(''); const legend=rows.map(x=>`<div class="fleet-legend-row"><i style="--fleet-color:${x[2]}"></i><span>${x[0]}</span><strong>${x[1]}</strong><small>${Math.round(x[1]/den*100)}%</small></div>`).join(''); els.dashboardFleetChart.innerHTML=`<svg viewBox="0 0 128 128" class="fleet-donut-svg"><circle cx="64" cy="64" r="46" fill="none" stroke="#eef2ef" stroke-width="18"/>${seg}<circle cx="64" cy="64" r="34" fill="#fff"/><text x="64" y="60" text-anchor="middle" class="fleet-total">${total}</text><text x="64" y="78" text-anchor="middle" class="fleet-caption">Unidades</text></svg><div class="fleet-legend">${legend}</div>`;
 }
 
 function renderDashboardOverview() {
   if (!currentProfile) return;
-  const todayParts = userParts.filter((part) => part.dateKey === todayKey());
+  const visibleParts = currentProfile.role === "admin" ? operatorParts : userParts;
+  const todayParts = visibleParts.filter((part) => part.dateKey === todayKey());
   const todayServices = services.filter((record) => recordIsToday(record.endAtClient || record.startAtClient));
   const completedServices = todayServices.filter((record) => record.status !== "active");
   const todayFuel = fuelLoads.filter((record) => recordIsToday(record.createdAtClient));
@@ -944,7 +1259,7 @@ function renderDashboardOverview() {
   if (els.metricServices) els.metricServices.textContent = String(completedServices.length);
   if (els.metricFuel) els.metricFuel.textContent = liters(fuelTotal);
   if (els.metricHours) els.metricHours.textContent = formatHours(hours);
-  const yKey=yesterdayKey(); const yFuel=fuelLoads.filter(r=>localDateKey(r.createdAtClient)===yKey).reduce((x,r)=>x+Number(r.liters||0),0); const yHours=userParts.filter(p=>p.dateKey===yKey).reduce((x,p)=>x+partOperatingHours(p),0);
+  const yKey=yesterdayKey(); const yFuel=fuelLoads.filter(r=>localDateKey(r.createdAtClient)===yKey).reduce((x,r)=>x+Number(r.liters||0),0); const yHours=visibleParts.filter(p=>p.dateKey===yKey).reduce((x,p)=>x+partOperatingHours(p),0);
   if(els.metricFuelTrend){const d=fuelTotal-yFuel;els.metricFuelTrend.textContent=`${d>=0?"+":""}${Math.round(d).toLocaleString("es-UY")} L vs. ayer`;els.metricFuelTrend.classList.toggle("negative",d<0);}
   if(els.metricHoursTrend){const d=hours-yHours;els.metricHoursTrend.textContent=`${d>=0?"+":""}${d.toLocaleString("es-UY",{maximumFractionDigits:1})} h vs. ayer`;els.metricHoursTrend.classList.toggle("negative",d<0);}
   const capacity = Number(tank?.capacityLiters || 0);
@@ -980,16 +1295,21 @@ function renderDashboardCards() {
   if (!currentProfile || !els.dashboardCards) return;
   const role = currentProfile.role;
   const cards = [];
-  if (["operator", "admin"].includes(role)) {
+  if (role === "operator") {
     cards.push({ kind: "break", icon: "bed", title: "Descanso", section: "break" });
-    cards.push({ kind: "part", icon: "clipboard", title: "Parte", section: "part", newPart: true });
+    cards.push({ kind: "part", icon: "clipboard", title: "Nuevo Parte", section: "part", newPart: true });
+    cards.push({ kind: "activity", icon: "activity", title: "Actividad", section: "activity" });
+  } else if (role === "mechanic") {
+    cards.push({ kind: "service", icon: "wrench", title: "Servicio", section: "service" });
+    cards.push({ kind: "fuel", icon: "fuel", title: "Combustible", section: "fuel" });
+    cards.push({ kind: "chat", icon: "chat", title: "Chat", section: "chat" });
+    cards.push({ kind: "activity", icon: "activity", title: "Actividad", section: "activity" });
+  } else if (role === "admin") {
+    cards.push({ kind: "part", icon: "clipboard", title: `Partes (${operatorParts.length})`, section: "part" });
+    cards.push({ kind: "service", icon: "wrench", title: `Servicios (${services.length})`, section: "service" });
+    cards.push({ kind: "break", icon: "bed", title: `Descansos (${breakRecords.length})`, section: "break" });
+    cards.push({ kind: "reports", icon: "chart", title: "Reportes y gráficos", section: "reports" });
   }
-  if (["mechanic", "admin"].includes(role)) cards.push({ kind: "service", icon: "wrench", title: "Servicio", section: "service" });
-  if (["mechanic", "admin"].includes(role)) cards.push({ kind: "fuel", icon: "fuel", title: "Combustible", section: "fuel" });
-  if (["mechanic", "admin"].includes(role)) cards.push({ kind: "chat", icon: "chat", title: "Chat", section: "chat" });
-  if (role === "admin") cards.push({ kind: "reports", icon: "chart", title: "Reportes", section: "reports" });
-  else cards.push({ kind: "activity", icon: "activity", title: "Actividad", section: "activity" });
-
   els.dashboardCards.innerHTML = cards.map((card) => `<button class="quick-access-card quick-card-${card.kind}" type="button" data-section-link="${card.section}" ${card.newPart ? 'data-new-part="true"' : ""}><span class="quick-access-icon">${iconSvg(card.icon)}</span><strong>${escapeHtml(card.title)}</strong></button>`).join("");
   els.dashboardCards.querySelectorAll("[data-section-link]").forEach((button) => button.addEventListener("click", () => {
     if (button.dataset.newPart === "true") startNewPart();
@@ -1007,13 +1327,56 @@ function renderRecentActivity() {
 function buildActivityRecords() {
   const role = currentProfile?.role;
   const items = [];
-  if (["operator", "admin"].includes(role)) {
-    breakRecords.forEach((record) => items.push({ icon: "bed", title: record.status === "active" ? "Inicio de descanso" : "Descanso completado", detail: record.status === "active" ? "Descanso en curso" : `Duración ${formatDuration(record.startAtClient, record.endAtClient)}`, date: record.startAtClient, status: record.syncStatus }));
-    userParts.forEach((part) => items.push({ icon: "clipboard", title: "Parte diario enviado", detail: `${part.machine || "Sin máquina"} · Troza ${part.production?.troza ?? part.production?.trozo ?? 0} / Pulpa ${part.production?.pulpa || 0}`, date: part.updatedAtClient || part.createdAtClient, status: part.syncStatus }));
+  if (role === "operator") {
+    breakRecords.forEach((record) => items.push({ type: "break", personUid: record.uid, personName: record.userName || currentProfile?.name || "Operador", icon: "bed", title: record.status === "active" ? "Inicio de descanso" : "Descanso completado", detail: record.status === "active" ? "Descanso en curso" : `Duración ${formatDuration(record.startAtClient, record.endAtClient)}`, date: record.startAtClient, status: record.syncStatus }));
+    userParts.forEach((part) => items.push({ type: "part", personUid: part.operatorUid || part.uid, personName: part.operatorName || currentProfile?.name || "Operador", machine: part.machine || "", icon: "clipboard", title: "Parte diario enviado", detail: `${part.machine || "Sin máquina"} · Troza ${part.production?.troza ?? part.production?.trozo ?? 0} / Pulpa ${part.production?.pulpa || 0}`, date: part.updatedAtClient || part.createdAtClient, status: part.syncStatus }));
+  }
+  if (role === "admin") {
+    breakRecords.forEach((record) => items.push({
+      type: "break",
+      personUid: record.uid || record.operatorUid || "",
+      personName: record.userName || adminProfiles.get(record.uid || record.operatorUid)?.name || "Operador",
+      icon: "bed",
+      title: `${record.status === "active" ? "Descanso iniciado" : "Descanso completado"} · ${record.userName || adminProfiles.get(record.uid || record.operatorUid)?.name || "Operador"}`,
+      detail: record.status === "active" ? "En curso" : `Duración ${formatDuration(record.startAtClient, record.endAtClient)}`,
+      date: record.startAtClient,
+      status: record.syncStatus
+    }));
+    operatorParts.forEach((part) => items.push({
+      type: "part",
+      personUid: part.operatorUid || part.uid || "",
+      personName: part.operatorName || "Operador",
+      machine: part.machine || "",
+      icon: "clipboard",
+      title: `Parte de ${part.operatorName || "Operador"}`,
+      detail: `${part.machine || "Sin máquina"} · ${part.dateKey || formatDate(part.createdAtClient)} · Troza ${part.production?.troza ?? part.production?.trozo ?? 0} / Pulpa ${part.production?.pulpa || 0}`,
+      date: part.updatedAtClient || part.createdAtClient,
+      status: part.syncStatus
+    }));
   }
   if (["mechanic", "admin"].includes(role)) {
-    services.forEach((record) => items.push({ icon: "wrench", title: record.status === "active" ? "Servicio iniciado" : "Servicio completado", detail: `${record.operatorName || "Operador"} · ${record.machine || "Máquina"}`, date: record.startAtClient, status: record.syncStatus }));
-    fuelLoads.forEach((record) => items.push({ icon: "fuel", title: "Carga de combustible", detail: `${record.machine} · ${liters(record.liters)} · ${record.shift === "night" ? "Nocturna" : "Diurna"}`, date: record.createdAtClient, status: record.syncStatus }));
+    services.forEach((record) => items.push({
+      type: "service",
+      personUid: record.mechanicUid || "",
+      personName: record.mechanicName || "Mecánico",
+      machine: record.machine || "",
+      icon: "wrench",
+      title: `${record.status === "active" ? "Servicio iniciado" : "Servicio completado"} · ${record.mechanicName || "Mecánico"}`,
+      detail: `${record.operatorName || "Operador"} · ${record.machine || "Máquina"}`,
+      date: record.startAtClient,
+      status: record.syncStatus
+    }));
+    fuelLoads.forEach((record) => items.push({
+      type: "fuel",
+      personUid: record.uid || record.mechanicUid || "",
+      personName: record.userName || record.mechanicName || "Mecánico",
+      machine: record.machine || "",
+      icon: "fuel",
+      title: `Carga de combustible · ${record.userName || record.mechanicName || "Mecánico"}`,
+      detail: `${record.machine || "Máquina"} · ${liters(record.liters)} · ${record.shift === "night" ? "Nocturno" : "Diurno"}`,
+      date: record.createdAtClient,
+      status: record.syncStatus
+    }));
   }
   return items.sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")));
 }
@@ -1061,6 +1424,7 @@ function resetReportFilters() {
   setDefaultReportDates();
   if (els.reportOperator) els.reportOperator.value = "";
   if (els.reportMachine) els.reportMachine.value = "";
+  if (els.reportShift) els.reportShift.value = "";
   renderAdminReports();
 }
 
@@ -1084,6 +1448,7 @@ function loadReportCache() {
     const cached = JSON.parse(localStorage.getItem(REPORT_CACHE_KEY) || "null");
     if (!cached) return false;
     reportUsers = Array.isArray(cached.users) ? cached.users : [];
+    reportParts = [];
     reportBreaks = Array.isArray(cached.breaks) ? cached.breaks : [];
     reportFuelLoads = Array.isArray(cached.fuelLoads) ? cached.fuelLoads : [];
     reportServices = Array.isArray(cached.services) ? cached.services : [];
@@ -1148,6 +1513,7 @@ async function loadAdminReports(force = false) {
       sdk.getDocs(sdk.collection(db, "services"))
     ]);
 
+    reportParts = [];
     reportBreaks = breakGroups.flat();
     reportFuelLoads = fuelSnap.docs.map((item) => ({ id: item.id, ...item.data() }));
     reportServices = serviceSnap.docs.map((item) => ({ id: item.id, ...item.data() }));
@@ -1191,7 +1557,8 @@ function reportFilters() {
   const to = els.reportDateTo?.value || "9999-12-31";
   const operatorUid = els.reportOperator?.value || "";
   const machine = els.reportMachine?.value || "";
-  return { from, to, operatorUid, machine };
+  const shift = els.reportShift?.value || "";
+  return { from, to, operatorUid, machine, shift };
 }
 
 function recordInReportRange(value, filters) {
@@ -1287,78 +1654,149 @@ function renderLineSvgChart(container, rowsA, rowsB) {
   svg+='</svg><div class="line-chart-legend"><span><i class="solid"></i>Litros cargados</span><span><i class="dashed"></i>Horas de servicio</span></div>'; container.innerHTML=svg;
 }
 
+
+function renderShiftComparisonChart(container, dayLiters, nightLiters) {
+  if (!container) return;
+  const day = Math.max(0, Number(dayLiters || 0));
+  const night = Math.max(0, Number(nightLiters || 0));
+  const total = day + night;
+  const dayPct = total ? day / total * 100 : 0;
+  const nightPct = total ? night / total * 100 : 0;
+  const dominant = total ? (night > day ? "Nocturno" : "Diurno") : "Sin datos";
+  container.innerHTML = `
+    <div class="shift-comparison-summary">
+      <article class="shift-result-card day">
+        <span class="shift-result-icon" aria-hidden="true"><svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="9"/><path d="M24 4v7M24 37v7M4 24h7M37 24h7M10 10l5 5M33 33l5 5M38 10l-5 5M15 33l-5 5"/></svg></span>
+        <div><small>Diurno</small><strong>${reportNumber(day, 1)} L</strong><span>${reportNumber(dayPct, 0)}% del total</span></div>
+      </article>
+      <article class="shift-result-card night">
+        <span class="shift-result-icon" aria-hidden="true"><svg viewBox="0 0 48 48"><path d="M36 31c-13 3-23-8-19-21C7 15 4 28 11 37c7 9 21 10 29 2-2-2-3-5-4-8z"/><circle cx="32" cy="13" r="2"/><circle cx="39" cy="20" r="1.5"/></svg></span>
+        <div><small>Nocturno</small><strong>${reportNumber(night, 1)} L</strong><span>${reportNumber(nightPct, 0)}% del total</span></div>
+      </article>
+    </div>
+    <div class="shift-balance" role="img" aria-label="Comparación de combustible entre turno Diurno y Nocturno">
+      <div class="shift-balance-bar"><span class="day" style="width:${dayPct.toFixed(2)}%"></span><span class="night" style="width:${nightPct.toFixed(2)}%"></span></div>
+      <div class="shift-balance-footer"><span><i class="day"></i>Diurno</span><strong>${escapeHtml(dominant)}</strong><span><i class="night"></i>Nocturno</span></div>
+    </div>`;
+}
+
 function renderAdminReports(message = "") {
-  if (currentProfile?.role !== "admin" || !els.reportBreakCount) return;
+  if (currentProfile?.role !== "admin" || !els.reportFuelTotal) return;
   const filters = reportFilters();
   if (filters.from > filters.to) {
-    showToast("Fechas invalidas", "La fecha desde no puede ser posterior a la fecha hasta.", "error");
+    showToast("Fechas inválidas", "La fecha desde no puede ser posterior a la fecha hasta.", "error");
     return;
   }
 
   const breaks = reportBreaks.filter((item) => recordInReportRange(item.startAtClient, filters) && sameReportOperator(item, filters.operatorUid));
-  const fuels = reportFuelLoads.filter((item) => recordInReportRange(item.createdAtClient, filters) && sameReportOperator(item, filters.operatorUid) && (!filters.machine || item.machine === filters.machine));
+  const fuels = reportFuelLoads.filter((item) => recordInReportRange(item.createdAtClient, filters) && sameReportOperator(item, filters.operatorUid) && (!filters.machine || item.machine === filters.machine) && (!filters.shift || (item.shift || "day") === filters.shift));
   const servicesFiltered = reportServices.filter((item) => recordInReportRange(item.startAtClient, filters) && sameReportOperator(item, filters.operatorUid) && (!filters.machine || item.machine === filters.machine));
   const completedBreaks = breaks.filter((item) => item.endAtClient);
   const completedServices = servicesFiltered.filter((item) => item.endAtClient);
-  const breakMinutes = completedBreaks.reduce((sum, item) => sum + reportDurationMinutes(item.startAtClient, item.endAtClient), 0);
   const serviceHours = completedServices.reduce((sum, item) => sum + reportDurationMinutes(item.startAtClient, item.endAtClient) / 60, 0);
   const fuelTotal = fuels.reduce((sum, item) => sum + Number(item.liters || 0), 0);
   const activeServices = servicesFiltered.filter((item) => !item.endAtClient || item.status === "active").length;
+  const dayLiters = fuels.filter((item) => (item.shift || "day") === "day").reduce((sum, item) => sum + Number(item.liters || 0), 0);
+  const nightLiters = fuels.filter((item) => item.shift === "night").reduce((sum, item) => sum + Number(item.liters || 0), 0);
 
-  els.reportBreakCount.textContent = reportNumber(breaks.length, 0);
-  els.reportBreakDetail.textContent = `${reportNumber(breakMinutes / 60, 1)} h acumuladas`;
-  els.reportBreakAverage.textContent = `${reportNumber(completedBreaks.length ? breakMinutes / completedBreaks.length : 0, 0)} min`;
   els.reportFuelTotal.textContent = `${reportNumber(fuelTotal, 1)} L`;
   els.reportFuelDetail.textContent = `${fuels.length} carga${fuels.length === 1 ? "" : "s"}`;
   els.reportServiceHours.textContent = `${reportNumber(serviceHours, 1)} h`;
   els.reportServiceDetail.textContent = `${completedServices.length} finalizado${completedServices.length === 1 ? "" : "s"}${activeServices ? ` · ${activeServices} activo${activeServices === 1 ? "" : "s"}` : ""}`;
+  if (els.reportDominantShift) els.reportDominantShift.textContent = fuelTotal ? (nightLiters > dayLiters ? "Nocturno" : "Diurno") : "Sin datos";
 
-  const breaksByDay = groupReportRows(completedBreaks, (item) => reportRecordDateKey(item.startAtClient), (item) => reportDurationMinutes(item.startAtClient, item.endAtClient), (row) => `${row.count} descanso${row.count === 1 ? "" : "s"}`).sort((a, b) => a.label.localeCompare(b.label));
-  const breaksByOperator = groupReportRows(completedBreaks, (item) => item.userName || "Sin operador", (item) => reportDurationMinutes(item.startAtClient, item.endAtClient), (row) => `${row.count} descanso${row.count === 1 ? "" : "s"}`).sort((a, b) => b.value - a.value);
+  const breaksByOperator = groupReportRows(completedBreaks, (item) => item.userName || "Sin operador", () => 1, (row) => `${row.count} descanso${row.count === 1 ? "" : "s"}`).sort((a, b) => b.count - a.count);
   const fuelByDay = groupReportRows(fuels, (item) => reportRecordDateKey(item.createdAtClient), (item) => Number(item.liters || 0), (row) => `${row.count} carga${row.count === 1 ? "" : "s"}`).sort((a, b) => a.label.localeCompare(b.label));
   const fuelByOperator = groupReportRows(fuels, (item) => item.operatorName || item.userName || "Sin operador", (item) => Number(item.liters || 0), (row) => `${row.count} carga${row.count === 1 ? "" : "s"}`).sort((a, b) => b.value - a.value);
-  const fuelByMachine = groupReportRows(fuels, (item) => item.machine || "Sin maquina", (item) => Number(item.liters || 0), (row) => `${row.count} carga${row.count === 1 ? "" : "s"}`).sort((a, b) => b.value - a.value);
-  const serviceByMachine = groupReportRows(completedServices, (item) => item.machine || "Sin maquina", (item) => reportDurationMinutes(item.startAtClient, item.endAtClient) / 60, (row) => `${row.count} servicio${row.count === 1 ? "" : "s"}`).sort((a, b) => b.value - a.value);
-
+  const fuelByMachine = groupReportRows(fuels, (item) => item.machine || "Sin máquina", (item) => Number(item.liters || 0), (row) => `${row.count} carga${row.count === 1 ? "" : "s"}`).sort((a, b) => b.value - a.value);
+  const serviceByMachine = groupReportRows(completedServices, (item) => item.machine || "Sin máquina", (item) => reportDurationMinutes(item.startAtClient, item.endAtClient) / 60, (row) => `${row.count} servicio${row.count === 1 ? "" : "s"}`).sort((a, b) => b.value - a.value);
   const activeMachines = new Set([...fuels, ...servicesFiltered].map((item) => item.machine).filter(Boolean));
+
   if (els.reportMachineCount) els.reportMachineCount.textContent = reportNumber(activeMachines.size, 0);
   renderVerticalSvgChart(els.fuelByDayChart, fuelByDay, (value) => reportNumber(value, 0), { limit: 20 });
+  renderShiftComparisonChart(els.fuelByShiftChart, dayLiters, nightLiters);
   renderHorizontalSvgChart(els.breaksByOperatorChart, breaksByOperator.map((row) => ({ ...row, value: row.count })), (value) => reportNumber(value, 0), { limit: 10 });
   renderDonutSvgChart(els.fuelByMachineChart, fuelByMachine, (value) => `${reportNumber(value, 0)} L`);
   renderVerticalSvgChart(els.serviceByMachineChart, serviceByMachine, (value) => reportNumber(value, 1), { limit: 10 });
   renderLineSvgChart(els.reportSummaryChart, fuelByDay, groupReportRows(completedServices, (item) => reportRecordDateKey(item.startAtClient), (item) => reportDurationMinutes(item.startAtClient, item.endAtClient) / 60).sort((a,b)=>a.label.localeCompare(b.label)));
-  if (els.breaksByDayChart) renderReportBars(els.breaksByDayChart, breaksByDay, (value) => `${reportNumber(value, 0)} min`);
   if (els.fuelByOperatorChart) renderReportBars(els.fuelByOperatorChart, fuelByOperator, (value) => `${reportNumber(value, 1)} L`);
   renderReportServiceTable(servicesFiltered);
 
   if (els.reportsLastUpdated) {
     const source = navigator.onLine && !localSession ? "Firebase" : "datos guardados";
-    els.reportsLastUpdated.textContent = message || (reportLoadedAt ? `Actualizado ${formatDateTime(reportLoadedAt)} · ${source}` : "Todavia no se cargaron datos.");
+    els.reportsLastUpdated.textContent = message || (reportLoadedAt ? `Actualizado ${formatDateTime(reportLoadedAt)} · ${source}` : "Todavía no se cargaron datos.");
   }
 }
 
 function renderReportServiceTable(records) {
+  if (!els.reportServiceTable || !els.reportServiceTableCount) return;
   const rows = [...records].sort((a, b) => String(b.startAtClient || "").localeCompare(String(a.startAtClient || ""))).slice(0, 100);
   els.reportServiceTableCount.textContent = `${records.length} registro${records.length === 1 ? "" : "s"}`;
   if (!rows.length) {
-    els.reportServiceTable.innerHTML = '<div class="empty-state">Sin servicios para el periodo seleccionado.</div>';
+    els.reportServiceTable.innerHTML = '<div class="empty-state">Sin servicios para el período seleccionado.</div>';
     return;
   }
-  els.reportServiceTable.innerHTML = `<table class="report-table"><thead><tr><th>Fecha</th><th>Maquina</th><th>Operador</th><th>Mecanico</th><th>Duracion</th><th>Estado</th></tr></thead><tbody>${rows.map((item) => {
+  els.reportServiceTable.innerHTML = `<table class="report-table responsive-report-table"><thead><tr><th>Fecha</th><th>Máquina</th><th>Operador</th><th>Mecánico</th><th>Duración</th><th>Estado</th></tr></thead><tbody>${rows.map((item) => {
     const completed = Boolean(item.endAtClient);
     const duration = completed ? `${reportNumber(reportDurationMinutes(item.startAtClient, item.endAtClient) / 60, 2)} h` : "En curso";
-    return `<tr><td>${escapeHtml(formatDate(item.startAtClient))}<br><small>${escapeHtml(formatTime(item.startAtClient))}</small></td><td><strong>${escapeHtml(item.machine || "-")}</strong></td><td>${escapeHtml(item.operatorName || "-")}</td><td>${escapeHtml(item.mechanicName || "-")}</td><td>${escapeHtml(duration)}</td><td><span class="badge ${completed ? "active" : "warning"}">${completed ? "Finalizado" : "Activo"}</span></td></tr>`;
+    return `<tr><td data-label="Fecha">${escapeHtml(formatDate(item.startAtClient))}<br><small>${escapeHtml(formatTime(item.startAtClient))}</small></td><td data-label="Máquina"><strong>${escapeHtml(item.machine || "-")}</strong></td><td data-label="Operador">${escapeHtml(item.operatorName || "-")}</td><td data-label="Mecánico">${escapeHtml(item.mechanicName || "-")}</td><td data-label="Duración">${escapeHtml(duration)}</td><td data-label="Estado"><span class="badge ${completed ? "active" : "warning"}">${completed ? "Finalizado" : "Activo"}</span></td></tr>`;
   }).join("")}</tbody></table>`;
 }
 
 function renderActivity() {
   if (!currentProfile) return;
-  const operatorMode = currentProfile.role === "operator";
+  const role = currentProfile.role;
+  const operatorMode = role === "operator";
+  const adminMode = role === "admin";
+
   if (els.operatorActivityTabs) els.operatorActivityTabs.classList.toggle("hidden", !operatorMode);
   if (els.activityDateFilter) {
     els.activityDateFilter.closest(".activity-date-filter")?.classList.toggle("hidden", !operatorMode);
     if (!els.activityDateFilter.value) els.activityDateFilter.value = todayKey();
   }
+  els.adminActivityControls?.classList.toggle("hidden", !adminMode);
+
+  if (adminMode) {
+    els.operatorPartsActivity?.classList.add("hidden");
+    els.operatorBreaksActivity?.classList.add("hidden");
+    els.generalActivityList?.classList.remove("hidden");
+
+    const allRecords = buildActivityRecords();
+    const people = new Map();
+    allRecords.forEach((record) => { if (record.personUid && record.personName) people.set(record.personUid, record.personName); });
+    if (els.adminActivityPerson) {
+      const previous = els.adminActivityPerson.value;
+      els.adminActivityPerson.innerHTML = '<option value="">Todos los usuarios</option>' + Array.from(people.entries()).sort((a,b)=>a[1].localeCompare(b[1])).map(([uid,name]) => `<option value="${escapeHtml(uid)}">${escapeHtml(name)}</option>`).join("");
+      els.adminActivityPerson.value = people.has(previous) ? previous : "";
+    }
+
+    const type = els.adminActivityType?.value || "all";
+    const person = els.adminActivityPerson?.value || "";
+    const date = els.adminActivityDate?.value || "";
+    const search = String(els.adminActivitySearch?.value || "").trim().toLowerCase();
+    const records = allRecords.filter((record) => {
+      if (type !== "all" && record.type !== type) return false;
+      if (person && record.personUid !== person) return false;
+      if (date && reportRecordDateKey(record.date) !== date) return false;
+      if (search) {
+        const haystack = `${record.title || ""} ${record.detail || ""} ${record.personName || ""} ${record.machine || ""}`.toLowerCase();
+        if (!haystack.includes(search)) return false;
+      }
+      return true;
+    });
+
+    if (els.adminActivityTotal) els.adminActivityTotal.textContent = String(allRecords.length);
+    if (els.adminActivityParts) els.adminActivityParts.textContent = String(allRecords.filter((item) => item.type === "part").length);
+    if (els.adminActivityBreaks) els.adminActivityBreaks.textContent = String(allRecords.filter((item) => item.type === "break").length);
+    if (els.adminActivityServices) els.adminActivityServices.textContent = String(allRecords.filter((item) => item.type === "service").length);
+    if (els.adminActivityFuel) els.adminActivityFuel.textContent = String(allRecords.filter((item) => item.type === "fuel").length);
+
+    if (els.generalActivityList) els.generalActivityList.innerHTML = records.length
+      ? records.map(activityTemplate).join("")
+      : '<div class="empty-state">No hay registros que coincidan con los filtros.</div>';
+    return;
+  }
+
   if (!operatorMode) {
     els.operatorPartsActivity?.classList.add("hidden");
     els.operatorBreaksActivity?.classList.add("hidden");
@@ -1417,13 +1855,6 @@ function renderBreak() {
   els.breakDescription.textContent = active ? `Iniciado ${formatDateTime(currentBreak.startAtClient)}` : "Puedes iniciar tu descanso.";
   els.startBreakButton.disabled = active;
   els.endBreakButton.disabled = !active;
-  if (els.breakStatusVisual) {
-    els.breakStatusVisual.classList.toggle("is-active", active);
-    const elapsed = active ? Math.max(0, Date.now() - new Date(currentBreak.startAtClient).getTime()) : 0;
-    const cycle = 60 * 60 * 1000;
-    const degrees = active ? Math.min(350, (elapsed % cycle) / cycle * 360) : 0;
-    els.breakStatusVisual.style.setProperty("--break-progress", `${degrees}deg`);
-  }
   els.breakRecentList.innerHTML = breakRecords.slice(0, 5).map((record) => activityTemplate({ icon: "bed", title: record.status === "active" ? "Descanso activo" : "Descanso completado", detail: record.status === "active" ? "En curso" : formatDuration(record.startAtClient, record.endAtClient), date: record.startAtClient, status: record.syncStatus })).join("") || '<div class="empty-state">Sin descansos registrados.</div>';
 }
 
@@ -1649,6 +2080,130 @@ function renderPartSessionSelector() {
     : `No hay partes para ${formatDate(`${dateKey}T12:00:00`)}.`;
 }
 
+function evidencePreview(evidence, label = "Evidencia") {
+  if (!evidence) return '<span class="admin-evidence-empty">Sin evidencia</span>';
+  const photoUrl = evidence.photoUrl || "";
+  const location = evidence.location || null;
+  return `<div class="admin-evidence-preview">${photoUrl ? `<a class="admin-evidence-photo" href="${escapeHtml(photoUrl)}" target="_blank" rel="noopener"><img src="${escapeHtml(photoUrl)}" alt="${escapeHtml(label)}" loading="lazy"><span>Ampliar foto</span></a>` : '<span class="admin-evidence-empty">Sin foto</span>'}${location ? `<a class="admin-map-button" href="${mapUrl(location)}" target="_blank" rel="noopener">${iconSvg("map-pin")} Ver ubicación</a>` : '<span class="admin-evidence-empty">Sin ubicación</span>'}</div>`;
+}
+function partEvidenceLink(stage) { return evidencePreview(stage?.evidence, "Evidencia de horómetro"); }
+
+function renderAdminParts() {
+  if (!els.adminPartsList || currentProfile?.role !== "admin") return;
+  const search = String(els.adminPartsSearch?.value || "").trim().toLowerCase();
+  const dateFilter = String(els.adminPartsDateFilter?.value || "");
+  const operatorFilter = String(els.adminPartsOperatorFilter?.value || "");
+  const operators = new Map();
+  operatorParts.forEach((part) => operators.set(part.operatorUid || part.uid || "", part.operatorName || "Operador"));
+  if (els.adminPartsOperatorFilter) {
+    const previous = els.adminPartsOperatorFilter.value;
+    els.adminPartsOperatorFilter.innerHTML = '<option value="">Todos los operadores</option>' + Array.from(operators.entries()).sort((a,b)=>String(a[1]).localeCompare(String(b[1]))).map(([uid,name]) => `<option value="${escapeHtml(uid)}">${escapeHtml(name)}</option>`).join("");
+    els.adminPartsOperatorFilter.value = operators.has(previous) ? previous : operatorFilter;
+  }
+  const visible = operatorParts.filter((part) => {
+    if (dateFilter && part.dateKey !== dateFilter) return false;
+    if (operatorFilter && (part.operatorUid || part.uid) !== operatorFilter) return false;
+    if (!search) return true;
+    return [part.operatorName, part.machine, part.establishment, part.dateKey].some((value) => String(value || "").toLowerCase().includes(search));
+  });
+  if (els.adminPartsCount) els.adminPartsCount.textContent = `${visible.length} Parte${visible.length === 1 ? "" : "s"}`;
+  if (!visible.length) {
+    els.adminPartsList.innerHTML = `<div class="empty-state"><strong>No hay Partes para mostrar.</strong><br><span>${navigator.onLine ? "Verifica que el operador vea el estado Sincronizado y presiona Actualizar." : "Conecta el dispositivo a Internet para consultar Firebase."}</span></div>`;
+    return;
+  }
+  els.adminPartsList.innerHTML = visible.map((part) => {
+    const created = part.updatedAtClient || part.createdAtClient;
+    const initial = part.horometers?.initial;
+    const breakStage = part.horometers?.break;
+    const postBreak = part.horometers?.postBreak;
+    const final = part.horometers?.final;
+    const hours = partOperatingHours(part);
+    const statusClass = part.syncStatus === "pending" ? "warning" : "active";
+    const statusText = part.syncStatus === "pending" ? "Pendiente" : "Sincronizado";
+    return `<article class="admin-part-card" data-admin-part-card="${escapeHtml(part.id)}">
+      <button class="admin-part-summary" type="button" data-admin-part-toggle="${escapeHtml(part.id)}">
+        <span class="admin-part-primary"><span class="admin-part-machine-icon">${iconSvg("clipboard")}</span><span><strong>${escapeHtml(part.operatorName || "Operador")}</strong><span>${escapeHtml(part.machine || "Sin máquina")} · ${escapeHtml(part.establishment || "-")}</span></span></span>
+        <span class="admin-part-metric"><strong>${formatDate(`${part.dateKey || ""}T12:00:00`)}</strong><span>Fecha del Parte</span></span>
+        <span class="admin-part-metric"><strong>${formatHours(hours)}</strong><span>Horas operadas</span></span>
+        <span class="admin-part-status"><span class="badge ${statusClass}">${statusText}</span><svg class="admin-part-chevron"><use href="#icon-chevron-right"></use></svg></span>
+      </button>
+      <div class="admin-part-details">
+        <div class="admin-part-detail-grid">
+          <div class="admin-part-detail-box"><span>Operador</span><strong>${escapeHtml(part.operatorName || "-")}</strong></div>
+          <div class="admin-part-detail-box"><span>Máquina</span><strong>${escapeHtml(part.machine || "-")}</strong></div>
+          <div class="admin-part-detail-box"><span>Troza</span><strong>${Number(part.production?.troza ?? part.production?.trozo ?? 0).toLocaleString("es-UY")}</strong></div>
+          <div class="admin-part-detail-box"><span>Pulpa</span><strong>${Number(part.production?.pulpa || 0).toLocaleString("es-UY")}</strong></div>
+        </div>
+        <div class="admin-part-horometers">
+          <div class="admin-part-horometer"><span>Horómetro inicial</span><strong>${initial?.value ?? "-"}</strong>${partEvidenceLink(initial)}</div>
+          <div class="admin-part-horometer"><span>Horómetro descanso</span><strong>${breakStage?.value ?? "-"}</strong>${partEvidenceLink(breakStage)}</div>
+          <div class="admin-part-horometer"><span>Horómetro post descanso</span><strong>${postBreak?.value ?? "-"}</strong>${partEvidenceLink(postBreak)}</div>
+          <div class="admin-part-horometer"><span>Horómetro final</span><strong>${final?.value ?? "-"}</strong>${partEvidenceLink(final)}</div>
+        </div>
+        <div class="admin-part-footer"><span>ID: ${escapeHtml(part.id)}</span><span>Actualizado: ${formatDateTime(created)} · Fuente: ${part._source === "legacy" ? "registro heredado" : "operationalParts"}</span></div>
+      </div>
+    </article>`;
+  }).join("");
+  els.adminPartsList.querySelectorAll("[data-admin-part-toggle]").forEach((button) => button.addEventListener("click", () => {
+    const card = els.adminPartsList.querySelector(`[data-admin-part-card="${CSS.escape(button.dataset.adminPartToggle)}"]`);
+    card?.classList.toggle("open");
+  }));
+}
+
+function setAdminBreaksStatus(message, isError = false) {
+  if (!els.adminBreaksStatus) return;
+  els.adminBreaksStatus.textContent = message;
+  els.adminBreaksStatus.classList.toggle("error", Boolean(isError));
+}
+function setAdminServicesStatus(message, isError = false) {
+  if (!els.adminServicesStatus) return;
+  els.adminServicesStatus.textContent = message;
+  els.adminServicesStatus.classList.toggle("error", Boolean(isError));
+}
+function fillFilterSelect(element, values, placeholder) {
+  if (!element) return;
+  const previous = element.value;
+  const rows = Array.from(values.entries ? values.entries() : values).sort((a, b) => String(a[1] ?? a[0]).localeCompare(String(b[1] ?? b[0]), "es", { numeric: true }));
+  element.innerHTML = `<option value="">${escapeHtml(placeholder)}</option>` + rows.map(([value, label]) => `<option value="${escapeHtml(value)}">${escapeHtml(label)}</option>`).join("");
+  if (rows.some(([value]) => String(value) === String(previous))) element.value = previous;
+}
+function renderAdminBreaks() {
+  if (!els.adminBreaksList || currentProfile?.role !== "admin") return;
+  const operatorMap = new Map();
+  breakRecords.forEach((record) => { const uid = record.operatorUid || record.uid || ""; operatorMap.set(uid, record.userName || adminProfiles.get(uid)?.name || adminProfiles.get(uid)?.email || "Operador"); });
+  fillFilterSelect(els.adminBreaksOperatorFilter, operatorMap, "Todos los operadores");
+  const search = String(els.adminBreaksSearch?.value || "").trim().toLowerCase();
+  const date = els.adminBreaksDateFilter?.value || "";
+  const operator = els.adminBreaksOperatorFilter?.value || "";
+  const status = els.adminBreaksStatusFilter?.value || "";
+  const visible = [...breakRecords].filter((record) => {
+    const uid = record.operatorUid || record.uid || "";
+    const name = record.userName || adminProfiles.get(uid)?.name || "Operador";
+    if (date && reportRecordDateKey(record.startAtClient) !== date) return false;
+    if (operator && uid !== operator) return false;
+    if (status && record.status !== status) return false;
+    return !search || `${name} ${record.status || ""}`.toLowerCase().includes(search);
+  }).sort((a,b)=>String(b.startAtClient||"").localeCompare(String(a.startAtClient||"")));
+  els.adminBreaksCount.textContent = `${visible.length} descanso${visible.length === 1 ? "" : "s"}`;
+  setAdminBreaksStatus(navigator.onLine ? `${breakRecords.length} registro${breakRecords.length === 1 ? "" : "s"} disponible${breakRecords.length === 1 ? "" : "s"} en Firebase.` : "Sin conexión: mostrando la última copia guardada.");
+  if (!visible.length) { els.adminBreaksList.innerHTML = '<div class="empty-state"><strong>No hay descansos para los filtros seleccionados.</strong></div>'; return; }
+  els.adminBreaksList.innerHTML = visible.map((record) => {
+    const uid=record.operatorUid||record.uid||""; const name=record.userName||adminProfiles.get(uid)?.name||adminProfiles.get(uid)?.email||"Operador"; const active=record.status==="active"; const duration=active?formatDuration(record.startAtClient):formatDuration(record.startAtClient,record.endAtClient);
+    return `<article class="admin-record-card admin-break-card"><header class="admin-record-card-header"><div class="admin-record-person"><span class="admin-record-avatar">${escapeHtml(initials(name))}</span><div><strong>${escapeHtml(name)}</strong><span>${formatDate(record.startAtClient)}</span></div></div><span class="badge ${active?"warning":"active"}">${active?"En curso":"Finalizado"}</span></header><div class="admin-record-metrics"><div><span>Inicio</span><strong>${formatTime(record.startAtClient)}</strong></div><div><span>Finalización</span><strong>${record.endAtClient?formatTime(record.endAtClient):"En curso"}</strong></div><div><span>Duración</span><strong>${duration}</strong></div></div><div class="admin-record-evidence-grid"><section><h4>Marcación inicial</h4>${evidencePreview(record.startEvidence,"Foto de inicio de descanso")}</section><section><h4>Marcación final</h4>${record.endEvidence?evidencePreview(record.endEvidence,"Foto de finalización de descanso"):'<span class="admin-evidence-empty">Pendiente de finalización</span>'}</section></div></article>`;
+  }).join("");
+}
+function renderAdminServices() {
+  if (!els.adminServicesList || currentProfile?.role !== "admin") return;
+  const operators=new Map(), mechanics=new Map(), machines=new Map();
+  services.forEach((record)=>{ if(record.operatorUid) operators.set(record.operatorUid,record.operatorName||"Operador"); if(record.mechanicUid) mechanics.set(record.mechanicUid,record.mechanicName||"Mecánico"); if(record.machine) machines.set(record.machine,record.machine); });
+  fillFilterSelect(els.adminServicesOperatorFilter,operators,"Todos los operadores"); fillFilterSelect(els.adminServicesMechanicFilter,mechanics,"Todos los mecánicos"); fillFilterSelect(els.adminServicesMachineFilter,machines,"Todas las máquinas");
+  const search=String(els.adminServicesSearch?.value||"").trim().toLowerCase(), date=els.adminServicesDateFilter?.value||"", operator=els.adminServicesOperatorFilter?.value||"", mechanic=els.adminServicesMechanicFilter?.value||"", machine=els.adminServicesMachineFilter?.value||"", status=els.adminServicesStatusFilter?.value||"";
+  const visible=[...services].filter((record)=>{ if(date&&reportRecordDateKey(record.startAtClient)!==date)return false; if(operator&&record.operatorUid!==operator)return false; if(mechanic&&record.mechanicUid!==mechanic)return false; if(machine&&record.machine!==machine)return false; if(status&&record.status!==status)return false; const haystack=`${record.operatorName||""} ${record.mechanicName||""} ${record.machine||""} ${record.startReason||""} ${record.endReason||""}`.toLowerCase(); return !search||haystack.includes(search); }).sort((a,b)=>String(b.startAtClient||"").localeCompare(String(a.startAtClient||"")));
+  els.adminServicesCount.textContent=`${visible.length} servicio${visible.length===1?"":"s"}`; setAdminServicesStatus(navigator.onLine?`${services.length} registro${services.length===1?"":"s"} disponible${services.length===1?"":"s"} en Firebase.`:"Sin conexión: mostrando la última copia guardada.");
+  if(!visible.length){els.adminServicesList.innerHTML='<div class="empty-state"><strong>No hay servicios para los filtros seleccionados.</strong></div>';return;}
+  els.adminServicesList.innerHTML=visible.map((record)=>{const active=record.status==="active",duration=active?formatDuration(record.startAtClient):formatDuration(record.startAtClient,record.endAtClient);return `<article class="admin-record-card admin-service-card"><header class="admin-record-card-header"><div class="admin-record-person"><span class="admin-record-avatar service">${iconSvg("wrench")}</span><div><strong>${escapeHtml(record.machine||"Máquina sin definir")}</strong><span>Parte ${escapeHtml(record.partId||"-")} · Servicio ${escapeHtml(record.serviceNumber||"-")}</span></div></div><span class="badge ${active?"warning":"active"}">${active?"En curso":"Finalizado"}</span></header><div class="admin-record-metrics service-metrics"><div><span>Operador</span><strong>${escapeHtml(record.operatorName||"-")}</strong></div><div><span>Mecánico</span><strong>${escapeHtml(record.mechanicName||"-")}</strong></div><div><span>Inicio</span><strong>${formatDateTime(record.startAtClient)}</strong></div><div><span>Finalización</span><strong>${record.endAtClient?formatDateTime(record.endAtClient):"En curso"}</strong></div><div><span>Duración</span><strong>${duration}</strong></div></div><div class="admin-service-description-grid"><section><span>Motivo de reparación</span><p>${escapeHtml(record.startReason||"Sin motivo registrado")}</p></section><section><span>Trabajo realizado</span><p>${escapeHtml(record.endReason||(active?"Servicio aún en curso":"Sin detalle"))}</p></section></div><div class="admin-record-evidence-grid"><section><h4>Inicio del servicio</h4>${evidencePreview(record.startEvidence,"Foto de inicio de servicio")}</section><section><h4>Finalización del servicio</h4>${record.endEvidence?evidencePreview(record.endEvidence,"Foto de finalización de servicio"):'<span class="admin-evidence-empty">Pendiente de finalización</span>'}</section></div></article>`;}).join("");
+}
+
 function renderPart() {
   const editing = Boolean(currentPart);
   const dateKey = currentPart?.dateKey || partDraftDate || todayKey();
@@ -1666,7 +2221,7 @@ function renderPart() {
   els.horometerStages.innerHTML = HOROMETER_CONFIG.map((config, index) => {
     const stage = currentPart?.horometers?.[config.key] || {};
     const evidence = stage.evidence;
-    return `<article class="pro-horometer-card"><div class="horometer-card-head"><span class="horometer-index">${iconSvg("horometer-pro")}</span><div class="horometer-title"><span class="horometer-step-number">LECTURA ${index + 1}</span><strong>${escapeHtml(config.label)}</strong><small>${escapeHtml(config.help)}</small></div></div><div class="horometer-entry-row"><label class="field"><span>Valor del horómetro</span><input type="number" inputmode="decimal" step="0.1" min="0" data-horometer-value="${config.key}" value="${escapeHtml(stage.value ?? "")}" placeholder="0.0"></label><button class="horometer-capture-button" type="button" data-horometer-capture="${config.key}">${iconSvg("camera")}<span>${evidence ? "Repetir" : "Foto + GPS"}</span></button></div><div class="horometer-status-row"><span class="stage-status ${evidence ? "ready" : ""}">${evidence ? "Evidencia completa" : "Evidencia pendiente"}</span>${evidence ? `<a href="${mapUrl(evidence.location)}" target="_blank" rel="noopener">${iconSvg("map-pin")} Ver mapa</a>` : `<span>${iconSvg("location-pro")} GPS requerido</span>`}</div>${evidence ? `<div class="stage-evidence">${evidence.photoUrl || evidence.photoBlob ? `<img src="${evidence.photoUrl || URL.createObjectURL(evidence.photoBlob)}" alt="${escapeHtml(config.label)}">` : ""}<strong>Fotografía registrada</strong></div>` : ""}</article>`;
+    return `<article class="stage-card"><div class="stage-title"><strong>${index + 1}. ${escapeHtml(config.label)}</strong><small>${escapeHtml(config.help)}</small></div><label class="field"><span>Valor</span><input type="number" inputmode="decimal" step="0.1" min="0" data-horometer-value="${config.key}" value="${escapeHtml(stage.value ?? "")}" placeholder="0"></label><div class="stage-actions"><button class="secondary-button" type="button" data-horometer-capture="${config.key}">${evidence ? "Repetir foto" : "Foto y GPS"}</button><span class="stage-status ${evidence ? "ready" : ""}">${evidence ? "Completo" : "Pendiente"}</span></div>${evidence ? `<div class="stage-evidence">${evidence.photoUrl || evidence.photoBlob ? `<img src="${evidence.photoUrl || URL.createObjectURL(evidence.photoBlob)}" alt="${escapeHtml(config.label)}">` : ""}<a href="${mapUrl(evidence.location)}" target="_blank" rel="noopener">Ver ubicacion en mapa</a></div>` : ""}</article>`;
   }).join("");
 }
 
@@ -1715,10 +2270,21 @@ async function savePart(event) {
   await OfflineDB.putPart(currentPart);
   await OfflineDB.putOperatorPart(currentPart);
   await queueForSync({ id: `part:${currentPart.id}`, uid: currentPart.operatorUid, type: "part-upsert", payload: currentPart });
-  showToast("Parte guardado", navigator.onLine ? "Se enviara a Firebase." : "Quedo pendiente de sincronizacion.");
   renderAll();
   await updateSyncUi();
-  syncNow(false).catch(console.warn);
+  if (navigator.onLine && firebaseReady && !localSession) {
+    showToast("Parte guardado", "Validando el envío a Firebase...");
+    await syncNow(false);
+    try {
+      const remote = await sdk.getDoc(sdk.doc(db, "operationalParts", currentPart.id));
+      if (remote.exists()) showToast("Parte sincronizado", "El administrador ya puede verlo en Partes y Actividad.");
+      else showToast("Parte pendiente", "El Parte quedó guardado en el dispositivo, pero todavía no llegó a Firebase.", "error");
+    } catch (error) {
+      showToast("Parte pendiente", friendlyError(error), "error");
+    }
+  } else {
+    showToast("Parte guardado sin conexión", "Se enviará automáticamente cuando vuelva Internet.");
+  }
 }
 
 function populateServiceParts() {
@@ -1914,16 +2480,6 @@ function renderService() {
   els.endServiceButton.disabled = !active;
   els.newServiceButton.disabled = !part || active;
   els.newServiceButton.textContent = active ? "Servicio en curso" : "+ Nuevo servicio";
-  const serviceSection = document.getElementById("serviceSection");
-  if (serviceSection) {
-    serviceSection.dataset.flowState = active ? "active" : completed ? "completed" : part ? "ready" : "empty";
-    const steps = serviceSection.querySelectorAll(".service-progress-step");
-    steps.forEach((step, index) => {
-      const completedStep = completed ? true : active ? index <= 2 : part ? index === 0 : false;
-      step.classList.toggle("active", completedStep);
-      step.classList.toggle("done", completed && index < 4);
-    });
-  }
   renderServiceSessionList();
 }
 
@@ -1998,7 +2554,7 @@ async function loadFuelSection() {
     const tankSnap = await sdk.getDoc(sdk.doc(db, "tanks", "main"));
     if (tankSnap.exists()) { tank = { id: "main", ...tankSnap.data() }; await OfflineDB.putTank(tank); }
     let q;
-    if (currentProfile.role === "admin") q = sdk.query(sdk.collection(db, "fuelLoads"), sdk.orderBy("createdAtClient", "desc"), sdk.limit(30));
+    if (currentProfile.role === "admin") q = sdk.collection(db, "fuelLoads");
     else q = sdk.query(sdk.collection(db, "fuelLoads"), sdk.where("uid", "==", currentUser.uid));
     const snap = await sdk.getDocs(q);
     for (const item of snap.docs) await OfflineDB.putFuelLoad({ id: item.id, ...item.data(), syncStatus: "synced" });
@@ -2026,7 +2582,7 @@ function renderFuelRecent() {
       <td>${formatDate(record.createdAtClient)}<br><small>${formatTime(record.createdAtClient)}</small></td>
       <td>${escapeHtml(record.machine || "-")}</td>
       <td><strong>${liters(record.liters)}</strong></td>
-      <td>${record.shift === "night" ? "Nocturna" : "Diurna"}</td>
+      <td>${record.shift === "night" ? "Nocturno" : "Diurno"}</td>
       <td>${escapeHtml(record.operatorName || record.userName || "-")}</td>
     </tr>`).join("");
   els.fuelRecentList.innerHTML = `
@@ -2429,6 +2985,7 @@ async function processSyncItem(item) {
     record.endEvidence = await uploadEvidence(record.endEvidence, `breaks/${record.uid}/${record.id}/end.jpg`);
     const remote = { ...cleanRecord(record), syncStatus: "synced", syncedAt: sdk.serverTimestamp() };
     await sdk.setDoc(sdk.doc(db, "users", record.uid, "breaks", record.id), remote, { merge: true });
+    await sdk.setDoc(sdk.doc(db, "operationalBreaks", record.id), remote, { merge: true });
     await OfflineDB.putBreak({ ...record, syncStatus: "synced" });
     return;
   }
@@ -2456,8 +3013,17 @@ async function processSyncItem(item) {
     // operationalParts es la fuente canonica. La copia antigua bajo users/{uid}/parts
     // no se escribe porque una regla desactualizada en esa ruta bloqueaba todo el batch.
     await sdk.setDoc(sdk.doc(db, "operationalParts", record.id), remote, { merge: true });
+    // Copia de compatibilidad: si falla, no invalida la escritura canónica.
+    try {
+      await sdk.setDoc(sdk.doc(db, "users", record.operatorUid, "parts", record.id), remote, { merge: true });
+    } catch (legacyError) {
+      console.warn("No se pudo actualizar la copia heredada del Parte", legacyError);
+    }
 
-    const syncedRecord = { ...record, syncStatus: "synced" };
+    const verification = await sdk.getDoc(sdk.doc(db, "operationalParts", record.id));
+    if (!verification.exists()) throw new Error("Firebase no confirmó el documento operationalParts del Parte.");
+
+    const syncedRecord = { ...record, _source: "canonical", syncStatus: "synced" };
     await OfflineDB.putPart(syncedRecord);
     await OfflineDB.putOperatorPart(syncedRecord);
     userParts = userParts.filter((part) => part.id !== syncedRecord.id).concat(syncedRecord);

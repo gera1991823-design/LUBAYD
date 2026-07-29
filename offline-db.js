@@ -195,6 +195,7 @@
 
   async function putBreak(record) { return put(STORES.breaks, { ...record, updatedAtLocal: Date.now() }); }
   async function getBreaks(uid) { return (await byIndex(STORES.breaks, "uid", uid)).sort((a, b) => String(b.startAtClient || "").localeCompare(String(a.startAtClient || ""))); }
+  async function getAllBreaks() { return (await all(STORES.breaks)).sort((a, b) => String(b.startAtClient || "").localeCompare(String(a.startAtClient || ""))); }
   async function getActiveBreak(uid) { return (await byIndex(STORES.breaks, "uidStatus", [uid, "active"])).sort((a, b) => String(b.startAtClient || "").localeCompare(String(a.startAtClient || "")))[0] || null; }
 
   async function putPart(record) { return put(STORES.parts, { ...record, updatedAtLocal: Date.now() }); }
@@ -211,6 +212,18 @@
   async function getOperatorParts(dateKey) {
     const records = dateKey ? await byIndex(STORES.operatorParts, "dateKey", dateKey) : await all(STORES.operatorParts);
     return records.sort((a, b) => String(a.operatorName || "").localeCompare(String(b.operatorName || "")));
+  }
+
+  async function replaceOperatorParts(records = []) {
+    const db = await open();
+    const tx = db.transaction(STORES.operatorParts, "readwrite");
+    const store = tx.objectStore(STORES.operatorParts);
+    await req(store.clear());
+    for (const record of records) {
+      if (record?.id) await req(store.put({ ...record, updatedAtLocal: Date.now() }));
+    }
+    await done(tx);
+    return records;
   }
 
   async function putService(record) { return put(STORES.services, { ...record, updatedAtLocal: Date.now() }); }
@@ -285,8 +298,8 @@
 
   window.OfflineDB = {
     open, saveProfile, getProfile, getProfileByEmail, getLastProfile, setLocked, configurePin, verifyPin,
-    putBreak, getBreaks, getActiveBreak,
-    putPart, getPart, getParts, putOperatorPart, getOperatorParts,
+    putBreak, getBreaks, getAllBreaks, getActiveBreak,
+    putPart, getPart, getParts, putOperatorPart, getOperatorParts, replaceOperatorParts,
     putService, getService, getServicesForMechanic, getAllServices, getServicesForPart,
     putFuelLoad, getFuelLoads, getAllFuelLoads,
     putTank, getTank,

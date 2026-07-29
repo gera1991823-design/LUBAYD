@@ -1,7 +1,7 @@
 {
-  "name": "LUBAYD Operativa 4.6 Profesional",
+  "name": "LUBAYD Operativa 5.2 Reportes",
   "short_name": "LUBAYD",
-  "description": "Gestión operativa profesional de Partes, descansos, servicios y combustible, con funcionamiento offline.",
+  "description": "Panel administrativo de consulta con reportes por turno, servicios, descansos y combustible, optimizado para móviles.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
