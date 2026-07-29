@@ -1,14 +1,14 @@
 "use strict";
 
-const CACHE_NAME = "lubayd-operativa-v5.5.0-chat-directo";
+const CACHE_NAME = "lubayd-operativa-v5.6.0-chat-directo";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./styles.css?v=5.5.0",
-  "./app.js?v=5.5.0",
-  "./offline-db.js?v=5.5.0",
-  "./sync-manager.js?v=5.5.0",
-  "./manifest.webmanifest?v=5.5.0",
+  "./styles.css?v=5.6.0",
+  "./app.js?v=5.6.0",
+  "./offline-db.js?v=5.6.0",
+  "./sync-manager.js?v=5.6.0",
+  "./manifest.webmanifest?v=5.6.0",
   "./logo-original.png",
   "./icon-192.png",
   "./icon-512.png",

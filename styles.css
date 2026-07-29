@@ -5538,3 +5538,88 @@ a {
     max-width: 155px;
   }
 }
+
+
+/* V5.6 - GPS opcional, captura offline y guardado no bloqueante */
+.capture-card-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.capture-card-heading h3 { margin: 0; }
+.gps-optional-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #e8f7ee;
+  color: #08763f;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .02em;
+}
+.gps-optional-badge.is-required { background: #fff1dc; color: #9a5a00; }
+.gps-help {
+  margin: -2px 0 12px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+.gps-action-grid {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) minmax(0,1fr);
+  gap: 8px;
+}
+.gps-skip-button {
+  min-height: 44px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 9px 12px;
+  background: #fff;
+  color: #4f6258;
+  font-weight: 750;
+}
+.gps-status {
+  position: relative;
+  min-height: 150px;
+  transition: background-color .2s ease, border-color .2s ease, color .2s ease;
+  border: 1px solid transparent;
+}
+.gps-status.is-loading {
+  background: linear-gradient(145deg,#edf7f1,#e4f0e8);
+  border-color: #c9dfd1;
+  color: #365948;
+}
+.gps-status.is-success {
+  background: linear-gradient(145deg,#e9faef,#dff4e7);
+  border-color: #9fd4b1;
+  color: #08723d;
+  font-weight: 750;
+}
+.gps-status.is-warning {
+  background: linear-gradient(145deg,#fff8e9,#fff3d7);
+  border-color: #efd49a;
+  color: #79530b;
+  font-weight: 700;
+}
+.evidence-location-missing {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: #fff3d9;
+  color: #7b570f;
+  font-size: 12px;
+  font-weight: 750;
+}
+@media (max-width: 640px) {
+  .gps-action-grid { grid-template-columns: 1fr; }
+  .gps-status { min-height: 118px !important; padding: 14px; }
+  .gps-help { font-size: 12px; }
+  .gps-capture-card .secondary-button,
+  .gps-capture-card .gps-skip-button { min-height: 42px; }
+}

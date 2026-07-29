@@ -39,7 +39,7 @@ const els = {
   chatMessages: $("#chatMessages"), chatForm: $("#chatForm"), chatInput: $("#chatInput"), chatSendButton: $("#chatSendButton"), chatStatusText: $("#chatStatusText"), chatConnectionBadge: $("#chatConnectionBadge"), directChatShell: $("#directChatShell"), chatUserSearch: $("#chatUserSearch"), chatContactList: $("#chatContactList"), chatDirectoryStatus: $("#chatDirectoryStatus"), chatUnreadTotal: $("#chatUnreadTotal"), chatBackButton: $("#chatBackButton"), chatRecipientAvatar: $("#chatRecipientAvatar"), chatRecipientName: $("#chatRecipientName"), chatRecipientMeta: $("#chatRecipientMeta"),
   reportsConnectionBadge: $("#reportsConnectionBadge"), refreshReportsButton: $("#refreshReportsButton"), reportDateFrom: $("#reportDateFrom"), reportDateTo: $("#reportDateTo"), reportOperator: $("#reportOperator"), reportMachine: $("#reportMachine"), reportShift: $("#reportShift"), applyReportsButton: $("#applyReportsButton"), clearReportsButton: $("#clearReportsButton"), reportsLastUpdated: $("#reportsLastUpdated"),
   reportFuelTotal: $("#reportFuelTotal"), reportFuelDetail: $("#reportFuelDetail"), reportServiceHours: $("#reportServiceHours"), reportServiceDetail: $("#reportServiceDetail"), reportMachineCount: $("#reportMachineCount"), reportDominantShift: $("#reportDominantShift"), fuelByShiftChart: $("#fuelByShiftChart"), reportSummaryChart: $("#reportSummaryChart"), breaksByDayChart: $("#breaksByDayChart"), breaksByOperatorChart: $("#breaksByOperatorChart"), fuelByDayChart: $("#fuelByDayChart"), fuelByOperatorChart: $("#fuelByOperatorChart"), fuelByMachineChart: $("#fuelByMachineChart"), serviceByMachineChart: $("#serviceByMachineChart"), reportServiceTable: $("#reportServiceTable"), reportServiceTableCount: $("#reportServiceTableCount"),
-  captureModal: $("#captureModal"), captureTitle: $("#captureTitle"), captureSubtitle: $("#captureSubtitle"), capturePreview: $("#capturePreview"), captureFileInput: $("#captureFileInput"), captureGpsCard: $("#captureGpsCard"), captureGpsStatus: $("#captureGpsStatus"), captureGpsButton: $("#captureGpsButton"), captureMapLink: $("#captureMapLink"), confirmCaptureButton: $("#confirmCaptureButton"),
+  captureModal: $("#captureModal"), captureTitle: $("#captureTitle"), captureSubtitle: $("#captureSubtitle"), capturePreview: $("#capturePreview"), captureFileInput: $("#captureFileInput"), captureGpsCard: $("#captureGpsCard"), captureGpsStatus: $("#captureGpsStatus"), captureGpsButton: $("#captureGpsButton"), captureGpsSkipButton: $("#captureGpsSkipButton"), captureGpsRequirement: $("#captureGpsRequirement"), captureGpsHelp: $("#captureGpsHelp"), captureMapLink: $("#captureMapLink"), confirmCaptureButton: $("#confirmCaptureButton"),
   pinModal: $("#pinModal"), pinInput: $("#pinInput"), pinConfirm: $("#pinConfirm"), pinError: $("#pinError"), savePinButton: $("#savePinButton"), skipPinButton: $("#skipPinButton"),
   tankModal: $("#tankModal"), tankCapacityInput: $("#tankCapacityInput"), tankCurrentInput: $("#tankCurrentInput"), saveTankButton: $("#saveTankButton"),
   processingOverlay: $("#processingOverlay"), processingTitle: $("#processingTitle"), processingMessage: $("#processingMessage"), toastRegion: $("#toastRegion")
@@ -85,6 +85,9 @@ let fuelPhoto = null;
 let captureContext = null;
 let captureBlob = null;
 let captureLocation = null;
+let captureGpsSkipped = false;
+let captureGpsErrorCode = "";
+let captureGpsRequestId = 0;
 let captureObjectUrl = null;
 let timerHandle = null;
 let syncRunning = false;
@@ -578,6 +581,7 @@ function bindEvents() {
   $$('[data-close-modal]').forEach((button) => button.addEventListener("click", closeCapture));
   els.captureFileInput.addEventListener("change", handleCaptureFile);
   els.captureGpsButton.addEventListener("click", acquireGps);
+  els.captureGpsSkipButton?.addEventListener("click", skipGpsCapture);
   els.confirmCaptureButton.addEventListener("click", confirmCapture);
   els.savePinButton.addEventListener("click", saveOfflinePin);
   els.skipPinButton.addEventListener("click", () => els.pinModal.classList.add("hidden"));
@@ -2124,7 +2128,7 @@ async function reconnectAndSync() {
 
 async function startBreak() {
   if (currentBreak) return;
-  openCapture({ title: "Iniciar descanso", subtitle: "La foto y la ubicacion son obligatorias.", requireGps: true, onConfirm: async (evidence) => {
+  openCapture({ title: "Iniciar descanso", subtitle: "La foto es obligatoria. La ubicacion se intentara obtener, pero no bloqueara el registro.", showGps: true, requireGps: false, onConfirm: async (evidence) => {
     const record = { id: uuid(), uid: currentUser.uid, userName: currentProfile.name, status: "active", startAtClient: localIso(), startEvidence: evidence, syncStatus: "pending" };
     currentBreak = record;
     breakRecords.unshift(record);
@@ -2138,7 +2142,7 @@ async function startBreak() {
 
 async function endBreak() {
   if (!currentBreak) return;
-  openCapture({ title: "Finalizar descanso", subtitle: "Registra la evidencia final.", requireGps: true, onConfirm: async (evidence) => {
+  openCapture({ title: "Finalizar descanso", subtitle: "Registra la foto final. El GPS es opcional y no bloquea el guardado.", showGps: true, requireGps: false, onConfirm: async (evidence) => {
     currentBreak = { ...currentBreak, status: "completed", endAtClient: localIso(), endEvidence: evidence, syncStatus: "pending" };
     breakRecords = breakRecords.map((item) => item.id === currentBreak.id ? currentBreak : item);
     await OfflineDB.putBreak(currentBreak);
@@ -2426,7 +2430,7 @@ function renderPart() {
   els.horometerStages.innerHTML = HOROMETER_CONFIG.map((config, index) => {
     const stage = currentPart?.horometers?.[config.key] || {};
     const evidence = stage.evidence;
-    return `<article class="stage-card"><div class="stage-title"><strong>${index + 1}. ${escapeHtml(config.label)}</strong><small>${escapeHtml(config.help)}</small></div><label class="field"><span>Valor</span><input type="number" inputmode="decimal" step="0.1" min="0" data-horometer-value="${config.key}" value="${escapeHtml(stage.value ?? "")}" placeholder="0"></label><div class="stage-actions"><button class="secondary-button" type="button" data-horometer-capture="${config.key}">${evidence ? "Repetir foto" : "Foto y GPS"}</button><span class="stage-status ${evidence ? "ready" : ""}">${evidence ? "Completo" : "Pendiente"}</span></div>${evidence ? `<div class="stage-evidence">${evidence.photoUrl || evidence.photoBlob ? `<img src="${evidence.photoUrl || URL.createObjectURL(evidence.photoBlob)}" alt="${escapeHtml(config.label)}">` : ""}<a href="${mapUrl(evidence.location)}" target="_blank" rel="noopener">Ver ubicacion en mapa</a></div>` : ""}</article>`;
+    return `<article class="stage-card"><div class="stage-title"><strong>${index + 1}. ${escapeHtml(config.label)}</strong><small>${escapeHtml(config.help)}</small></div><label class="field"><span>Valor</span><input type="number" inputmode="decimal" step="0.1" min="0" data-horometer-value="${config.key}" value="${escapeHtml(stage.value ?? "")}" placeholder="0"></label><div class="stage-actions"><button class="secondary-button" type="button" data-horometer-capture="${config.key}">${evidence ? "Repetir foto" : "Foto y GPS opcional"}</button><span class="stage-status ${evidence ? "ready" : ""}">${evidence ? "Completo" : "Pendiente"}</span></div>${evidence ? `<div class="stage-evidence">${evidence.photoUrl || evidence.photoBlob ? `<img src="${evidence.photoUrl || URL.createObjectURL(evidence.photoBlob)}" alt="${escapeHtml(config.label)}">` : ""}${evidence.location ? `<a href="${mapUrl(evidence.location)}" target="_blank" rel="noopener">Ver ubicacion en mapa</a>` : `<span class="evidence-location-missing">Sin ubicacion GPS</span>`}</div>` : ""}</article>`;
   }).join("");
 }
 
@@ -2438,7 +2442,7 @@ function captureHorometer(key) {
   const value = input?.value;
   if (!value) { showToast("Falta el horometro", "Ingresa el valor antes de tomar la evidencia.", "error"); return; }
   const config = HOROMETER_CONFIG.find((item) => item.key === key);
-  openCapture({ title: config.label, subtitle: "Fotografia y ubicacion obligatorias.", requireGps: true, onConfirm: async (evidence) => {
+  openCapture({ title: config.label, subtitle: "La fotografia es obligatoria. El GPS es opcional y se sincronizara cuando haya Internet.", showGps: true, requireGps: false, onConfirm: async (evidence) => {
     part.horometers[key] = { value: Number(value), evidence };
     part.updatedAtClient = localIso();
     part.syncStatus = "pending";
@@ -2583,7 +2587,10 @@ function evidenceBox(element, evidence, emptyText) {
   if (!evidence) { element.className = "evidence-box empty"; element.textContent = emptyText; return; }
   const source = evidence.photoUrl || (evidence.photoBlob ? URL.createObjectURL(evidence.photoBlob) : "");
   element.className = "evidence-box ready";
-  element.innerHTML = `${source ? `<img src="${source}" alt="Evidencia">` : ""}<div><strong>Evidencia registrada</strong><br><a href="${mapUrl(evidence.location)}" target="_blank" rel="noopener">Ver ubicacion</a><br><small>${formatDateTime(evidence.capturedAtClient)}</small></div>`;
+  const locationMarkup = evidence.location
+    ? `<a href="${mapUrl(evidence.location)}" target="_blank" rel="noopener">Ver ubicacion</a>`
+    : `<span class="evidence-location-missing">Sin ubicacion GPS</span>`;
+  element.innerHTML = `${source ? `<img src="${source}" alt="Evidencia">` : ""}<div><strong>Evidencia registrada</strong><br>${locationMarkup}<br><small>${formatDateTime(evidence.capturedAtClient)}</small></div>`;
 }
 
 function serviceSessionTemplate(record) {
@@ -2621,8 +2628,8 @@ function renderServiceSessionList() {
 function clearServiceForm() {
   els.serviceStartReason.value = "";
   els.serviceEndReason.value = "";
-  evidenceBox(els.serviceStartEvidence, null, "Foto y ubicacion pendientes");
-  evidenceBox(els.serviceEndEvidence, null, "Foto y ubicacion pendientes");
+  evidenceBox(els.serviceStartEvidence, null, "Foto pendiente · GPS opcional");
+  evidenceBox(els.serviceEndEvidence, null, "Foto pendiente · GPS opcional");
 }
 
 function beginNewServiceSession() {
@@ -2676,8 +2683,8 @@ function renderService() {
   if (!serviceDraftMode) els.serviceStartReason.value = currentService?.startReason || "";
   if (active || completed) els.serviceEndReason.value = currentService?.endReason || "";
   else if (!serviceDraftMode) els.serviceEndReason.value = "";
-  evidenceBox(els.serviceStartEvidence, serviceDraftMode ? null : currentService?.startEvidence, "Foto y ubicacion pendientes");
-  evidenceBox(els.serviceEndEvidence, active || completed ? currentService?.endEvidence : null, "Foto y ubicacion pendientes");
+  evidenceBox(els.serviceStartEvidence, serviceDraftMode ? null : currentService?.startEvidence, "Foto pendiente · GPS opcional");
+  evidenceBox(els.serviceEndEvidence, active || completed ? currentService?.endEvidence : null, "Foto pendiente · GPS opcional");
 
   els.serviceStartReason.disabled = !part || active || completed;
   els.serviceEndReason.disabled = !active;
@@ -2701,7 +2708,7 @@ async function startService() {
   }
   if (!els.serviceStartReason.value.trim()) { showToast("Falta el motivo", "Describe la falla o reparacion.", "error"); return; }
 
-  openCapture({ title: "Inicio de reparacion", subtitle: "Foto y ubicacion obligatorias.", requireGps: true, onConfirm: async (evidence) => {
+  openCapture({ title: "Inicio de reparacion", subtitle: "La foto es obligatoria. La ubicacion es opcional y no bloquea el servicio.", showGps: true, requireGps: false, onConfirm: async (evidence) => {
     const record = normalizeServiceRecord({
       id: uuid(),
       partId: part.id,
@@ -2733,7 +2740,7 @@ async function startService() {
 async function endService() {
   if (!currentService || currentService.status !== "active") return;
   if (!els.serviceEndReason.value.trim()) { showToast("Falta el detalle", "Describe el trabajo realizado.", "error"); return; }
-  openCapture({ title: "Finalizacion de reparacion", subtitle: "Foto y ubicacion obligatorias.", requireGps: true, onConfirm: async (evidence) => {
+  openCapture({ title: "Finalizacion de reparacion", subtitle: "La foto final es obligatoria. El GPS es opcional.", showGps: true, requireGps: false, onConfirm: async (evidence) => {
     currentService = normalizeServiceRecord({
       ...currentService,
       status: "completed",
@@ -2800,7 +2807,7 @@ function renderFuelRecent() {
 }
 
 function captureFuelPhoto() {
-  openCapture({ title: "Foto de la carga", subtitle: "La fotografia es obligatoria. No se requiere GPS.", requireGps: false, onConfirm: async (evidence) => { fuelPhoto = evidence; evidenceBox(els.fuelPhotoEvidence, evidence, "Foto obligatoria pendiente"); }});
+  openCapture({ title: "Foto de la carga", subtitle: "La fotografia es obligatoria. No se requiere GPS.", showGps: false, requireGps: false, onConfirm: async (evidence) => { fuelPhoto = evidence; evidenceBox(els.fuelPhotoEvidence, evidence, "Foto obligatoria pendiente"); }});
 }
 
 async function saveFuelLoad(event) {
@@ -3015,31 +3022,50 @@ async function saveUserRole(uid) {
   catch (error) { showToast("No se pudo guardar", friendlyError(error), "error"); }
 }
 
-function openCapture({ title, subtitle, requireGps, onConfirm }) {
-  captureContext = { requireGps, onConfirm };
+function openCapture({ title, subtitle, showGps = false, requireGps = false, onConfirm }) {
+  const gpsVisible = Boolean(showGps || requireGps);
+  captureContext = { requireGps: Boolean(requireGps), showGps: gpsVisible, onConfirm };
   captureBlob = null;
   captureLocation = null;
+  captureGpsSkipped = false;
+  captureGpsErrorCode = "";
+  captureGpsRequestId += 1;
   if (captureObjectUrl) URL.revokeObjectURL(captureObjectUrl);
   captureObjectUrl = null;
   els.captureTitle.textContent = title;
   els.captureSubtitle.textContent = subtitle;
   els.capturePreview.innerHTML = "<span>Sin foto</span>";
   els.captureFileInput.value = "";
-  els.captureGpsCard.classList.toggle("hidden", !requireGps);
-  els.captureGpsStatus.textContent = requireGps ? "Ubicacion pendiente" : "No requerida";
+  els.captureGpsCard.classList.toggle("hidden", !gpsVisible);
+  if (els.captureGpsRequirement) {
+    els.captureGpsRequirement.textContent = requireGps ? "Obligatorio" : "Opcional";
+    els.captureGpsRequirement.classList.toggle("is-required", requireGps);
+  }
+  if (els.captureGpsHelp) {
+    els.captureGpsHelp.textContent = requireGps
+      ? "La ubicacion es necesaria para confirmar esta evidencia."
+      : "Intentaremos obtener la ubicacion. Si no hay señal GPS, podras guardar igualmente.";
+  }
+  els.captureGpsStatus.className = "gps-status";
+  els.captureGpsStatus.textContent = gpsVisible ? "Preparando GPS..." : "No requerida";
+  els.captureGpsButton.disabled = false;
+  els.captureGpsSkipButton?.classList.toggle("hidden", !gpsVisible || requireGps);
   els.captureMapLink.classList.add("hidden");
   els.confirmCaptureButton.disabled = true;
   els.captureModal.classList.remove("hidden");
-  if (requireGps) acquireGps();
+  if (gpsVisible) acquireGps();
 }
 
 function closeCapture() {
+  captureGpsRequestId += 1;
   els.captureModal.classList.add("hidden");
   if (captureObjectUrl) URL.revokeObjectURL(captureObjectUrl);
   captureObjectUrl = null;
   captureContext = null;
   captureBlob = null;
   captureLocation = null;
+  captureGpsSkipped = false;
+  captureGpsErrorCode = "";
 }
 
 async function compressImage(file, maxDimension = 1600, quality = 0.82) {
@@ -3076,29 +3102,120 @@ async function handleCaptureFile(event) {
   updateCaptureConfirm();
 }
 
+function setGpsCaptureStatus(message, state = "") {
+  if (!els.captureGpsStatus) return;
+  els.captureGpsStatus.className = `gps-status${state ? ` ${state}` : ""}`;
+  els.captureGpsStatus.textContent = message;
+}
+
+function skipGpsCapture() {
+  if (!captureContext?.showGps || captureContext.requireGps) return;
+  captureGpsSkipped = true;
+  captureGpsErrorCode = "user-skipped";
+  captureLocation = null;
+  captureGpsRequestId += 1;
+  els.captureGpsButton.disabled = false;
+  els.captureMapLink.classList.add("hidden");
+  setGpsCaptureStatus("Continuaras sin ubicacion. La foto y el registro se guardaran normalmente.", "is-warning");
+  updateCaptureConfirm();
+}
+
 function acquireGps() {
-  if (!navigator.geolocation) { els.captureGpsStatus.textContent = "GPS no disponible"; return; }
+  if (!captureContext?.showGps) return;
+  captureGpsSkipped = false;
+  captureGpsErrorCode = "";
+  captureLocation = null;
+  const requestId = ++captureGpsRequestId;
+
+  if (!navigator.geolocation) {
+    captureGpsErrorCode = "unsupported";
+    setGpsCaptureStatus("GPS no disponible en este dispositivo. Puedes guardar sin ubicacion.", "is-warning");
+    els.captureGpsButton.disabled = false;
+    updateCaptureConfirm();
+    return;
+  }
+
   els.captureGpsButton.disabled = true;
-  els.captureGpsStatus.textContent = "Buscando ubicacion...";
-  navigator.geolocation.getCurrentPosition((position) => {
-    captureLocation = { latitude: position.coords.latitude, longitude: position.coords.longitude, accuracy: position.coords.accuracy, capturedAtClient: localIso() };
-    els.captureGpsStatus.textContent = `Ubicacion obtenida. Precision aproximada: ${Math.round(position.coords.accuracy)} m`;
+  els.captureMapLink.classList.add("hidden");
+  setGpsCaptureStatus("Buscando señal GPS... Puedes tomar la foto mientras esperamos.", "is-loading");
+
+  const success = (position) => {
+    if (requestId !== captureGpsRequestId || !captureContext) return;
+    captureLocation = {
+      latitude: position.coords.latitude,
+      longitude: position.coords.longitude,
+      accuracy: position.coords.accuracy,
+      altitude: position.coords.altitude ?? null,
+      heading: position.coords.heading ?? null,
+      speed: position.coords.speed ?? null,
+      capturedAtClient: localIso()
+    };
+    captureGpsErrorCode = "";
+    setGpsCaptureStatus(`Ubicacion obtenida. Precision aproximada: ${Math.round(position.coords.accuracy || 0)} m`, "is-success");
     els.captureMapLink.href = mapUrl(captureLocation);
     els.captureMapLink.classList.remove("hidden");
     els.captureGpsButton.disabled = false;
     updateCaptureConfirm();
-  }, (error) => {
-    els.captureGpsStatus.textContent = error.code === 1 ? "Permiso de ubicacion rechazado." : "No se pudo obtener la ubicacion.";
+  };
+
+  const finalFailure = (error) => {
+    if (requestId !== captureGpsRequestId || !captureContext) return;
+    captureGpsErrorCode = error?.code === 1 ? "permission-denied" : error?.code === 3 ? "timeout" : "unavailable";
+    const message = error?.code === 1
+      ? "Permiso de ubicacion rechazado. Puedes guardar sin GPS y habilitarlo mas tarde."
+      : "No se encontro la ubicacion. Puedes guardar igualmente; el registro no quedara bloqueado.";
+    setGpsCaptureStatus(message, "is-warning");
     els.captureGpsButton.disabled = false;
     updateCaptureConfirm();
-  }, { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 });
+  };
+
+  navigator.geolocation.getCurrentPosition(
+    success,
+    (error) => {
+      if (requestId !== captureGpsRequestId || !captureContext) return;
+      if (error?.code === 1) {
+        finalFailure(error);
+        return;
+      }
+      setGpsCaptureStatus("GPS preciso no disponible. Intentando una ubicacion aproximada...", "is-loading");
+      navigator.geolocation.getCurrentPosition(
+        success,
+        finalFailure,
+        { enableHighAccuracy: false, timeout: 15000, maximumAge: 600000 }
+      );
+    },
+    { enableHighAccuracy: true, timeout: 45000, maximumAge: 0 }
+  );
 }
 
-function updateCaptureConfirm() { els.confirmCaptureButton.disabled = !captureBlob || (captureContext?.requireGps && !captureLocation); }
+function updateCaptureConfirm() {
+  if (!captureContext) {
+    els.confirmCaptureButton.disabled = true;
+    return;
+  }
+  const gpsBlocks = captureContext.requireGps && !captureLocation;
+  els.confirmCaptureButton.disabled = !captureBlob || gpsBlocks;
+  if (captureBlob && !gpsBlocks && captureContext.showGps && !captureLocation) {
+    els.confirmCaptureButton.textContent = "Guardar sin ubicacion";
+  } else {
+    els.confirmCaptureButton.textContent = "Confirmar evidencia";
+  }
+}
+
 async function confirmCapture() {
-  if (!captureContext || !captureBlob || (captureContext.requireGps && !captureLocation)) return;
+  if (!captureContext || !captureBlob) return;
+  if (captureContext.requireGps && !captureLocation) {
+    showToast("Falta la ubicacion", "Reintenta obtener el GPS para continuar.", "error");
+    return;
+  }
   const context = captureContext;
-  const evidence = { photoBlob: captureBlob, location: captureLocation, capturedAtClient: localIso() };
+  const evidence = {
+    photoBlob: captureBlob,
+    location: captureLocation,
+    locationStatus: captureLocation ? "captured" : captureContext.showGps ? (captureGpsSkipped ? "skipped" : "unavailable") : "not-required",
+    locationErrorCode: captureLocation ? "" : captureGpsErrorCode,
+    capturedAtClient: localIso()
+  };
   closeCapture();
   await context.onConfirm(evidence);
 }
@@ -3169,7 +3286,13 @@ async function uploadEvidence(evidence, path) {
     const snap = await sdk.uploadBytes(ref, evidence.photoBlob, { contentType: evidence.photoBlob.type || "image/jpeg" });
     photoUrl = await sdk.getDownloadURL(snap.ref);
   }
-  return { photoUrl, location: evidence.location || null, capturedAtClient: evidence.capturedAtClient || localIso() };
+  return {
+    photoUrl,
+    location: evidence.location || null,
+    locationStatus: evidence.locationStatus || (evidence.location ? "captured" : "unavailable"),
+    locationErrorCode: evidence.locationErrorCode || "",
+    capturedAtClient: evidence.capturedAtClient || localIso()
+  };
 }
 
 function cleanRecord(value) {
