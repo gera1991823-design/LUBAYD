@@ -30,11 +30,11 @@ const els = {
   partForm: $("#partForm"), partStatus: $("#partStatus"), newPartButton: $("#newPartButton"), partSessionSelect: $("#partSessionSelect"), partSessionInfo: $("#partSessionInfo"), establishmentInput: $("#establishmentInput"), machineInput: $("#machineInput"), partDateInput: $("#partDateInput"), horometerStages: $("#horometerStages"), trozoInput: $("#trozoInput"), pulpaInput: $("#pulpaInput"), savePartButton: $("#savePartButton"),
   servicePartSelect: $("#servicePartSelect"), serviceMachine: $("#serviceMachine"), serviceOperator: $("#serviceOperator"), serviceTimer: $("#serviceTimer"), serviceStatus: $("#serviceStatus"), serviceStartedAt: $("#serviceStartedAt"), serviceStartReason: $("#serviceStartReason"), serviceEndReason: $("#serviceEndReason"), serviceStartEvidence: $("#serviceStartEvidence"), serviceEndEvidence: $("#serviceEndEvidence"), newServiceButton: $("#newServiceButton"), serviceSessionCount: $("#serviceSessionCount"), serviceSessionList: $("#serviceSessionList"), startServiceButton: $("#startServiceButton"), endServiceButton: $("#endServiceButton"),
   tankPercent: $("#tankPercent"), tankProgress: $("#tankProgress"), tankCapacity: $("#tankCapacity"), tankCurrent: $("#tankCurrent"), tankUpdated: $("#tankUpdated"), editTankButton: $("#editTankButton"), fuelRecentList: $("#fuelRecentList"), fuelForm: $("#fuelForm"), fuelMachine: $("#fuelMachine"), fuelOperator: $("#fuelOperator"), fuelLiters: $("#fuelLiters"), fuelPhotoEvidence: $("#fuelPhotoEvidence"), captureFuelPhotoButton: $("#captureFuelPhotoButton"), saveFuelButton: $("#saveFuelButton"),
-  activityList: $("#activityList"), usersList: $("#usersList"),
+  activityList: $("#activityList"), operatorActivityTabs: $("#operatorActivityTabs"), operatorPartsActivity: $("#operatorPartsActivity"), operatorBreaksActivity: $("#operatorBreaksActivity"), generalActivityList: $("#generalActivityList"), activityDateFilter: $("#activityDateFilter"), usersList: $("#usersList"),
   cleanupParts: $("#cleanupParts"), cleanupServices: $("#cleanupServices"), cleanupFuel: $("#cleanupFuel"), cleanupTank: $("#cleanupTank"), cleanupConfirmInput: $("#cleanupConfirmInput"), cleanupDataButton: $("#cleanupDataButton"),
   chatMessages: $("#chatMessages"), chatForm: $("#chatForm"), chatInput: $("#chatInput"), chatSendButton: $("#chatSendButton"), chatStatusText: $("#chatStatusText"), chatConnectionBadge: $("#chatConnectionBadge"),
   reportsConnectionBadge: $("#reportsConnectionBadge"), refreshReportsButton: $("#refreshReportsButton"), reportDateFrom: $("#reportDateFrom"), reportDateTo: $("#reportDateTo"), reportOperator: $("#reportOperator"), reportMachine: $("#reportMachine"), applyReportsButton: $("#applyReportsButton"), clearReportsButton: $("#clearReportsButton"), reportsLastUpdated: $("#reportsLastUpdated"),
-  reportBreakCount: $("#reportBreakCount"), reportBreakDetail: $("#reportBreakDetail"), reportBreakAverage: $("#reportBreakAverage"), reportFuelTotal: $("#reportFuelTotal"), reportFuelDetail: $("#reportFuelDetail"), reportServiceHours: $("#reportServiceHours"), reportServiceDetail: $("#reportServiceDetail"), breaksByDayChart: $("#breaksByDayChart"), breaksByOperatorChart: $("#breaksByOperatorChart"), fuelByDayChart: $("#fuelByDayChart"), fuelByOperatorChart: $("#fuelByOperatorChart"), fuelByMachineChart: $("#fuelByMachineChart"), serviceByMachineChart: $("#serviceByMachineChart"), reportServiceTable: $("#reportServiceTable"), reportServiceTableCount: $("#reportServiceTableCount"),
+  reportBreakCount: $("#reportBreakCount"), reportBreakDetail: $("#reportBreakDetail"), reportBreakAverage: $("#reportBreakAverage"), reportFuelTotal: $("#reportFuelTotal"), reportFuelDetail: $("#reportFuelDetail"), reportServiceHours: $("#reportServiceHours"), reportServiceDetail: $("#reportServiceDetail"), reportMachineCount: $("#reportMachineCount"), reportSummaryChart: $("#reportSummaryChart"), breaksByDayChart: $("#breaksByDayChart"), breaksByOperatorChart: $("#breaksByOperatorChart"), fuelByDayChart: $("#fuelByDayChart"), fuelByOperatorChart: $("#fuelByOperatorChart"), fuelByMachineChart: $("#fuelByMachineChart"), serviceByMachineChart: $("#serviceByMachineChart"), reportServiceTable: $("#reportServiceTable"), reportServiceTableCount: $("#reportServiceTableCount"),
   captureModal: $("#captureModal"), captureTitle: $("#captureTitle"), captureSubtitle: $("#captureSubtitle"), capturePreview: $("#capturePreview"), captureFileInput: $("#captureFileInput"), captureGpsCard: $("#captureGpsCard"), captureGpsStatus: $("#captureGpsStatus"), captureGpsButton: $("#captureGpsButton"), captureMapLink: $("#captureMapLink"), confirmCaptureButton: $("#confirmCaptureButton"),
   pinModal: $("#pinModal"), pinInput: $("#pinInput"), pinConfirm: $("#pinConfirm"), pinError: $("#pinError"), savePinButton: $("#savePinButton"), skipPinButton: $("#skipPinButton"),
   tankModal: $("#tankModal"), tankCapacityInput: $("#tankCapacityInput"), tankCurrentInput: $("#tankCurrentInput"), saveTankButton: $("#saveTankButton"),
@@ -44,7 +44,7 @@ const els = {
 const SECTION_TITLES = { dashboard: "Inicio", break: "Descanso", part: "Parte", service: "Servicio", fuel: "Combustible", activity: "Actividad", chat: "Chat", reports: "Reportes", users: "Usuarios" };
 const ROLE_LABELS = { operator: "Operador", mechanic: "Mecanico", admin: "Administrador" };
 const ROLE_SECTIONS = {
-  operator: ["dashboard", "break", "part", "activity", "chat"],
+  operator: ["dashboard", "break", "part", "activity"],
   mechanic: ["dashboard", "service", "fuel", "activity", "chat"],
   admin: ["dashboard", "break", "part", "service", "fuel", "activity", "chat", "reports", "users"]
 };
@@ -99,6 +99,7 @@ let reportFuelLoads = [];
 let reportServices = [];
 let reportLoadedAt = null;
 let reportLoading = false;
+let operatorActivityTab = "parts";
 const REPORT_CACHE_KEY = "lubayd-admin-reports-v1";
 const DATA_RESET_SETTING_KEY = "lastAppliedOperationalResetAt";
 let profilePhotoTargetUid = "";
@@ -461,6 +462,8 @@ function bindEvents() {
   els.refreshReportsButton?.addEventListener("click", () => loadAdminReports(true));
   els.applyReportsButton?.addEventListener("click", renderAdminReports);
   els.clearReportsButton?.addEventListener("click", resetReportFilters);
+  els.operatorActivityTabs?.querySelectorAll("[data-activity-tab]").forEach((button) => button.addEventListener("click", () => { operatorActivityTab = button.dataset.activityTab || "parts"; renderActivity(); }));
+  els.activityDateFilter?.addEventListener("change", renderActivity);
   els.offlineLoginButton.addEventListener("click", loginOffline);
   els.menuButton.addEventListener("click", () => els.sidebar.classList.toggle("open"));
   els.mobileMoreButton?.addEventListener("click", () => els.sidebar.classList.toggle("open"));
@@ -967,7 +970,7 @@ function renderDashboardCards() {
   }
   if (["mechanic", "admin"].includes(role)) cards.push({ kind: "service", icon: "wrench", title: "Servicio", section: "service" });
   if (["mechanic", "admin"].includes(role)) cards.push({ kind: "fuel", icon: "fuel", title: "Combustible", section: "fuel" });
-  cards.push({ kind: "chat", icon: "chat", title: "Chat", section: "chat" });
+  if (["mechanic", "admin"].includes(role)) cards.push({ kind: "chat", icon: "chat", title: "Chat", section: "chat" });
   if (role === "admin") cards.push({ kind: "reports", icon: "chart", title: "Reportes", section: "reports" });
   else cards.push({ kind: "activity", icon: "activity", title: "Actividad", section: "activity" });
 
@@ -1211,6 +1214,63 @@ function renderReportBars(container, rows, formatter, emptyMessage = "Sin datos 
   }).join("");
 }
 
+
+function svgEscape(value) { return escapeHtml(String(value ?? "")); }
+function chartNiceMax(value) {
+  const n = Math.max(1, Number(value || 0));
+  const magnitude = 10 ** Math.floor(Math.log10(n));
+  const normalized = n / magnitude;
+  const nice = normalized <= 1 ? 1 : normalized <= 2 ? 2 : normalized <= 5 ? 5 : 10;
+  return nice * magnitude;
+}
+function renderVerticalSvgChart(container, rows, formatter, options = {}) {
+  if (!container) return;
+  const data = rows.slice(0, options.limit || 20);
+  if (!data.length) { container.innerHTML = '<div class="empty-state compact">Sin datos para el período seleccionado.</div>'; return; }
+  const width = 900, height = 310, left = 58, right = 18, top = 18, bottom = 54;
+  const plotW = width - left - right, plotH = height - top - bottom;
+  const max = chartNiceMax(Math.max(...data.map((row) => Number(row.value || 0)), 1));
+  const slot = plotW / data.length, barW = Math.max(10, Math.min(34, slot * .58));
+  let svg = `<svg viewBox="0 0 ${width} ${height}" class="report-svg" role="img">`;
+  for (let i=0;i<=4;i++) { const y=top+plotH-(plotH*i/4); const v=max*i/4; svg += `<line x1="${left}" y1="${y}" x2="${width-right}" y2="${y}" class="chart-grid-line"/><text x="${left-10}" y="${y+4}" text-anchor="end" class="chart-axis-label">${svgEscape(reportNumber(v, v<10?1:0))}</text>`; }
+  data.forEach((row,i)=>{ const x=left+i*slot+(slot-barW)/2; const h=Math.max(2,(Number(row.value||0)/max)*plotH); const y=top+plotH-h; const label=String(row.label||"").replace(/^\d{4}-/,''); svg += `<rect x="${x}" y="${y}" width="${barW}" height="${h}" rx="5" class="chart-bar"/><text x="${x+barW/2}" y="${Math.max(12,y-7)}" text-anchor="middle" class="chart-value-label">${svgEscape(formatter(row.value,row))}</text><text x="${x+barW/2}" y="${height-24}" text-anchor="middle" class="chart-axis-label">${svgEscape(label)}</text>`; });
+  svg += `</svg>`; container.innerHTML = svg;
+}
+function renderHorizontalSvgChart(container, rows, formatter, options = {}) {
+  if (!container) return;
+  const data = rows.slice(0, options.limit || 10);
+  if (!data.length) { container.innerHTML = '<div class="empty-state compact">Sin datos para el período seleccionado.</div>'; return; }
+  const width=720, rowH=38, top=12, left=150, right=48, height=top+data.length*rowH+18, plotW=width-left-right;
+  const max=Math.max(...data.map(r=>Number(r.value||0)),1);
+  let svg=`<svg viewBox="0 0 ${width} ${height}" class="report-svg horizontal-report-svg" role="img">`;
+  data.forEach((row,i)=>{ const y=top+i*rowH; const w=Math.max(4,Number(row.value||0)/max*plotW); svg += `<text x="${left-12}" y="${y+18}" text-anchor="end" class="chart-category-label">${svgEscape(row.label)}</text><rect x="${left}" y="${y+5}" width="${plotW}" height="18" rx="9" class="chart-bar-bg"/><rect x="${left}" y="${y+5}" width="${w}" height="18" rx="9" class="chart-bar"/><text x="${Math.min(width-right+7,left+w+7)}" y="${y+19}" class="chart-value-label">${svgEscape(formatter(row.value,row))}</text>`; });
+  svg += '</svg>'; container.innerHTML=svg;
+}
+function renderDonutSvgChart(container, rows, formatter) {
+  if (!container) return;
+  const data=rows.slice(0,6); const total=data.reduce((s,r)=>s+Number(r.value||0),0);
+  if (!data.length || total<=0) { container.innerHTML='<div class="empty-state compact">Sin datos para el período seleccionado.</div>'; return; }
+  const colors=['#05833f','#25a45a','#67c987','#0e9fa5','#4c9bdf','#f2b83f'];
+  const r=72,c=2*Math.PI*r; let offset=0;
+  const arcs=data.map((row,i)=>{ const frac=Number(row.value||0)/total; const dash=frac*c; const node=`<circle cx="105" cy="105" r="${r}" fill="none" stroke="${colors[i]}" stroke-width="26" stroke-dasharray="${dash} ${c-dash}" stroke-dashoffset="${-offset}" transform="rotate(-90 105 105)"/>`; offset+=dash; return node; }).join('');
+  const legend=data.map((row,i)=>`<div class="donut-legend-row"><span style="--legend-color:${colors[i]}"></span><strong>${svgEscape(row.label)}</strong><b>${svgEscape(formatter(row.value,row))}</b><small>${reportNumber(Number(row.value||0)/total*100,1)}%</small></div>`).join('');
+  container.innerHTML=`<div class="donut-layout"><svg viewBox="0 0 210 210" class="donut-svg">${arcs}<circle cx="105" cy="105" r="50" class="donut-hole"/><text x="105" y="100" text-anchor="middle" class="donut-total">${svgEscape(formatter(total))}</text><text x="105" y="122" text-anchor="middle" class="donut-caption">Total</text></svg><div class="donut-legend">${legend}</div></div>`;
+}
+function renderLineSvgChart(container, rowsA, rowsB) {
+  if (!container) return;
+  const keys=Array.from(new Set([...rowsA.map(r=>r.label),...rowsB.map(r=>r.label)])).sort();
+  if (!keys.length) { container.innerHTML='<div class="empty-state compact">Sin datos para el período seleccionado.</div>'; return; }
+  const mapA=new Map(rowsA.map(r=>[r.label,Number(r.value||0)])), mapB=new Map(rowsB.map(r=>[r.label,Number(r.value||0)]));
+  const valsA=keys.map(k=>mapA.get(k)||0), valsB=keys.map(k=>mapB.get(k)||0); const max=chartNiceMax(Math.max(...valsA,...valsB,1));
+  const width=720,height=280,left=48,right=18,top=25,bottom=48,plotW=width-left-right,plotH=height-top-bottom;
+  const points=(vals)=>vals.map((v,i)=>`${left+(keys.length===1?plotW/2:i*plotW/(keys.length-1))},${top+plotH-v/max*plotH}`).join(' ');
+  let svg=`<svg viewBox="0 0 ${width} ${height}" class="report-svg" role="img">`;
+  for(let i=0;i<=4;i++){const y=top+plotH-plotH*i/4;svg+=`<line x1="${left}" y1="${y}" x2="${width-right}" y2="${y}" class="chart-grid-line"/>`;}
+  svg+=`<polyline points="${points(valsA)}" class="chart-line chart-line-solid"/><polyline points="${points(valsB)}" class="chart-line chart-line-dashed"/>`;
+  keys.forEach((k,i)=>{const x=left+(keys.length===1?plotW/2:i*plotW/(keys.length-1));svg+=`<text x="${x}" y="${height-20}" text-anchor="middle" class="chart-axis-label">${svgEscape(k.replace(/^\d{4}-/,''))}</text>`;});
+  svg+='</svg><div class="line-chart-legend"><span><i class="solid"></i>Litros cargados</span><span><i class="dashed"></i>Horas de servicio</span></div>'; container.innerHTML=svg;
+}
+
 function renderAdminReports(message = "") {
   if (currentProfile?.role !== "admin" || !els.reportBreakCount) return;
   const filters = reportFilters();
@@ -1244,12 +1304,15 @@ function renderAdminReports(message = "") {
   const fuelByMachine = groupReportRows(fuels, (item) => item.machine || "Sin maquina", (item) => Number(item.liters || 0), (row) => `${row.count} carga${row.count === 1 ? "" : "s"}`).sort((a, b) => b.value - a.value);
   const serviceByMachine = groupReportRows(completedServices, (item) => item.machine || "Sin maquina", (item) => reportDurationMinutes(item.startAtClient, item.endAtClient) / 60, (row) => `${row.count} servicio${row.count === 1 ? "" : "s"}`).sort((a, b) => b.value - a.value);
 
-  renderReportBars(els.breaksByDayChart, breaksByDay, (value) => `${reportNumber(value, 0)} min`);
-  renderReportBars(els.breaksByOperatorChart, breaksByOperator, (value) => `${reportNumber(value / 60, 1)} h`);
-  renderReportBars(els.fuelByDayChart, fuelByDay, (value) => `${reportNumber(value, 1)} L`);
-  renderReportBars(els.fuelByOperatorChart, fuelByOperator, (value) => `${reportNumber(value, 1)} L`);
-  renderReportBars(els.fuelByMachineChart, fuelByMachine, (value) => `${reportNumber(value, 1)} L`);
-  renderReportBars(els.serviceByMachineChart, serviceByMachine, (value) => `${reportNumber(value, 1)} h`);
+  const activeMachines = new Set([...fuels, ...servicesFiltered].map((item) => item.machine).filter(Boolean));
+  if (els.reportMachineCount) els.reportMachineCount.textContent = reportNumber(activeMachines.size, 0);
+  renderVerticalSvgChart(els.fuelByDayChart, fuelByDay, (value) => reportNumber(value, 0), { limit: 20 });
+  renderHorizontalSvgChart(els.breaksByOperatorChart, breaksByOperator.map((row) => ({ ...row, value: row.count })), (value) => reportNumber(value, 0), { limit: 10 });
+  renderDonutSvgChart(els.fuelByMachineChart, fuelByMachine, (value) => `${reportNumber(value, 0)} L`);
+  renderVerticalSvgChart(els.serviceByMachineChart, serviceByMachine, (value) => reportNumber(value, 1), { limit: 10 });
+  renderLineSvgChart(els.reportSummaryChart, fuelByDay, groupReportRows(completedServices, (item) => reportRecordDateKey(item.startAtClient), (item) => reportDurationMinutes(item.startAtClient, item.endAtClient) / 60).sort((a,b)=>a.label.localeCompare(b.label)));
+  if (els.breaksByDayChart) renderReportBars(els.breaksByDayChart, breaksByDay, (value) => `${reportNumber(value, 0)} min`);
+  if (els.fuelByOperatorChart) renderReportBars(els.fuelByOperatorChart, fuelByOperator, (value) => `${reportNumber(value, 1)} L`);
   renderReportServiceTable(servicesFiltered);
 
   if (els.reportsLastUpdated) {
@@ -1273,8 +1336,61 @@ function renderReportServiceTable(records) {
 }
 
 function renderActivity() {
-  const records = buildActivityRecords();
-  els.activityList.innerHTML = records.length ? records.map(activityTemplate).join("") : '<div class="empty-state">Sin actividad para mostrar.</div>';
+  if (!currentProfile) return;
+  const operatorMode = currentProfile.role === "operator";
+  if (els.operatorActivityTabs) els.operatorActivityTabs.classList.toggle("hidden", !operatorMode);
+  if (els.activityDateFilter) {
+    els.activityDateFilter.closest(".activity-date-filter")?.classList.toggle("hidden", !operatorMode);
+    if (!els.activityDateFilter.value) els.activityDateFilter.value = todayKey();
+  }
+  if (!operatorMode) {
+    els.operatorPartsActivity?.classList.add("hidden");
+    els.operatorBreaksActivity?.classList.add("hidden");
+    els.generalActivityList?.classList.remove("hidden");
+    const records = buildActivityRecords();
+    if (els.generalActivityList) els.generalActivityList.innerHTML = records.length ? records.map(activityTemplate).join("") : '<div class="empty-state">Sin actividad para mostrar.</div>';
+    return;
+  }
+
+  els.generalActivityList?.classList.add("hidden");
+  const dateKey = els.activityDateFilter?.value || "";
+  const parts = [...userParts]
+    .filter((part) => !dateKey || String(part.dateKey || part.date || "").slice(0, 10) === dateKey)
+    .sort((a, b) => String(b.updatedAtClient || b.createdAtClient || b.dateKey || "").localeCompare(String(a.updatedAtClient || a.createdAtClient || a.dateKey || "")));
+  const breaks = [...breakRecords]
+    .filter((record) => !dateKey || reportRecordDateKey(record.startAtClient) === dateKey)
+    .sort((a, b) => String(b.startAtClient || "").localeCompare(String(a.startAtClient || "")));
+
+  const tabs = els.operatorActivityTabs?.querySelectorAll("[data-activity-tab]") || [];
+  tabs.forEach((button) => {
+    const active = button.dataset.activityTab === operatorActivityTab;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-selected", active ? "true" : "false");
+  });
+  els.operatorPartsActivity?.classList.toggle("hidden", operatorActivityTab !== "parts");
+  els.operatorBreaksActivity?.classList.toggle("hidden", operatorActivityTab !== "breaks");
+
+  if (els.operatorPartsActivity) {
+    els.operatorPartsActivity.innerHTML = parts.length ? parts.map((part) => {
+      const hours = partOperatingHours(part);
+      const status = part.syncStatus === "pending" ? "Pendiente" : part.status === "active" ? "En progreso" : "Completado";
+      const statusClass = part.syncStatus === "pending" ? "pending" : part.status === "active" ? "warning" : "complete";
+      return `<article class="operator-record-card"><span class="operator-record-icon">${iconSvg("tractor")}</span><div class="operator-record-copy"><strong>${escapeHtml(part.machine || "Máquina sin definir")}</strong><span>${iconSvg("calendar")} ${escapeHtml(formatDate(part.dateKey || part.createdAtClient))}</span><span>${iconSvg("clock")} ${hours ? `${reportNumber(hours, 1)} h operadas` : "Sin cierre de horómetro"}</span></div><span class="record-status ${statusClass}">${status}</span><button class="record-chevron" type="button" data-open-part="${escapeHtml(part.id || "")}" aria-label="Abrir Parte">${iconSvg("chevron-right")}</button></article>`;
+    }).join("") : '<div class="empty-state">No hay Partes para la fecha seleccionada.</div>';
+    els.operatorPartsActivity.querySelectorAll("[data-open-part]").forEach((button) => button.addEventListener("click", () => {
+      const part = userParts.find((item) => item.id === button.dataset.openPart);
+      if (part) { currentPart = part; showSection("part"); renderPart(); }
+    }));
+  }
+  if (els.operatorBreaksActivity) {
+    els.operatorBreaksActivity.innerHTML = breaks.length ? breaks.map((record) => {
+      const completed = Boolean(record.endAtClient);
+      const status = record.syncStatus === "pending" ? "Pendiente" : completed ? "Completado" : "En curso";
+      const statusClass = record.syncStatus === "pending" ? "pending" : completed ? "complete" : "warning";
+      return `<article class="operator-record-card"><span class="operator-record-icon break-record-icon">${iconSvg("bed")}</span><div class="operator-record-copy"><strong>${completed ? "Descanso registrado" : "Descanso en curso"}</strong><span>${iconSvg("calendar")} ${escapeHtml(formatDate(record.startAtClient))}</span><span>${iconSvg("clock")} ${escapeHtml(formatTime(record.startAtClient))}${completed ? ` – ${escapeHtml(formatTime(record.endAtClient))} · ${escapeHtml(formatDuration(record.startAtClient, record.endAtClient).slice(0,5))}` : ""}</span></div><span class="record-status ${statusClass}">${status}</span><button class="record-chevron" type="button" data-section-link="break" aria-label="Abrir Descanso">${iconSvg("chevron-right")}</button></article>`;
+    }).join("") : '<div class="empty-state">No hay marcas de descanso para la fecha seleccionada.</div>';
+    els.operatorBreaksActivity.querySelectorAll("[data-section-link]").forEach((button) => button.addEventListener("click", () => showSection("break")));
+  }
 }
 
 function renderBreak() {
