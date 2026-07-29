@@ -1,7 +1,7 @@
 {
-  "name": "LUBAYD Operativa 4.2",
+  "name": "LUBAYD Operativa 4.6 Profesional",
   "short_name": "LUBAYD",
-  "description": "Partes, descansos, servicios y combustible con funcionamiento offline.",
+  "description": "Gestión operativa profesional de Partes, descansos, servicios y combustible, con funcionamiento offline.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

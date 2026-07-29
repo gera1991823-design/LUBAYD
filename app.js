@@ -25,8 +25,8 @@ const els = {
   sidebarProfileButton: $("#sidebarProfileButton"), sidebarProfileImage: $("#sidebarProfileImage"), topbarProfileButton: $("#topbarProfileButton"), topbarProfileImage: $("#topbarProfileImage"), topbarProfileFallback: $("#topbarProfileFallback"), dashboardProfileButton: $("#dashboardProfileButton"), dashboardProfileImage: $("#dashboardProfileImage"), mobileProfileButton: $("#mobileProfileButton"), mobileProfileImage: $("#mobileProfileImage"), mobileProfileFallback: $("#mobileProfileFallback"), profilePhotoInput: $("#profilePhotoInput"), topLogoutButton: $("#topLogoutButton"), mobileLogoutButton: $("#mobileLogoutButton"),
   connectionDot: $("#connectionDot"), connectionText: $("#connectionText"), syncText: $("#syncText"), pendingCount: $("#pendingCount"), syncButton: $("#syncButton"), lockButton: $("#lockButton"),
   topSyncButton: $("#topSyncButton"), topConnectionDot: $("#topConnectionDot"), topConnectionText: $("#topConnectionText"), topSyncText: $("#topSyncText"), topPendingCount: $("#topPendingCount"),
-  liveDate: $("#liveDate"), liveClock: $("#liveClock"), dashboardClock: $("#dashboardClock"), dashboardAvatar: $("#dashboardAvatar"), dashboardGreeting: $("#dashboardGreeting"), dashboardRole: $("#dashboardRole"), dashboardConnection: $("#dashboardConnection"), offlineBanner: $("#offlineBanner"), dashboardCards: $("#dashboardCards"), recentActivity: $("#recentActivity"), upcomingBreaks: $("#upcomingBreaks"), topbarRoleName: $("#topbarRoleName"), mobileGreeting: $("#mobileGreeting"), mobileDate: $("#mobileDate"), mobileSyncButton: $("#mobileSyncButton"), mobilePendingCount: $("#mobilePendingCount"), mobileMoreButton: $("#mobileMoreButton"), metricJourneys: $("#metricJourneys"), metricServices: $("#metricServices"), metricFuel: $("#metricFuel"), metricHours: $("#metricHours"), dashboardTankGauge: $("#dashboardTankGauge"), dashboardTankPercent: $("#dashboardTankPercent"), dashboardTankRatio: $("#dashboardTankRatio"), dashboardTankCapacity: $("#dashboardTankCapacity"), flowTankStart: $("#flowTankStart"), flowLoadedToday: $("#flowLoadedToday"), flowTankBalance: $("#flowTankBalance"),
-  breakBadge: $("#breakBadge"), breakTitle: $("#breakTitle"), breakTimer: $("#breakTimer"), breakDescription: $("#breakDescription"), startBreakButton: $("#startBreakButton"), endBreakButton: $("#endBreakButton"), breakRecentList: $("#breakRecentList"),
+  liveDate: $("#liveDate"), liveClock: $("#liveClock"), dashboardClock: $("#dashboardClock"), dashboardAvatar: $("#dashboardAvatar"), dashboardGreeting: $("#dashboardGreeting"), dashboardRole: $("#dashboardRole"), dashboardConnection: $("#dashboardConnection"), offlineBanner: $("#offlineBanner"), dashboardCards: $("#dashboardCards"), recentActivity: $("#recentActivity"), upcomingBreaks: $("#upcomingBreaks"), topbarRoleName: $("#topbarRoleName"), mobileGreeting: $("#mobileGreeting"), mobileDate: $("#mobileDate"), mobileSyncButton: $("#mobileSyncButton"), mobilePendingCount: $("#mobilePendingCount"), mobileMoreButton: $("#mobileMoreButton"), metricJourneys: $("#metricJourneys"), metricServices: $("#metricServices"), metricFuel: $("#metricFuel"), metricHours: $("#metricHours"), dashboardTankGauge: $("#dashboardTankGauge"), dashboardTankPercent: $("#dashboardTankPercent"), dashboardTankRatio: $("#dashboardTankRatio"), dashboardTankCapacity: $("#dashboardTankCapacity"), dashboardTankVolume: $("#dashboardTankVolume"), dashboardTankProgress: $("#dashboardTankProgress"), dashboardFuelChart: $("#dashboardFuelChart"), dashboardFleetChart: $("#dashboardFleetChart"), metricFuelTrend: $("#metricFuelTrend"), metricHoursTrend: $("#metricHoursTrend"), flowTankStart: $("#flowTankStart"), flowLoadedToday: $("#flowLoadedToday"), flowTankBalance: $("#flowTankBalance"),
+  breakBadge: $("#breakBadge"), breakTitle: $("#breakTitle"), breakTimer: $("#breakTimer"), breakDescription: $("#breakDescription"), startBreakButton: $("#startBreakButton"), endBreakButton: $("#endBreakButton"), breakRecentList: $("#breakRecentList"), breakStatusVisual: $("#breakStatusVisual"),
   partForm: $("#partForm"), partStatus: $("#partStatus"), newPartButton: $("#newPartButton"), partSessionSelect: $("#partSessionSelect"), partSessionInfo: $("#partSessionInfo"), establishmentInput: $("#establishmentInput"), machineInput: $("#machineInput"), partDateInput: $("#partDateInput"), horometerStages: $("#horometerStages"), trozoInput: $("#trozoInput"), pulpaInput: $("#pulpaInput"), savePartButton: $("#savePartButton"),
   servicePartSelect: $("#servicePartSelect"), serviceMachine: $("#serviceMachine"), serviceOperator: $("#serviceOperator"), serviceTimer: $("#serviceTimer"), serviceStatus: $("#serviceStatus"), serviceStartedAt: $("#serviceStartedAt"), serviceStartReason: $("#serviceStartReason"), serviceEndReason: $("#serviceEndReason"), serviceStartEvidence: $("#serviceStartEvidence"), serviceEndEvidence: $("#serviceEndEvidence"), newServiceButton: $("#newServiceButton"), serviceSessionCount: $("#serviceSessionCount"), serviceSessionList: $("#serviceSessionList"), startServiceButton: $("#startServiceButton"), endServiceButton: $("#endServiceButton"),
   tankPercent: $("#tankPercent"), tankProgress: $("#tankProgress"), tankCapacity: $("#tankCapacity"), tankCurrent: $("#tankCurrent"), tankUpdated: $("#tankUpdated"), editTankButton: $("#editTankButton"), fuelRecentList: $("#fuelRecentList"), fuelForm: $("#fuelForm"), fuelMachine: $("#fuelMachine"), fuelOperator: $("#fuelOperator"), fuelLiters: $("#fuelLiters"), fuelPhotoEvidence: $("#fuelPhotoEvidence"), captureFuelPhotoButton: $("#captureFuelPhotoButton"), saveFuelButton: $("#saveFuelButton"),
@@ -426,7 +426,15 @@ function applyRoleVisibility() {
 function showSection(section) {
   if (!allowedSections().includes(section)) section = "dashboard";
   currentSection = section;
-  $$(".content-section").forEach((node) => node.classList.toggle("active", node.id === `${section}Section`));
+  $$(".content-section").forEach((node) => {
+    const isActive = node.id === `${section}Section`;
+    node.classList.toggle("active", isActive);
+    if (isActive) {
+      node.classList.remove("section-enter");
+      void node.offsetWidth;
+      node.classList.add("section-enter");
+    }
+  });
   $$('[data-section]').forEach((node) => node.classList.toggle("active", node.dataset.section === section));
   els.pageTitle.textContent = SECTION_TITLES[section] || "Inicio";
   els.sidebar.classList.remove("open");
@@ -914,6 +922,14 @@ function formatHours(value) {
   const number = Number(value || 0);
   return `${number.toLocaleString("es-UY", { minimumFractionDigits: number % 1 ? 1 : 0, maximumFractionDigits: 1 })} h`;
 }
+function localDateKey(value) { const date=new Date(value); if(Number.isNaN(date.getTime())) return String(value||"").slice(0,10); return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,"0")}-${String(date.getDate()).padStart(2,"0")}`; }
+function yesterdayKey(){ const d=new Date(); d.setDate(d.getDate()-1); return localDateKey(d); }
+function renderDashboardFuelChart(records){
+  if(!els.dashboardFuelChart) return; const h=Array.from({length:24},()=>0); records.forEach(r=>{const d=new Date(r.createdAtClient||Date.now()); if(!Number.isNaN(d.getTime())) h[d.getHours()]+=Number(r.liters||0);}); let sum=0; const data=h.map((v,i)=>({hour:i,value:sum+=v})); const W=720,H=270,m={l:52,r:20,t:24,b:38},pw=W-m.l-m.r,ph=H-m.t-m.b,max=Math.max(500,Math.ceil(Math.max(...data.map(x=>x.value),1)/500)*500); const X=i=>m.l+i/23*pw,Y=v=>m.t+ph-v/max*ph; const pts=data.map(d=>`${X(d.hour).toFixed(1)},${Y(d.value).toFixed(1)}`).join(' '); const area=`M ${X(0)} ${m.t+ph} L ${pts.replaceAll(' ',' L ')} L ${X(23)} ${m.t+ph} Z`; const peak=data.reduce((p,c)=>c.value>=p.value?c:p,data[0]); const grid=[0,.25,.5,.75,1].map(f=>{const y=m.t+ph-f*ph;return `<line x1="${m.l}" y1="${y}" x2="${W-m.r}" y2="${y}" class="dashboard-chart-grid"/><text x="${m.l-10}" y="${y+4}" text-anchor="end" class="dashboard-chart-axis">${Math.round(max*f).toLocaleString('es-UY')}</text>`}).join(''); const labels=[0,4,8,12,16,20,23].map(v=>`<text x="${X(v)}" y="${H-12}" text-anchor="middle" class="dashboard-chart-axis">${String(v).padStart(2,'0')}:00</text>`).join(''); const px=X(peak.hour),py=Y(peak.value); els.dashboardFuelChart.innerHTML=`<svg class="dashboard-chart-svg" viewBox="0 0 ${W} ${H}"><defs><linearGradient id="fuelArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#15984f" stop-opacity=".35"/><stop offset="1" stop-color="#15984f" stop-opacity=".02"/></linearGradient></defs>${grid}${labels}<path d="${area}" fill="url(#fuelArea)"/><polyline points="${pts}" class="dashboard-chart-line"/><circle cx="${px}" cy="${py}" r="6" class="dashboard-chart-peak"/><g class="dashboard-chart-tooltip" transform="translate(${Math.min(W-116,Math.max(55,px-52))} ${Math.max(8,py-68)})"><rect width="104" height="52" rx="10"/><text x="52" y="19" text-anchor="middle">${String(peak.hour).padStart(2,'0')}:00</text><text x="52" y="40" text-anchor="middle" class="value">${Math.round(peak.value).toLocaleString('es-UY')} L</text></g></svg>`;
+}
+function renderDashboardFleetChart(parts,serviceRows,fuelRows){
+  if(!els.dashboardFleetChart) return; const all=new Set(); [...userParts,...services,...fuelLoads].forEach(x=>x?.machine&&all.add(x.machine)); const service=new Set(serviceRows.filter(x=>x.status==='active').map(x=>x.machine).filter(Boolean)); const active=new Set([...parts.map(x=>x.machine),...fuelRows.map(x=>x.machine)].filter(Boolean)); service.forEach(x=>active.delete(x)); const resting=new Set(currentBreak&&currentPart?.machine?[currentPart.machine]:[]); resting.forEach(x=>active.delete(x)); const total=all.size, rows=[['Operativas',active.size,'#0b9c4b'],['En servicio',service.size,'#68bc67'],['En descanso',resting.size,'#efbd35'],['Sin actividad',Math.max(0,total-active.size-service.size-resting.size),'#cbd4ce']]; const den=Math.max(total,1),r=46,c=2*Math.PI*r; let o=0; const seg=rows.map(x=>{const l=c*x[1]/den,n=`<circle cx="64" cy="64" r="${r}" fill="none" stroke="${x[2]}" stroke-width="18" stroke-dasharray="${l} ${c-l}" stroke-dashoffset="${-o}" transform="rotate(-90 64 64)"/>`;o+=l;return n}).join(''); const legend=rows.map(x=>`<div class="fleet-legend-row"><i style="--fleet-color:${x[2]}"></i><span>${x[0]}</span><strong>${x[1]}</strong><small>${Math.round(x[1]/den*100)}%</small></div>`).join(''); els.dashboardFleetChart.innerHTML=`<svg viewBox="0 0 128 128" class="fleet-donut-svg"><circle cx="64" cy="64" r="46" fill="none" stroke="#eef2ef" stroke-width="18"/>${seg}<circle cx="64" cy="64" r="34" fill="#fff"/><text x="64" y="60" text-anchor="middle" class="fleet-total">${total}</text><text x="64" y="78" text-anchor="middle" class="fleet-caption">Unidades</text></svg><div class="fleet-legend">${legend}</div>`;
+}
 
 function renderDashboardOverview() {
   if (!currentProfile) return;
@@ -928,22 +944,22 @@ function renderDashboardOverview() {
   if (els.metricServices) els.metricServices.textContent = String(completedServices.length);
   if (els.metricFuel) els.metricFuel.textContent = liters(fuelTotal);
   if (els.metricHours) els.metricHours.textContent = formatHours(hours);
-
+  const yKey=yesterdayKey(); const yFuel=fuelLoads.filter(r=>localDateKey(r.createdAtClient)===yKey).reduce((x,r)=>x+Number(r.liters||0),0); const yHours=userParts.filter(p=>p.dateKey===yKey).reduce((x,p)=>x+partOperatingHours(p),0);
+  if(els.metricFuelTrend){const d=fuelTotal-yFuel;els.metricFuelTrend.textContent=`${d>=0?"+":""}${Math.round(d).toLocaleString("es-UY")} L vs. ayer`;els.metricFuelTrend.classList.toggle("negative",d<0);}
+  if(els.metricHoursTrend){const d=hours-yHours;els.metricHoursTrend.textContent=`${d>=0?"+":""}${d.toLocaleString("es-UY",{maximumFractionDigits:1})} h vs. ayer`;els.metricHoursTrend.classList.toggle("negative",d<0);}
   const capacity = Number(tank?.capacityLiters || 0);
   const current = Number(tank?.currentLiters || 0);
   const percent = capacity > 0 ? Math.max(0, Math.min(100, current / capacity * 100)) : 0;
-  if (els.dashboardTankGauge) {
-    els.dashboardTankGauge.style.setProperty("--tank-level", `${percent * 1.8}deg`);
-    els.dashboardTankGauge.closest(".tank-overview-card")?.style.setProperty("--mobile-level", `${percent}%`);
-  }
+  if (els.dashboardTankGauge) els.dashboardTankGauge.style.setProperty("--tank-level", `${percent * 1.8}deg`);
   if (els.dashboardTankPercent) els.dashboardTankPercent.textContent = `${Math.round(percent)}%`;
   if (els.dashboardTankRatio) els.dashboardTankRatio.textContent = `${liters(current)} / ${liters(capacity)}`;
   if (els.dashboardTankCapacity) els.dashboardTankCapacity.textContent = liters(capacity);
+  if (els.dashboardTankVolume) els.dashboardTankVolume.textContent = liters(current);
+  if (els.dashboardTankProgress) els.dashboardTankProgress.style.width = `${percent}%`;
   if (els.flowTankStart) els.flowTankStart.textContent = liters(current + fuelTotal);
   if (els.flowLoadedToday) els.flowLoadedToday.textContent = liters(fuelTotal);
   if (els.flowTankBalance) els.flowTankBalance.textContent = liters(current);
-
-  renderUpcomingBreaks(todayParts);
+  renderDashboardFuelChart(todayFuel); renderDashboardFleetChart(todayParts,todayServices,todayFuel); renderUpcomingBreaks(todayParts);
 }
 
 function renderUpcomingBreaks(todayParts = []) {
@@ -1401,6 +1417,13 @@ function renderBreak() {
   els.breakDescription.textContent = active ? `Iniciado ${formatDateTime(currentBreak.startAtClient)}` : "Puedes iniciar tu descanso.";
   els.startBreakButton.disabled = active;
   els.endBreakButton.disabled = !active;
+  if (els.breakStatusVisual) {
+    els.breakStatusVisual.classList.toggle("is-active", active);
+    const elapsed = active ? Math.max(0, Date.now() - new Date(currentBreak.startAtClient).getTime()) : 0;
+    const cycle = 60 * 60 * 1000;
+    const degrees = active ? Math.min(350, (elapsed % cycle) / cycle * 360) : 0;
+    els.breakStatusVisual.style.setProperty("--break-progress", `${degrees}deg`);
+  }
   els.breakRecentList.innerHTML = breakRecords.slice(0, 5).map((record) => activityTemplate({ icon: "bed", title: record.status === "active" ? "Descanso activo" : "Descanso completado", detail: record.status === "active" ? "En curso" : formatDuration(record.startAtClient, record.endAtClient), date: record.startAtClient, status: record.syncStatus })).join("") || '<div class="empty-state">Sin descansos registrados.</div>';
 }
 
@@ -1643,7 +1666,7 @@ function renderPart() {
   els.horometerStages.innerHTML = HOROMETER_CONFIG.map((config, index) => {
     const stage = currentPart?.horometers?.[config.key] || {};
     const evidence = stage.evidence;
-    return `<article class="stage-card"><div class="stage-title"><strong>${index + 1}. ${escapeHtml(config.label)}</strong><small>${escapeHtml(config.help)}</small></div><label class="field"><span>Valor</span><input type="number" inputmode="decimal" step="0.1" min="0" data-horometer-value="${config.key}" value="${escapeHtml(stage.value ?? "")}" placeholder="0"></label><div class="stage-actions"><button class="secondary-button" type="button" data-horometer-capture="${config.key}">${evidence ? "Repetir foto" : "Foto y GPS"}</button><span class="stage-status ${evidence ? "ready" : ""}">${evidence ? "Completo" : "Pendiente"}</span></div>${evidence ? `<div class="stage-evidence">${evidence.photoUrl || evidence.photoBlob ? `<img src="${evidence.photoUrl || URL.createObjectURL(evidence.photoBlob)}" alt="${escapeHtml(config.label)}">` : ""}<a href="${mapUrl(evidence.location)}" target="_blank" rel="noopener">Ver ubicacion en mapa</a></div>` : ""}</article>`;
+    return `<article class="pro-horometer-card"><div class="horometer-card-head"><span class="horometer-index">${iconSvg("horometer-pro")}</span><div class="horometer-title"><span class="horometer-step-number">LECTURA ${index + 1}</span><strong>${escapeHtml(config.label)}</strong><small>${escapeHtml(config.help)}</small></div></div><div class="horometer-entry-row"><label class="field"><span>Valor del horómetro</span><input type="number" inputmode="decimal" step="0.1" min="0" data-horometer-value="${config.key}" value="${escapeHtml(stage.value ?? "")}" placeholder="0.0"></label><button class="horometer-capture-button" type="button" data-horometer-capture="${config.key}">${iconSvg("camera")}<span>${evidence ? "Repetir" : "Foto + GPS"}</span></button></div><div class="horometer-status-row"><span class="stage-status ${evidence ? "ready" : ""}">${evidence ? "Evidencia completa" : "Evidencia pendiente"}</span>${evidence ? `<a href="${mapUrl(evidence.location)}" target="_blank" rel="noopener">${iconSvg("map-pin")} Ver mapa</a>` : `<span>${iconSvg("location-pro")} GPS requerido</span>`}</div>${evidence ? `<div class="stage-evidence">${evidence.photoUrl || evidence.photoBlob ? `<img src="${evidence.photoUrl || URL.createObjectURL(evidence.photoBlob)}" alt="${escapeHtml(config.label)}">` : ""}<strong>Fotografía registrada</strong></div>` : ""}</article>`;
   }).join("");
 }
 
@@ -1891,6 +1914,16 @@ function renderService() {
   els.endServiceButton.disabled = !active;
   els.newServiceButton.disabled = !part || active;
   els.newServiceButton.textContent = active ? "Servicio en curso" : "+ Nuevo servicio";
+  const serviceSection = document.getElementById("serviceSection");
+  if (serviceSection) {
+    serviceSection.dataset.flowState = active ? "active" : completed ? "completed" : part ? "ready" : "empty";
+    const steps = serviceSection.querySelectorAll(".service-progress-step");
+    steps.forEach((step, index) => {
+      const completedStep = completed ? true : active ? index <= 2 : part ? index === 0 : false;
+      step.classList.toggle("active", completedStep);
+      step.classList.toggle("done", completed && index < 4);
+    });
+  }
   renderServiceSessionList();
 }
 
