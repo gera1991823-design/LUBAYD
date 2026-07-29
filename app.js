@@ -26,7 +26,7 @@ const els = {
   connectionDot: $("#connectionDot"), connectionText: $("#connectionText"), syncText: $("#syncText"), pendingCount: $("#pendingCount"), syncButton: $("#syncButton"), lockButton: $("#lockButton"),
   topSyncButton: $("#topSyncButton"), topConnectionDot: $("#topConnectionDot"), topConnectionText: $("#topConnectionText"), topSyncText: $("#topSyncText"), topPendingCount: $("#topPendingCount"),
   liveDate: $("#liveDate"), liveClock: $("#liveClock"), dashboardClock: $("#dashboardClock"), dashboardAvatar: $("#dashboardAvatar"), dashboardGreeting: $("#dashboardGreeting"), dashboardRole: $("#dashboardRole"), dashboardConnection: $("#dashboardConnection"), offlineBanner: $("#offlineBanner"), dashboardCards: $("#dashboardCards"), recentActivity: $("#recentActivity"), upcomingBreaks: $("#upcomingBreaks"), topbarRoleName: $("#topbarRoleName"), mobileGreeting: $("#mobileGreeting"), mobileDate: $("#mobileDate"), mobileSyncButton: $("#mobileSyncButton"), mobilePendingCount: $("#mobilePendingCount"), mobileMoreButton: $("#mobileMoreButton"), metricJourneys: $("#metricJourneys"), metricServices: $("#metricServices"), metricFuel: $("#metricFuel"), metricHours: $("#metricHours"), dashboardTankGauge: $("#dashboardTankGauge"), dashboardTankPercent: $("#dashboardTankPercent"), dashboardTankRatio: $("#dashboardTankRatio"), dashboardTankCapacity: $("#dashboardTankCapacity"), dashboardTankVolume: $("#dashboardTankVolume"), dashboardTankProgress: $("#dashboardTankProgress"), dashboardFuelChart: $("#dashboardFuelChart"), dashboardFleetChart: $("#dashboardFleetChart"), metricFuelTrend: $("#metricFuelTrend"), metricHoursTrend: $("#metricHoursTrend"), flowTankStart: $("#flowTankStart"), flowLoadedToday: $("#flowLoadedToday"), flowTankBalance: $("#flowTankBalance"),
-  operatorHomePanel: $("#operatorHomePanel"), operatorHomeTitle: $("#operatorHomeTitle"), operatorHomeSubtitle: $("#operatorHomeSubtitle"), operatorHomeConnection: $("#operatorHomeConnection"), operatorHomeSyncStatus: $("#operatorHomeSyncStatus"), operatorHomeClock: $("#operatorHomeClock"), operatorHomeDay: $("#operatorHomeDay"), operatorNewPartAction: $("#operatorNewPartAction"), operatorBreakAction: $("#operatorBreakAction"), operatorBreakActionLabel: $("#operatorBreakActionLabel"), operatorBreakActionMeta: $("#operatorBreakActionMeta"), operatorTodayParts: $("#operatorTodayParts"), operatorTodayPartsMeta: $("#operatorTodayPartsMeta"), operatorTodayBreaks: $("#operatorTodayBreaks"), operatorTodayBreaksMeta: $("#operatorTodayBreaksMeta"), operatorPendingRecords: $("#operatorPendingRecords"), operatorPendingMeta: $("#operatorPendingMeta"), operatorLatestActivity: $("#operatorLatestActivity"),
+  operatorHomePanel: $("#operatorHomePanel"), operatorHomeConnection: $("#operatorHomeConnection"), operatorHomeSyncStatus: $("#operatorHomeSyncStatus"), operatorHomeClock: $("#operatorHomeClock"), operatorHomeDay: $("#operatorHomeDay"), operatorNewPartAction: $("#operatorNewPartAction"), operatorMainActionEyebrow: $("#operatorMainActionEyebrow"), operatorMainActionTitle: $("#operatorMainActionTitle"), operatorMainActionMeta: $("#operatorMainActionMeta"), operatorBreakAction: $("#operatorBreakAction"), operatorBreakActionLabel: $("#operatorBreakActionLabel"), operatorBreakActionMeta: $("#operatorBreakActionMeta"), operatorLatestActivity: $("#operatorLatestActivity"),
   breakBadge: $("#breakBadge"), breakTitle: $("#breakTitle"), breakTimer: $("#breakTimer"), breakDescription: $("#breakDescription"), startBreakButton: $("#startBreakButton"), endBreakButton: $("#endBreakButton"), breakRecentList: $("#breakRecentList"),
   partForm: $("#partForm"), partStatus: $("#partStatus"), newPartButton: $("#newPartButton"), partSessionSelect: $("#partSessionSelect"), partSessionInfo: $("#partSessionInfo"), establishmentInput: $("#establishmentInput"), machineInput: $("#machineInput"), partDateInput: $("#partDateInput"), horometerStages: $("#horometerStages"), trozoInput: $("#trozoInput"), pulpaInput: $("#pulpaInput"), savePartButton: $("#savePartButton"),
   adminPartsPanel: $("#adminPartsPanel"), adminPartsList: $("#adminPartsList"), adminPartsCount: $("#adminPartsCount"), adminPartsStatus: $("#adminPartsStatus"), refreshAdminPartsButton: $("#refreshAdminPartsButton"), adminPartsSearch: $("#adminPartsSearch"), adminPartsDateFilter: $("#adminPartsDateFilter"), adminPartsOperatorFilter: $("#adminPartsOperatorFilter"),
@@ -620,7 +620,7 @@ function bindEvents() {
   els.menuButton.addEventListener("click", () => els.sidebar.classList.toggle("open"));
   els.mobileMoreButton?.addEventListener("click", () => els.sidebar.classList.toggle("open"));
   els.mobileSyncButton?.addEventListener("click", () => syncNow(true));
-  els.operatorNewPartAction?.addEventListener("click", startNewPart);
+  els.operatorNewPartAction?.addEventListener("click", openOperatorPrimaryAction);
   els.operatorBreakAction?.addEventListener("click", () => showSection("break"));
   els.syncButton.addEventListener("click", () => syncNow(true));
   els.topSyncButton?.addEventListener("click", () => syncNow(true));
@@ -1579,49 +1579,51 @@ function operatorActivityIcon(type) {
   return type === "part" ? "clipboard" : type === "break" ? "bed" : type === "service" ? "wrench" : type === "fuel" ? "fuel" : "activity";
 }
 
+function openOperatorPrimaryAction() {
+  const today = todayKey();
+  const activePart = userParts.find((part) => {
+    const dateKey = String(part.dateKey || part.createdAtClient || "").slice(0, 10);
+    return dateKey === today && part.status !== "completed" && !part.horometers?.final?.value;
+  });
+  if (activePart) {
+    currentPart = activePart;
+    partDraftDate = activePart.dateKey || today;
+    renderPart();
+    showSection("part");
+    return;
+  }
+  startNewPart();
+}
+
 function renderOperatorHome() {
   if (!els.operatorHomePanel || currentProfile?.role !== "operator") return;
   const today = todayKey();
   const todayParts = userParts.filter((part) => String(part.dateKey || part.createdAtClient || "").slice(0, 10) === today);
-  const todayBreaks = breakRecords.filter((record) => recordIsToday(record.startAtClient));
   const pendingParts = userParts.filter((part) => part.syncStatus === "pending").length;
   const pendingBreaks = breakRecords.filter((record) => record.syncStatus === "pending").length;
   const pending = pendingParts + pendingBreaks;
   const activeBreak = Boolean(currentBreak?.status === "active");
-  const completedPart = todayParts.some((part) => part.status === "completed" || Boolean(part.horometers?.final?.value));
   const activePart = todayParts.find((part) => part.status !== "completed" && !part.horometers?.final?.value);
 
-  if (activeBreak) {
-    els.operatorHomeTitle.textContent = "Descanso en curso";
-    els.operatorHomeSubtitle.textContent = `Iniciado a las ${formatTime(currentBreak.startAtClient)}. Finalízalo desde la sección Descanso.`;
-  } else if (activePart) {
-    els.operatorHomeTitle.textContent = `Parte activo · ${activePart.machine || "Sin máquina"}`;
-    els.operatorHomeSubtitle.textContent = "Continúa registrando horómetros y producción de la jornada.";
-  } else if (completedPart) {
-    els.operatorHomeTitle.textContent = "Jornada registrada";
-    els.operatorHomeSubtitle.textContent = "Tu Parte de hoy quedó guardado y disponible en Mis registros.";
-  } else {
-    els.operatorHomeTitle.textContent = "Listo para comenzar";
-    els.operatorHomeSubtitle.textContent = "Crea el Parte de la jornada y registra tus descansos cuando corresponda.";
+  const online = navigator.onLine;
+  els.operatorHomeConnection?.classList.toggle("is-online", online);
+  els.operatorHomeConnection?.classList.toggle("is-offline", !online);
+  if (els.operatorHomeConnection) els.operatorHomeConnection.innerHTML = `<i></i> ${online ? "En línea" : "Sin conexión"}`;
+  if (els.operatorHomeSyncStatus) {
+    els.operatorHomeSyncStatus.textContent = pending ? `${pending} pendiente${pending === 1 ? "" : "s"} de sincronizar` : "Todo sincronizado";
+    els.operatorHomeSyncStatus.classList.toggle("has-pending", pending > 0);
   }
 
-  const online = navigator.onLine;
-  els.operatorHomeConnection.classList.toggle("is-online", online);
-  els.operatorHomeConnection.classList.toggle("is-offline", !online);
-  els.operatorHomeConnection.innerHTML = `<i></i> ${online ? "En línea" : "Sin conexión"}`;
-  els.operatorHomeSyncStatus.textContent = pending ? `${pending} pendiente${pending === 1 ? "" : "s"} de sincronizar` : "Todo sincronizado";
-  els.operatorHomeSyncStatus.classList.toggle("has-pending", pending > 0);
+  if (els.operatorMainActionEyebrow) els.operatorMainActionEyebrow.textContent = activePart ? "PARTE EN CURSO" : "REGISTRO DE JORNADA";
+  if (els.operatorMainActionTitle) els.operatorMainActionTitle.textContent = activePart ? "Continuar Parte" : "Crear nuevo Parte";
+  if (els.operatorMainActionMeta) els.operatorMainActionMeta.textContent = activePart
+    ? `${activePart.machine || "Máquina sin definir"} · Completar horómetros y producción`
+    : "Máquina, horómetros y producción";
+  els.operatorNewPartAction?.classList.toggle("has-active-part", Boolean(activePart));
 
-  els.operatorBreakActionLabel.textContent = activeBreak ? "Finalizar descanso" : "Descanso";
-  els.operatorBreakActionMeta.textContent = activeBreak ? `Activo desde ${formatTime(currentBreak.startAtClient)}` : "Iniciar o consultar";
-  els.operatorBreakAction.classList.toggle("is-active", activeBreak);
-
-  els.operatorTodayParts.textContent = String(todayParts.length);
-  els.operatorTodayPartsMeta.textContent = todayParts.length ? `${todayParts.filter((part) => part.status === "completed" || part.horometers?.final?.value).length} finalizado${todayParts.length === 1 ? "" : "s"}` : "Sin registros";
-  els.operatorTodayBreaks.textContent = String(todayBreaks.length);
-  els.operatorTodayBreaksMeta.textContent = activeBreak ? "Uno en curso" : todayBreaks.length ? "Registrados hoy" : "Sin registros";
-  els.operatorPendingRecords.textContent = String(pending);
-  els.operatorPendingMeta.textContent = pending ? "Se enviarán al conectar" : "Todo enviado";
+  if (els.operatorBreakActionLabel) els.operatorBreakActionLabel.textContent = activeBreak ? "Finalizar descanso" : "Descanso";
+  if (els.operatorBreakActionMeta) els.operatorBreakActionMeta.textContent = activeBreak ? `Activo desde ${formatTime(currentBreak.startAtClient)}` : "Iniciar o consultar";
+  els.operatorBreakAction?.classList.toggle("is-active", activeBreak);
 
   const latest = buildActivityRecords().find((item) => ["part", "break"].includes(item.type));
   if (!latest) {
