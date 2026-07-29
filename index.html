@@ -10,10 +10,10 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="LUBAYD Operativa">
   <title>LUBAYD SA | Gestion de trabajos en campo</title>
-  <link rel="manifest" href="./manifest.webmanifest?v=4.2.0">
+  <link rel="manifest" href="./manifest.webmanifest?v=4.3.0">
   <link rel="icon" href="./icon-192.png">
   <link rel="apple-touch-icon" href="./icon-192.png">
-  <link rel="stylesheet" href="./styles.css?v=4.2.0">
+  <link rel="stylesheet" href="./styles.css?v=4.3.0">
 </head>
 <body class="booting">
 
@@ -42,6 +42,9 @@
     <symbol id="icon-logout" viewBox="0 0 24 24"><path d="M10 17l5-5-5-5M15 12H3"/><path d="M14 3h5a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-5"/></symbol>
     <symbol id="icon-more" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></symbol>
     <symbol id="icon-map-pin" viewBox="0 0 24 24"><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0z"/><circle cx="12" cy="10" r="2.5"/></symbol>
+    <symbol id="icon-camera" viewBox="0 0 24 24"><path d="M4 7h3l2-3h6l2 3h3a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2z"/><circle cx="12" cy="14" r="4"/></symbol>
+    <symbol id="icon-trash" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 15H6L5 6M10 10v7M14 10v7"/></symbol>
+    <symbol id="icon-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol>
   </svg>
 
   <div id="toastRegion" class="toast-region" aria-live="polite"></div>
@@ -127,16 +130,24 @@
         <button class="nav-item" type="button" data-section="activity" data-roles="operator,mechanic,admin"><svg class="ui-icon"><use href="#icon-activity"></use></svg><small>Actividad</small></button>
         <button class="nav-item" type="button" data-section="users" data-roles="admin"><svg class="ui-icon"><use href="#icon-users"></use></svg><small>Usuarios</small></button>
       </nav>
-      <div class="sidebar-user">
-        <div id="userAvatar" class="avatar">U</div>
-        <div><strong id="userName">Usuario</strong><span id="userEmail">-</span><span id="userRoleBadge" class="role-badge">Operador</span></div>
+      <div class="sidebar-user sidebar-profile-clean">
+        <button id="sidebarProfileButton" class="sidebar-profile-button" type="button" aria-label="Cambiar foto de perfil">
+          <span class="profile-photo-frame profile-photo-small">
+            <img id="sidebarProfileImage" class="profile-photo-image hidden" alt="Foto de perfil">
+            <span id="userAvatar" class="avatar profile-photo-fallback">U</span>
+            <span class="profile-photo-edit"><svg class="ui-icon"><use href="#icon-camera"></use></svg></span>
+          </span>
+          <span class="sidebar-role-copy"><strong id="userRoleBadge" class="role-badge">Operador</strong><small>Editar foto</small></span>
+        </button>
+        <span id="userName" class="sr-only">Usuario</span>
+        <span id="userEmail" class="sr-only">-</span>
       </div>
       <div class="sidebar-footer">
         <div class="connection-pill"><span id="connectionDot" class="status-dot"></span><span id="connectionText">Comprobando</span></div>
         <div class="sync-pill"><span id="syncText">Sin pendientes</span><strong id="pendingCount" class="hidden">0</strong></div>
         <button id="syncButton" class="sidebar-button" type="button"><svg class="ui-icon"><use href="#icon-sync"></use></svg><span>Sincronizar ahora</span></button>
         <button id="lockButton" class="sidebar-button" type="button"><svg class="ui-icon"><use href="#icon-logout"></use></svg><span>Cerrar sesión</span></button>
-        <small>Version 4.2.0</small>
+        <small>Version 4.3.0</small>
       </div>
     </aside>
 
@@ -145,6 +156,13 @@
         <button id="menuButton" class="icon-button topbar-menu" type="button" aria-label="Abrir menú"><svg class="ui-icon"><use href="#icon-menu"></use></svg></button>
         <div class="topbar-heading">
           <img src="./logo-original.png" alt="LUBAYD SA" class="topbar-brand-logo">
+          <button id="topbarProfileButton" class="profile-photo-button" type="button" aria-label="Agregar o cambiar foto de perfil">
+            <span class="profile-photo-frame">
+              <img id="topbarProfileImage" class="profile-photo-image hidden" alt="Foto de perfil">
+              <span id="topbarProfileFallback" class="profile-photo-fallback">U</span>
+              <span class="profile-photo-edit"><svg class="ui-icon"><use href="#icon-camera"></use></svg></span>
+            </span>
+          </button>
           <div class="topbar-welcome-copy"><span>Bienvenido, <strong id="topbarRoleName">Operador</strong></span><small>Resumen operativo del día</small><span id="pageTitle" class="sr-only">Inicio</span></div>
         </div>
         <div class="topbar-actions">
@@ -154,18 +172,25 @@
             <span id="topPendingCount" class="notification-count hidden">0</span>
             <span class="sr-only" id="topConnectionText">Comprobando</span><span class="sr-only" id="topSyncText">Sin pendientes</span><span id="topConnectionDot" class="status-dot hidden"></span>
           </button>
+          <button id="topLogoutButton" class="topbar-logout-button" type="button"><svg class="ui-icon"><use href="#icon-logout"></use></svg><span>Cerrar sesión</span></button>
           <div class="topbar-clock sr-only"><strong id="liveClock">--:--:--</strong></div>
         </div>
       </header>
 
       <section id="dashboardSection" class="content-section active dashboard-section">
         <div class="mobile-dashboard-hero">
-          <div class="mobile-hero-row"><img src="./logo-original.png" alt="LUBAYD SA"><button class="mobile-bell" type="button" id="mobileSyncButton" aria-label="Sincronizar"><svg class="ui-icon"><use href="#icon-bell"></use></svg><span id="mobilePendingCount" class="notification-count hidden">0</span></button></div>
-          <div class="mobile-greeting"><div><h1 id="mobileGreeting">Hola</h1><p>Resumen del día</p></div><div class="mobile-date"><svg class="ui-icon"><use href="#icon-calendar"></use></svg><span id="mobileDate">-</span></div></div>
+          <div class="mobile-hero-row"><img src="./logo-original.png" alt="LUBAYD SA"><div class="mobile-hero-actions"><button class="mobile-bell" type="button" id="mobileSyncButton" aria-label="Sincronizar"><svg class="ui-icon"><use href="#icon-bell"></use></svg><span id="mobilePendingCount" class="notification-count hidden">0</span></button><button id="mobileLogoutButton" class="mobile-logout-button" type="button" aria-label="Cerrar sesión"><svg class="ui-icon"><use href="#icon-logout"></use></svg></button></div></div>
+          <div class="mobile-greeting"><button id="mobileProfileButton" class="profile-photo-button mobile-profile-button" type="button" aria-label="Agregar o cambiar foto de perfil"><span class="profile-photo-frame"><img id="mobileProfileImage" class="profile-photo-image hidden" alt="Foto de perfil"><span id="mobileProfileFallback" class="profile-photo-fallback">U</span><span class="profile-photo-edit"><svg class="ui-icon"><use href="#icon-camera"></use></svg></span></span></button><div class="mobile-greeting-copy"><h1 id="mobileGreeting">Hola</h1><p>Resumen del día</p></div><div class="mobile-date"><svg class="ui-icon"><use href="#icon-calendar"></use></svg><span id="mobileDate">-</span></div></div>
         </div>
 
         <div class="desktop-dashboard-heading">
-          <div class="dashboard-heading-logo"><img src="./logo-original.png" alt="LUBAYD SA"></div>
+          <button id="dashboardProfileButton" class="profile-photo-button dashboard-profile-button" type="button" aria-label="Agregar o cambiar foto de perfil">
+            <span class="profile-photo-frame profile-photo-large">
+              <img id="dashboardProfileImage" class="profile-photo-image hidden" alt="Foto de perfil">
+              <span id="dashboardAvatar" class="profile-photo-fallback">U</span>
+              <span class="profile-photo-edit"><svg class="ui-icon"><use href="#icon-camera"></use></svg></span>
+            </span>
+          </button>
           <div><h1 id="dashboardGreeting">Bienvenido</h1><p>Resumen operativo del día</p><span id="dashboardRole" class="role-chip">Operador</span></div>
         </div>
 
@@ -215,7 +240,7 @@
           </article>
         </div>
 
-        <div class="dashboard-hidden-status sr-only"><span id="dashboardConnection">En línea</span><span id="dashboardClock">--:--</span><div id="dashboardAvatar">U</div></div>
+        <div class="dashboard-hidden-status sr-only"><span id="dashboardConnection">En línea</span><span id="dashboardClock">--:--</span><div id="dashboardAvatarLegacy" class="hidden">U</div></div>
       </section>
 
       <section id="breakSection" class="content-section">
@@ -406,8 +431,22 @@
       </section>
 
       <section id="usersSection" class="content-section">
-        <div class="page-heading"><div><span class="eyebrow">ADMINISTRACION</span><h1>Usuarios y permisos</h1><p>Asigna el rol de operador, mecanico o administrador.</p></div></div>
+        <div class="page-heading"><div><span class="eyebrow">ADMINISTRACIÓN</span><h1>Usuarios, fotos y permisos</h1><p>Asigna roles y carga una foto para identificar a cada integrante.</p></div></div>
         <article class="panel-card"><div id="usersList" class="users-list"><div class="empty-state">Cargando usuarios...</div></div></article>
+        <article class="panel-card maintenance-card">
+          <div class="panel-heading"><div><span class="eyebrow danger-eyebrow">MANTENIMIENTO</span><h3>Limpiar datos de prueba</h3><p>Elimina registros operativos de Firebase y ordena a todos los dispositivos borrar sus copias locales al volver a conectarse.</p></div><span class="secure-chip danger-chip">Solo administrador</span></div>
+          <div class="maintenance-options">
+            <label><input id="cleanupParts" type="checkbox" checked><span><strong>Partes diarios</strong><small>Incluye horómetros y producción.</small></span></label>
+            <label><input id="cleanupServices" type="checkbox" checked><span><strong>Servicios mecánicos</strong><small>Incluye sesiones asociadas a Partes.</small></span></label>
+            <label><input id="cleanupFuel" type="checkbox" checked><span><strong>Cargas de combustible</strong><small>Elimina el historial de cargas.</small></span></label>
+            <label><input id="cleanupTank" type="checkbox"><span><strong>Reiniciar tanque a 0 L</strong><small>Conserva la capacidad configurada.</small></span></label>
+          </div>
+          <div class="maintenance-confirm">
+            <label class="field"><span>Escribe ELIMINAR para confirmar</span><input id="cleanupConfirmInput" type="text" autocomplete="off" placeholder="ELIMINAR"></label>
+            <button id="cleanupDataButton" class="danger-button" type="button" disabled><svg class="ui-icon"><use href="#icon-trash"></use></svg><span>Limpiar datos seleccionados</span></button>
+          </div>
+          <p class="maintenance-warning">Esta acción no elimina usuarios, roles, PIN offline ni mensajes del chat.</p>
+        </article>
       </section>
     </main>
 
@@ -451,15 +490,17 @@
     <div class="pin-dialog"><span class="eyebrow">TANQUE PRINCIPAL</span><h2>Actualizar stock</h2><label class="field"><span>Capacidad total en litros</span><input id="tankCapacityInput" type="number" min="1" step="1"></label><label class="field"><span>Litros disponibles</span><input id="tankCurrentInput" type="number" min="0" step="0.1"></label><button id="saveTankButton" class="primary-button" type="button">Guardar tanque</button><button class="text-button" type="button" data-close-tank>Cancelar</button></div>
   </div>
 
+  <input id="profilePhotoInput" class="hidden" type="file" accept="image/*">
+
   <div id="processingOverlay" class="processing-overlay hidden"><div class="processing-card"><div class="boot-spinner"></div><strong id="processingTitle">Guardando...</strong><span id="processingMessage">No cierres la aplicacion.</span></div></div>
 
-  <script defer src="./offline-db.js?v=4.2.0"></script>
-  <script defer src="./sync-manager.js?v=4.2.0"></script>
-  <script defer src="./app.js?v=4.2.0"></script>
+  <script defer src="./offline-db.js?v=4.3.0"></script>
+  <script defer src="./sync-manager.js?v=4.3.0"></script>
+  <script defer src="./app.js?v=4.3.0"></script>
   <script>
     if ('serviceWorker' in navigator && location.protocol === 'https:') {
       window.addEventListener('load', function () {
-        navigator.serviceWorker.register('./service-worker.js?v=4.2.0').then(function (registration) {
+        navigator.serviceWorker.register('./service-worker.js?v=4.3.0').then(function (registration) {
           registration.update().catch(function () {});
         }).catch(function (error) { console.warn('Service Worker', error); });
       });

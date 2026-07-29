@@ -22,6 +22,7 @@ const els = {
   registerName: $("#registerName"), registerEmail: $("#registerEmail"), registerPassword: $("#registerPassword"), registerPasswordConfirm: $("#registerPasswordConfirm"), registerButton: $("#registerButton"),
   offlineLoginPanel: $("#offlineLoginPanel"), offlineUserAvatar: $("#offlineUserAvatar"), offlineUserName: $("#offlineUserName"), offlineUserEmail: $("#offlineUserEmail"), offlineLoginHint: $("#offlineLoginHint"), offlinePinInput: $("#offlinePinInput"), offlineLoginButton: $("#offlineLoginButton"),
   sidebar: $("#sidebar"), menuButton: $("#menuButton"), pageTitle: $("#pageTitle"), userAvatar: $("#userAvatar"), userName: $("#userName"), userEmail: $("#userEmail"), userRoleBadge: $("#userRoleBadge"),
+  sidebarProfileButton: $("#sidebarProfileButton"), sidebarProfileImage: $("#sidebarProfileImage"), topbarProfileButton: $("#topbarProfileButton"), topbarProfileImage: $("#topbarProfileImage"), topbarProfileFallback: $("#topbarProfileFallback"), dashboardProfileButton: $("#dashboardProfileButton"), dashboardProfileImage: $("#dashboardProfileImage"), mobileProfileButton: $("#mobileProfileButton"), mobileProfileImage: $("#mobileProfileImage"), mobileProfileFallback: $("#mobileProfileFallback"), profilePhotoInput: $("#profilePhotoInput"), topLogoutButton: $("#topLogoutButton"), mobileLogoutButton: $("#mobileLogoutButton"),
   connectionDot: $("#connectionDot"), connectionText: $("#connectionText"), syncText: $("#syncText"), pendingCount: $("#pendingCount"), syncButton: $("#syncButton"), lockButton: $("#lockButton"),
   topSyncButton: $("#topSyncButton"), topConnectionDot: $("#topConnectionDot"), topConnectionText: $("#topConnectionText"), topSyncText: $("#topSyncText"), topPendingCount: $("#topPendingCount"),
   liveDate: $("#liveDate"), liveClock: $("#liveClock"), dashboardClock: $("#dashboardClock"), dashboardAvatar: $("#dashboardAvatar"), dashboardGreeting: $("#dashboardGreeting"), dashboardRole: $("#dashboardRole"), dashboardConnection: $("#dashboardConnection"), offlineBanner: $("#offlineBanner"), dashboardCards: $("#dashboardCards"), recentActivity: $("#recentActivity"), upcomingBreaks: $("#upcomingBreaks"), topbarRoleName: $("#topbarRoleName"), mobileGreeting: $("#mobileGreeting"), mobileDate: $("#mobileDate"), mobileSyncButton: $("#mobileSyncButton"), mobilePendingCount: $("#mobilePendingCount"), mobileMoreButton: $("#mobileMoreButton"), metricJourneys: $("#metricJourneys"), metricServices: $("#metricServices"), metricFuel: $("#metricFuel"), metricHours: $("#metricHours"), dashboardTankGauge: $("#dashboardTankGauge"), dashboardTankPercent: $("#dashboardTankPercent"), dashboardTankRatio: $("#dashboardTankRatio"), dashboardTankCapacity: $("#dashboardTankCapacity"), flowTankStart: $("#flowTankStart"), flowLoadedToday: $("#flowLoadedToday"), flowTankBalance: $("#flowTankBalance"),
@@ -30,6 +31,7 @@ const els = {
   servicePartSelect: $("#servicePartSelect"), serviceMachine: $("#serviceMachine"), serviceOperator: $("#serviceOperator"), serviceTimer: $("#serviceTimer"), serviceStatus: $("#serviceStatus"), serviceStartedAt: $("#serviceStartedAt"), serviceStartReason: $("#serviceStartReason"), serviceEndReason: $("#serviceEndReason"), serviceStartEvidence: $("#serviceStartEvidence"), serviceEndEvidence: $("#serviceEndEvidence"), newServiceButton: $("#newServiceButton"), serviceSessionCount: $("#serviceSessionCount"), serviceSessionList: $("#serviceSessionList"), startServiceButton: $("#startServiceButton"), endServiceButton: $("#endServiceButton"),
   tankPercent: $("#tankPercent"), tankProgress: $("#tankProgress"), tankCapacity: $("#tankCapacity"), tankCurrent: $("#tankCurrent"), tankUpdated: $("#tankUpdated"), editTankButton: $("#editTankButton"), fuelRecentList: $("#fuelRecentList"), fuelForm: $("#fuelForm"), fuelMachine: $("#fuelMachine"), fuelOperator: $("#fuelOperator"), fuelLiters: $("#fuelLiters"), fuelPhotoEvidence: $("#fuelPhotoEvidence"), captureFuelPhotoButton: $("#captureFuelPhotoButton"), saveFuelButton: $("#saveFuelButton"),
   activityList: $("#activityList"), usersList: $("#usersList"),
+  cleanupParts: $("#cleanupParts"), cleanupServices: $("#cleanupServices"), cleanupFuel: $("#cleanupFuel"), cleanupTank: $("#cleanupTank"), cleanupConfirmInput: $("#cleanupConfirmInput"), cleanupDataButton: $("#cleanupDataButton"),
   chatMessages: $("#chatMessages"), chatForm: $("#chatForm"), chatInput: $("#chatInput"), chatSendButton: $("#chatSendButton"), chatStatusText: $("#chatStatusText"), chatConnectionBadge: $("#chatConnectionBadge"),
   reportsConnectionBadge: $("#reportsConnectionBadge"), refreshReportsButton: $("#refreshReportsButton"), reportDateFrom: $("#reportDateFrom"), reportDateTo: $("#reportDateTo"), reportOperator: $("#reportOperator"), reportMachine: $("#reportMachine"), applyReportsButton: $("#applyReportsButton"), clearReportsButton: $("#clearReportsButton"), reportsLastUpdated: $("#reportsLastUpdated"),
   reportBreakCount: $("#reportBreakCount"), reportBreakDetail: $("#reportBreakDetail"), reportBreakAverage: $("#reportBreakAverage"), reportFuelTotal: $("#reportFuelTotal"), reportFuelDetail: $("#reportFuelDetail"), reportServiceHours: $("#reportServiceHours"), reportServiceDetail: $("#reportServiceDetail"), breaksByDayChart: $("#breaksByDayChart"), breaksByOperatorChart: $("#breaksByOperatorChart"), fuelByDayChart: $("#fuelByDayChart"), fuelByOperatorChart: $("#fuelByOperatorChart"), fuelByMachineChart: $("#fuelByMachineChart"), serviceByMachineChart: $("#serviceByMachineChart"), reportServiceTable: $("#reportServiceTable"), reportServiceTableCount: $("#reportServiceTableCount"),
@@ -98,6 +100,8 @@ let reportServices = [];
 let reportLoadedAt = null;
 let reportLoading = false;
 const REPORT_CACHE_KEY = "lubayd-admin-reports-v1";
+const DATA_RESET_SETTING_KEY = "lastAppliedOperationalResetAt";
+let profilePhotoTargetUid = "";
 
 function escapeHtml(value) {
   return String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
@@ -333,6 +337,8 @@ async function resolveProfile(user) {
   let cached = await OfflineDB.getProfile(user.uid).catch(() => null);
   let role = cached?.role || "operator";
   let name = user.displayName || cached?.name || "Usuario";
+  let photoURL = cached?.photoURL || user.photoURL || "";
+  let active = cached?.active !== false;
   if (navigator.onLine && db) {
     const ref = sdk.doc(db, "users", user.uid);
     const snap = await sdk.getDoc(ref);
@@ -340,12 +346,14 @@ async function resolveProfile(user) {
       const data = snap.data();
       role = data.role || role;
       name = data.name || name;
+      photoURL = data.photoURL || photoURL;
+      active = data.active !== false;
     } else {
-      await sdk.setDoc(ref, { uid: user.uid, name, email: user.email || "", role: "operator", active: true, createdAt: sdk.serverTimestamp(), createdAtClient: localIso() }, { merge: true });
+      await sdk.setDoc(ref, { uid: user.uid, name, email: user.email || "", role: "operator", active: true, photoURL: "", createdAt: sdk.serverTimestamp(), createdAtClient: localIso() }, { merge: true });
       role = "operator";
     }
   }
-  const profile = await OfflineDB.saveProfile({ ...(cached || {}), uid: user.uid, name, email: user.email || "", role, active: true, locked: false, lastLoginAt: Date.now() });
+  const profile = await OfflineDB.saveProfile({ ...(cached || {}), uid: user.uid, name, email: user.email || "", role, active, photoURL, locked: false, lastLoginAt: Date.now() });
   lastOfflineProfile = profile;
   return profile;
 }
@@ -368,15 +376,34 @@ async function enterApplication(user, profile, offline) {
   if (!profile.offlineAccessEnabled && !offline) els.pinModal.classList.remove("hidden");
 }
 
+function setProfilePhoto(imageElement, fallbackElement, photoURL, name) {
+  if (!imageElement || !fallbackElement) return;
+  fallbackElement.textContent = initials(name);
+  if (photoURL) {
+    imageElement.src = photoURL;
+    imageElement.classList.remove("hidden");
+    fallbackElement.classList.add("hidden");
+  } else {
+    imageElement.removeAttribute("src");
+    imageElement.classList.add("hidden");
+    fallbackElement.classList.remove("hidden");
+  }
+}
+
 function applyProfile() {
   const name = currentProfile?.name || currentUser?.displayName || "Usuario";
   const email = currentProfile?.email || currentUser?.email || "";
   const role = currentProfile?.role || "operator";
+  const photoURL = currentProfile?.photoURL || currentUser?.photoURL || "";
   document.body.dataset.role = role;
-  [els.userAvatar, els.dashboardAvatar].forEach((el) => { if (el) el.textContent = initials(name); });
+  els.userAvatar.textContent = initials(name);
   els.userName.textContent = name;
   els.userEmail.textContent = email;
   els.userRoleBadge.textContent = roleLabel(role);
+  setProfilePhoto(els.sidebarProfileImage, els.userAvatar, photoURL, name);
+  setProfilePhoto(els.topbarProfileImage, els.topbarProfileFallback, photoURL, name);
+  setProfilePhoto(els.dashboardProfileImage, els.dashboardAvatar, photoURL, name);
+  setProfilePhoto(els.mobileProfileImage, els.mobileProfileFallback, photoURL, name);
   const firstName = String(name || "Usuario").trim().split(/\s+/)[0];
   els.dashboardGreeting.textContent = `¡Hola, ${firstName}!`;
   els.dashboardRole.textContent = roleLabel(role);
@@ -441,6 +468,13 @@ function bindEvents() {
   els.syncButton.addEventListener("click", () => syncNow(true));
   els.topSyncButton?.addEventListener("click", () => syncNow(true));
   els.lockButton.addEventListener("click", lockApplication);
+  els.topLogoutButton?.addEventListener("click", lockApplication);
+  els.mobileLogoutButton?.addEventListener("click", lockApplication);
+  [els.sidebarProfileButton, els.topbarProfileButton, els.dashboardProfileButton, els.mobileProfileButton].filter(Boolean).forEach((button) => button.addEventListener("click", () => openProfilePhotoPicker(currentUser?.uid || "")));
+  els.profilePhotoInput?.addEventListener("change", handleProfilePhotoSelection);
+  els.cleanupConfirmInput?.addEventListener("input", updateCleanupButtonState);
+  [els.cleanupParts, els.cleanupServices, els.cleanupFuel, els.cleanupTank].filter(Boolean).forEach((input) => input.addEventListener("change", updateCleanupButtonState));
+  els.cleanupDataButton?.addEventListener("click", cleanupOperationalData);
   $$('[data-section]').forEach((button) => button.addEventListener("click", () => showSection(button.dataset.section)));
   $$('[data-section-link]').forEach((button) => button.addEventListener("click", () => showSection(button.dataset.sectionLink)));
   els.startBreakButton.addEventListener("click", startBreak);
@@ -474,6 +508,8 @@ function bindEvents() {
     if (partCapture) captureHorometer(partCapture.dataset.horometerCapture);
     const roleSave = event.target.closest("[data-save-role]");
     if (roleSave) saveUserRole(roleSave.dataset.saveRole);
+    const photoUpload = event.target.closest("[data-upload-user-photo]");
+    if (photoUpload) openProfilePhotoPicker(photoUpload.dataset.uploadUserPhoto);
   });
 }
 
@@ -504,7 +540,7 @@ async function loginOnline(event) {
 async function registerOnline(event) {
   event.preventDefault();
   if (!navigator.onLine) { showAuthMessage("Crear usuarios requiere Internet."); return; }
-  if (els.registerPassword.value !== els.registerPasswordConfirm.value) { showAuthMessage("Las contrasenas no coinciden."); return; }
+  if (els.registerPassword.value !== els.registerPasswordConfirm.value) { showAuthMessage("Las contraseñas no coinciden."); return; }
   setBusy(els.registerButton, true, "Creando...");
   try {
     await importFirebase();
@@ -598,6 +634,7 @@ async function loadAllLocalData() {
 
 async function refreshServerData() {
   if (!firebaseReady || !navigator.onLine || !currentUser || localSession) return;
+  await applyGlobalOperationalReset();
   const role = currentProfile?.role || "operator";
   const tasks = [];
   if (["operator", "admin"].includes(role)) tasks.push(loadBreaksFromServer(), loadPartFromServer());
@@ -1897,13 +1934,167 @@ async function saveTank() {
   syncNow(false).catch(console.warn);
 }
 
+function updateCleanupButtonState() {
+  if (!els.cleanupDataButton) return;
+  const selected = [els.cleanupParts, els.cleanupServices, els.cleanupFuel, els.cleanupTank].some((input) => input?.checked);
+  els.cleanupDataButton.disabled = currentProfile?.role !== "admin" || !selected || String(els.cleanupConfirmInput?.value || "").trim().toUpperCase() !== "ELIMINAR";
+}
+
+async function applyGlobalOperationalReset() {
+  if (!firebaseReady || !navigator.onLine || !currentUser || localSession) return false;
+  try {
+    const snap = await sdk.getDoc(sdk.doc(db, "system", "maintenance"));
+    if (!snap.exists()) return false;
+    const data = snap.data();
+    const resetAt = String(data.operationalResetAtClient || "");
+    if (!resetAt) return false;
+    const applied = String(await OfflineDB.getSetting(DATA_RESET_SETTING_KEY).catch(() => "") || "");
+    if (applied && applied >= resetAt) return false;
+    const scopes = Array.isArray(data.operationalResetScopes) ? data.operationalResetScopes : ["parts", "services", "fuel"];
+    await OfflineDB.clearOperationalData(scopes);
+    await OfflineDB.setSetting(DATA_RESET_SETTING_KEY, resetAt);
+    await loadAllLocalData();
+    renderAll();
+    showToast("Datos de prueba limpiados", "Este dispositivo aplicó la limpieza definida por el administrador.");
+    return true;
+  } catch (error) {
+    console.warn("Limpieza global", error);
+    return false;
+  }
+}
+
+async function deleteDocumentsInBatches(docRefs, batchSize = 350) {
+  for (let start = 0; start < docRefs.length; start += batchSize) {
+    const batch = sdk.writeBatch(db);
+    docRefs.slice(start, start + batchSize).forEach((ref) => batch.delete(ref));
+    await batch.commit();
+  }
+}
+
+async function collectLegacyPartRefs() {
+  const refs = [];
+  const usersSnap = await sdk.getDocs(sdk.collection(db, "users"));
+  for (const userDoc of usersSnap.docs) {
+    const partSnap = await sdk.getDocs(sdk.collection(db, "users", userDoc.id, "parts"));
+    partSnap.docs.forEach((docSnap) => refs.push(docSnap.ref));
+  }
+  return refs;
+}
+
+async function cleanupOperationalData() {
+  if (currentProfile?.role !== "admin") return;
+  if (!navigator.onLine || !firebaseReady || localSession) { showToast("Se necesita Internet", "La limpieza de Firebase solo puede ejecutarse en línea.", "error"); return; }
+  updateCleanupButtonState();
+  if (els.cleanupDataButton.disabled) return;
+  const scopes = [];
+  if (els.cleanupParts.checked) scopes.push("parts");
+  if (els.cleanupServices.checked) scopes.push("services");
+  if (els.cleanupFuel.checked) scopes.push("fuel");
+  if (els.cleanupTank.checked) scopes.push("tank");
+  try {
+    showProcessing("Limpiando datos", "Eliminando registros de prueba. No cierres la aplicación...");
+    const refs = [];
+    let operationalParts = [];
+    if (scopes.includes("parts") || scopes.includes("services")) {
+      const partSnap = await sdk.getDocs(sdk.collection(db, "operationalParts"));
+      operationalParts = partSnap.docs;
+      if (scopes.includes("services")) {
+        for (const partDoc of operationalParts) {
+          const nestedServices = await sdk.getDocs(sdk.collection(db, "operationalParts", partDoc.id, "services"));
+          nestedServices.docs.forEach((docSnap) => refs.push(docSnap.ref));
+        }
+        const servicesSnap = await sdk.getDocs(sdk.collection(db, "services"));
+        servicesSnap.docs.forEach((docSnap) => refs.push(docSnap.ref));
+      }
+      if (scopes.includes("parts")) {
+        refs.push(...await collectLegacyPartRefs());
+        operationalParts.forEach((docSnap) => refs.push(docSnap.ref));
+      }
+    }
+    if (scopes.includes("fuel")) {
+      const fuelSnap = await sdk.getDocs(sdk.collection(db, "fuelLoads"));
+      fuelSnap.docs.forEach((docSnap) => refs.push(docSnap.ref));
+    }
+    await deleteDocumentsInBatches(refs);
+    if (scopes.includes("tank")) {
+      const tankRef = sdk.doc(db, "tanks", "main");
+      const tankSnap = await sdk.getDoc(tankRef);
+      if (tankSnap.exists()) {
+        await sdk.setDoc(tankRef, { currentLiters: 0, updatedAtClient: localIso(), updatedBy: currentUser.uid, updatedAt: sdk.serverTimestamp() }, { merge: true });
+      }
+    }
+    const resetAt = localIso();
+    await sdk.setDoc(sdk.doc(db, "system", "maintenance"), { operationalResetAtClient: resetAt, operationalResetScopes: scopes, operationalResetBy: currentUser.uid, operationalResetAt: sdk.serverTimestamp() }, { merge: true });
+    await OfflineDB.clearOperationalData(scopes);
+    await OfflineDB.setSetting(DATA_RESET_SETTING_KEY, resetAt);
+    els.cleanupConfirmInput.value = "";
+    updateCleanupButtonState();
+    await loadAllLocalData();
+    await refreshServerData();
+    renderAll();
+    showToast("Limpieza completada", `${refs.length} registro${refs.length === 1 ? "" : "s"} eliminado${refs.length === 1 ? "" : "s"}.`);
+  } catch (error) {
+    showToast("No se pudo completar la limpieza", friendlyError(error), "error");
+  } finally {
+    hideProcessing();
+  }
+}
+
+function openProfilePhotoPicker(targetUid) {
+  if (!currentUser || !targetUid || !els.profilePhotoInput) return;
+  const canEdit = targetUid === currentUser.uid || currentProfile?.role === "admin";
+  if (!canEdit) { showToast("Sin permiso", "Solo puedes cambiar tu propia foto.", "error"); return; }
+  if (!navigator.onLine || !firebaseReady || localSession) { showToast("Se necesita Internet", "La foto de perfil se guarda en Firebase.", "error"); return; }
+  profilePhotoTargetUid = targetUid;
+  els.profilePhotoInput.value = "";
+  els.profilePhotoInput.click();
+}
+
+async function handleProfilePhotoSelection(event) {
+  const file = event.target.files?.[0];
+  const targetUid = profilePhotoTargetUid;
+  if (!file || !targetUid) return;
+  if (!file.type.startsWith("image/")) { showToast("Archivo inválido", "Selecciona una imagen.", "error"); return; }
+  try {
+    showProcessing("Guardando foto", "Optimizando y cargando la imagen de perfil...");
+    const blob = await compressImage(file, 900, 0.84);
+    const path = `profilePhotos/${currentUser.uid}/${targetUid}/avatar.jpg`;
+    const ref = sdk.storageRef(storage, path);
+    const snap = await sdk.uploadBytes(ref, blob, { contentType: blob.type || "image/jpeg", cacheControl: "public,max-age=3600" });
+    const photoURL = await sdk.getDownloadURL(snap.ref);
+    await sdk.updateDoc(sdk.doc(db, "users", targetUid), { photoURL, photoUpdatedAt: sdk.serverTimestamp(), photoUpdatedAtClient: localIso() });
+    if (targetUid === currentUser.uid) {
+      currentProfile = await OfflineDB.saveProfile({ ...currentProfile, photoURL });
+      lastOfflineProfile = currentProfile;
+      applyProfile();
+    }
+    if (currentProfile?.role === "admin" && currentSection === "users") await loadUsers();
+    showToast("Foto actualizada", "La imagen de perfil quedó guardada.");
+  } catch (error) {
+    showToast("No se pudo guardar la foto", friendlyError(error), "error");
+  } finally {
+    hideProcessing();
+    profilePhotoTargetUid = "";
+    event.target.value = "";
+  }
+}
+
 async function loadUsers() {
   if (currentProfile?.role !== "admin") return;
   if (!firebaseReady || !navigator.onLine || localSession) { els.usersList.innerHTML = '<div class="empty-state">La administracion de usuarios requiere Internet.</div>'; return; }
   const snap = await sdk.getDocs(sdk.collection(db, "users"));
   els.usersList.innerHTML = snap.docs.map((item) => {
     const data = item.data();
-    return `<div class="user-row"><div><strong>${escapeHtml(data.name || "Usuario")}</strong><span>${escapeHtml(data.email || "")}</span></div><select id="role-${item.id}"><option value="operator" ${data.role === "operator" ? "selected" : ""}>Operador</option><option value="mechanic" ${data.role === "mechanic" ? "selected" : ""}>Mecanico</option><option value="admin" ${data.role === "admin" ? "selected" : ""}>Administrador</option></select><button class="primary-button" type="button" data-save-role="${item.id}">Guardar</button></div>`;
+    const name = data.name || "Usuario";
+    const avatar = data.photoURL
+      ? `<img class="user-photo" src="${escapeHtml(data.photoURL)}" alt="Foto de ${escapeHtml(name)}">`
+      : `<span class="user-photo-fallback">${escapeHtml(initials(name))}</span>`;
+    return `<div class="user-row modern-user-row">
+      <button class="user-photo-button" type="button" data-upload-user-photo="${item.id}" aria-label="Cargar foto de ${escapeHtml(name)}">${avatar}<span><svg class="ui-icon"><use href="#icon-camera"></use></svg></span></button>
+      <div class="user-row-copy"><strong>${escapeHtml(name)}</strong><span>${escapeHtml(roleLabel(data.role || "operator"))}</span></div>
+      <select id="role-${item.id}" aria-label="Rol de ${escapeHtml(name)}"><option value="operator" ${data.role === "operator" ? "selected" : ""}>Operador</option><option value="mechanic" ${data.role === "mechanic" ? "selected" : ""}>Mecánico</option><option value="admin" ${data.role === "admin" ? "selected" : ""}>Administrador</option></select>
+      <button class="primary-button compact-button" type="button" data-save-role="${item.id}">Guardar</button>
+    </div>`;
   }).join("") || '<div class="empty-state">Sin usuarios.</div>';
 }
 
@@ -2029,6 +2220,7 @@ async function syncNow(manual) {
     }
 
     await sdk.getIdToken(auth.currentUser, true).catch(() => {});
+    await applyGlobalOperationalReset();
     const pending = await OfflineDB.countPending(currentUser.uid);
     if (!pending) {
       lastSyncError = "";

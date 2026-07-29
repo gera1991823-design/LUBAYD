@@ -43,6 +43,16 @@ service firebase.storage {
       allow delete: if false;
     }
 
+    // La primera carpeta identifica al usuario que realiza la carga. Esto permite
+    // que un administrador cargue la foto de otro usuario sin exponer escrituras.
+    match /profilePhotos/{uploaderUid}/{targetUid}/{fileName} {
+      allow read: if signedIn();
+      allow create, update: if signedIn()
+                            && request.auth.uid == uploaderUid
+                            && validImage();
+      allow delete: if false;
+    }
+
     match /{allPaths=**} {
       allow read, write: if false;
     }

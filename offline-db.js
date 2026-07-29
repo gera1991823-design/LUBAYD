@@ -249,6 +249,35 @@
   async function deleteQueue(id) { return remove(STORES.queue, id); }
   async function countPending(uid) { return (await getPendingQueue(uid)).length; }
 
+  async function clearStore(storeName) {
+    return storeAction(storeName, "readwrite", (store) => req(store.clear()));
+  }
+
+  async function clearOperationalData(scopes = ["parts", "services", "fuel"]) {
+    const selected = new Set(scopes);
+    const stores = [];
+    if (selected.has("parts")) stores.push(STORES.parts, STORES.operatorParts);
+    if (selected.has("services")) stores.push(STORES.services);
+    if (selected.has("fuel")) stores.push(STORES.fuelLoads);
+    if (selected.has("tank")) stores.push(STORES.tank);
+    for (const storeName of stores) await clearStore(storeName);
+
+    const queueTypes = new Set();
+    if (selected.has("parts")) queueTypes.add("part-upsert");
+    if (selected.has("services")) queueTypes.add("service-upsert");
+    if (selected.has("fuel")) queueTypes.add("fuel-load");
+    if (selected.has("tank")) queueTypes.add("tank-update");
+    if (queueTypes.size) {
+      await storeAction(STORES.queue, "readwrite", async (store) => {
+        const records = await req(store.getAll());
+        for (const item of records) {
+          if (queueTypes.has(item.type)) await req(store.delete(item.id));
+        }
+      });
+    }
+    return true;
+  }
+
   async function requestPersistentStorage() {
     try { return navigator.storage?.persist ? await navigator.storage.persist() : false; }
     catch (error) { console.warn("Persistencia local", error); return false; }
@@ -262,7 +291,7 @@
     putFuelLoad, getFuelLoads, getAllFuelLoads,
     putTank, getTank,
     putChatMessage, getChatMessages,
-    enqueue, getPendingQueue, updateQueue, deleteQueue, countPending, requestPersistentStorage,
+    enqueue, getPendingQueue, updateQueue, deleteQueue, countPending, clearOperationalData, requestPersistentStorage,
     setSetting, getSetting
   };
 })();
