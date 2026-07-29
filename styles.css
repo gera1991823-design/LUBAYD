@@ -6046,3 +6046,168 @@ a {
   .pro-stage-list { grid-template-columns: 1fr !important; }
   .mobile-nav-item small { font-size: 7px !important; }
 }
+
+
+/* V5.8 - corrección de Troza/Pulpa y barra Guardar Parte en móvil */
+@media (max-width: 760px) {
+  #partSection,
+  #partForm,
+  .pro-part-form {
+    overflow: visible !important;
+  }
+
+  .pro-part-form {
+    gap: 14px !important;
+    padding-bottom: 18px !important;
+  }
+
+  .production-pro-grid {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .production-field-card {
+    width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+    display: grid !important;
+    grid-template-columns: 40px minmax(72px, 1fr) minmax(76px, 92px) auto !important;
+    align-items: center !important;
+    column-gap: 9px !important;
+    row-gap: 4px !important;
+    padding: 12px !important;
+    overflow: visible !important;
+    border-radius: 15px !important;
+  }
+
+  .production-field-icon {
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    border-radius: 12px !important;
+  }
+
+  .production-field-icon svg,
+  .production-field-icon.pulp svg {
+    width: 24px !important;
+    height: 24px !important;
+  }
+
+  .production-field-copy {
+    min-width: 0 !important;
+  }
+
+  .production-field-copy strong {
+    font-size: 17px !important;
+    line-height: 1.1 !important;
+    white-space: nowrap !important;
+  }
+
+  .production-field-copy small {
+    display: none !important;
+  }
+
+  .production-field-card input {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 92px !important;
+    min-height: 44px !important;
+    box-sizing: border-box !important;
+    padding: 0 10px !important;
+    font-size: 17px !important;
+    line-height: 1 !important;
+    text-align: right !important;
+    border-radius: 12px !important;
+  }
+
+  .production-field-card em {
+    min-width: 28px !important;
+    font-size: 10px !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+  }
+
+  .part-submit-bar {
+    position: static !important;
+    inset: auto !important;
+    z-index: auto !important;
+    display: block !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    margin: 0 0 12px !important;
+    padding: 10px !important;
+    border-radius: 16px !important;
+    background: #ffffff !important;
+    box-shadow: 0 10px 24px rgba(3,70,38,.11) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  .part-submit-bar > div {
+    display: none !important;
+  }
+
+  .part-submit-bar .pro-save-button {
+    width: 100% !important;
+    min-height: 48px !important;
+    margin: 0 !important;
+    border-radius: 14px !important;
+    font-size: 15px !important;
+  }
+
+  .part-submit-bar .pro-save-button svg {
+    width: 17px !important;
+    height: 17px !important;
+  }
+}
+
+@media (max-width: 390px) {
+  .production-field-card {
+    grid-template-columns: 36px minmax(62px, 1fr) minmax(68px, 82px) auto !important;
+    column-gap: 7px !important;
+    padding: 10px !important;
+  }
+
+  .production-field-icon {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+  }
+
+  .production-field-icon svg,
+  .production-field-icon.pulp svg {
+    width: 21px !important;
+    height: 21px !important;
+  }
+
+  .production-field-copy strong {
+    font-size: 15px !important;
+  }
+
+  .production-field-card input {
+    max-width: 82px !important;
+    min-height: 42px !important;
+    font-size: 16px !important;
+    padding-inline: 8px !important;
+  }
+
+  .production-field-card em {
+    font-size: 9px !important;
+  }
+}
+
+@media (max-width: 340px) {
+  .production-field-card {
+    grid-template-columns: 34px minmax(55px, 1fr) 70px !important;
+    grid-template-areas:
+      "prodIcon prodCopy prodInput"
+      "prodIcon prodCopy prodUnit" !important;
+  }
+  .production-field-icon { grid-area: prodIcon !important; }
+  .production-field-copy { grid-area: prodCopy !important; }
+  .production-field-card input { grid-area: prodInput !important; width: 70px !important; }
+  .production-field-card em { grid-area: prodUnit !important; justify-self: end !important; }
+}

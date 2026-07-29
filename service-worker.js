@@ -1,14 +1,14 @@
 "use strict";
 
-const CACHE_NAME = "lubayd-operativa-v5.7.0-mobile-pro";
+const CACHE_NAME = "lubayd-operativa-v5.8.0-production-mobile-fix";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./styles.css?v=5.7.0",
-  "./app.js?v=5.7.0",
-  "./offline-db.js?v=5.7.0",
-  "./sync-manager.js?v=5.7.0",
-  "./manifest.webmanifest?v=5.7.0",
+  "./styles.css?v=5.8.0",
+  "./app.js?v=5.8.0",
+  "./offline-db.js?v=5.8.0",
+  "./sync-manager.js?v=5.8.0",
+  "./manifest.webmanifest?v=5.8.0",
   "./logo-original.png",
   "./icon-192.png",
   "./icon-512.png",
