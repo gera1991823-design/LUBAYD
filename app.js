@@ -26,6 +26,7 @@ const els = {
   connectionDot: $("#connectionDot"), connectionText: $("#connectionText"), syncText: $("#syncText"), pendingCount: $("#pendingCount"), syncButton: $("#syncButton"), lockButton: $("#lockButton"),
   topSyncButton: $("#topSyncButton"), topConnectionDot: $("#topConnectionDot"), topConnectionText: $("#topConnectionText"), topSyncText: $("#topSyncText"), topPendingCount: $("#topPendingCount"),
   liveDate: $("#liveDate"), liveClock: $("#liveClock"), dashboardClock: $("#dashboardClock"), dashboardAvatar: $("#dashboardAvatar"), dashboardGreeting: $("#dashboardGreeting"), dashboardRole: $("#dashboardRole"), dashboardConnection: $("#dashboardConnection"), offlineBanner: $("#offlineBanner"), dashboardCards: $("#dashboardCards"), recentActivity: $("#recentActivity"), upcomingBreaks: $("#upcomingBreaks"), topbarRoleName: $("#topbarRoleName"), mobileGreeting: $("#mobileGreeting"), mobileDate: $("#mobileDate"), mobileSyncButton: $("#mobileSyncButton"), mobilePendingCount: $("#mobilePendingCount"), mobileMoreButton: $("#mobileMoreButton"), metricJourneys: $("#metricJourneys"), metricServices: $("#metricServices"), metricFuel: $("#metricFuel"), metricHours: $("#metricHours"), dashboardTankGauge: $("#dashboardTankGauge"), dashboardTankPercent: $("#dashboardTankPercent"), dashboardTankRatio: $("#dashboardTankRatio"), dashboardTankCapacity: $("#dashboardTankCapacity"), dashboardTankVolume: $("#dashboardTankVolume"), dashboardTankProgress: $("#dashboardTankProgress"), dashboardFuelChart: $("#dashboardFuelChart"), dashboardFleetChart: $("#dashboardFleetChart"), metricFuelTrend: $("#metricFuelTrend"), metricHoursTrend: $("#metricHoursTrend"), flowTankStart: $("#flowTankStart"), flowLoadedToday: $("#flowLoadedToday"), flowTankBalance: $("#flowTankBalance"),
+  operatorHomePanel: $("#operatorHomePanel"), operatorHomeTitle: $("#operatorHomeTitle"), operatorHomeSubtitle: $("#operatorHomeSubtitle"), operatorHomeConnection: $("#operatorHomeConnection"), operatorHomeSyncStatus: $("#operatorHomeSyncStatus"), operatorHomeClock: $("#operatorHomeClock"), operatorHomeDay: $("#operatorHomeDay"), operatorNewPartAction: $("#operatorNewPartAction"), operatorBreakAction: $("#operatorBreakAction"), operatorBreakActionLabel: $("#operatorBreakActionLabel"), operatorBreakActionMeta: $("#operatorBreakActionMeta"), operatorTodayParts: $("#operatorTodayParts"), operatorTodayPartsMeta: $("#operatorTodayPartsMeta"), operatorTodayBreaks: $("#operatorTodayBreaks"), operatorTodayBreaksMeta: $("#operatorTodayBreaksMeta"), operatorPendingRecords: $("#operatorPendingRecords"), operatorPendingMeta: $("#operatorPendingMeta"), operatorLatestActivity: $("#operatorLatestActivity"),
   breakBadge: $("#breakBadge"), breakTitle: $("#breakTitle"), breakTimer: $("#breakTimer"), breakDescription: $("#breakDescription"), startBreakButton: $("#startBreakButton"), endBreakButton: $("#endBreakButton"), breakRecentList: $("#breakRecentList"),
   partForm: $("#partForm"), partStatus: $("#partStatus"), newPartButton: $("#newPartButton"), partSessionSelect: $("#partSessionSelect"), partSessionInfo: $("#partSessionInfo"), establishmentInput: $("#establishmentInput"), machineInput: $("#machineInput"), partDateInput: $("#partDateInput"), horometerStages: $("#horometerStages"), trozoInput: $("#trozoInput"), pulpaInput: $("#pulpaInput"), savePartButton: $("#savePartButton"),
   adminPartsPanel: $("#adminPartsPanel"), adminPartsList: $("#adminPartsList"), adminPartsCount: $("#adminPartsCount"), adminPartsStatus: $("#adminPartsStatus"), refreshAdminPartsButton: $("#refreshAdminPartsButton"), adminPartsSearch: $("#adminPartsSearch"), adminPartsDateFilter: $("#adminPartsDateFilter"), adminPartsOperatorFilter: $("#adminPartsOperatorFilter"),
@@ -567,6 +568,8 @@ function startClock() {
     els.liveClock.textContent = now.toLocaleTimeString("es-UY", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
     els.dashboardClock.textContent = now.toLocaleTimeString("es-UY", { hour: "2-digit", minute: "2-digit" });
     if (els.mobileDate) els.mobileDate.textContent = now.toLocaleDateString("es-UY", { day: "2-digit", month: "short", year: "numeric" });
+    if (els.operatorHomeClock) els.operatorHomeClock.textContent = now.toLocaleTimeString("es-UY", { hour: "2-digit", minute: "2-digit" });
+    if (els.operatorHomeDay) els.operatorHomeDay.textContent = now.toLocaleDateString("es-UY", { weekday: "short", day: "2-digit", month: "short" }).replace(".", "");
     renderTimers();
   };
   update();
@@ -617,6 +620,8 @@ function bindEvents() {
   els.menuButton.addEventListener("click", () => els.sidebar.classList.toggle("open"));
   els.mobileMoreButton?.addEventListener("click", () => els.sidebar.classList.toggle("open"));
   els.mobileSyncButton?.addEventListener("click", () => syncNow(true));
+  els.operatorNewPartAction?.addEventListener("click", startNewPart);
+  els.operatorBreakAction?.addEventListener("click", () => showSection("break"));
   els.syncButton.addEventListener("click", () => syncNow(true));
   els.topSyncButton?.addEventListener("click", () => syncNow(true));
   els.lockButton.addEventListener("click", lockApplication);
@@ -1459,6 +1464,7 @@ function updateConnection() {
   if (els.topConnectionText) els.topConnectionText.textContent = connectionLabel;
   els.dashboardConnection.textContent = connectionDetail;
   els.offlineBanner.classList.toggle("hidden", online);
+  renderOperatorHome();
   renderChat();
   if (online && currentUser && !localSession) subscribeToChat().catch(console.warn);
 }
@@ -1492,6 +1498,7 @@ async function updateSyncUi(state = null) {
     els.topSyncText.textContent = text;
     els.topSyncText.title = lastSyncError || "";
   }
+  renderOperatorHome();
 }
 
 function recordIsToday(value) {
@@ -1568,6 +1575,69 @@ function renderUpcomingBreaks(todayParts = []) {
   els.upcomingBreaks.innerHTML = machines.map((machine) => `<div class="upcoming-item"><span class="upcoming-icon">${iconSvg("bed")}</span><div><strong>${escapeHtml(machine)}</strong><span>Sin descanso activo</span></div><b>--:--</b></div>`).join("");
 }
 
+function operatorActivityIcon(type) {
+  return type === "part" ? "clipboard" : type === "break" ? "bed" : type === "service" ? "wrench" : type === "fuel" ? "fuel" : "activity";
+}
+
+function renderOperatorHome() {
+  if (!els.operatorHomePanel || currentProfile?.role !== "operator") return;
+  const today = todayKey();
+  const todayParts = userParts.filter((part) => String(part.dateKey || part.createdAtClient || "").slice(0, 10) === today);
+  const todayBreaks = breakRecords.filter((record) => recordIsToday(record.startAtClient));
+  const pendingParts = userParts.filter((part) => part.syncStatus === "pending").length;
+  const pendingBreaks = breakRecords.filter((record) => record.syncStatus === "pending").length;
+  const pending = pendingParts + pendingBreaks;
+  const activeBreak = Boolean(currentBreak?.status === "active");
+  const completedPart = todayParts.some((part) => part.status === "completed" || Boolean(part.horometers?.final?.value));
+  const activePart = todayParts.find((part) => part.status !== "completed" && !part.horometers?.final?.value);
+
+  if (activeBreak) {
+    els.operatorHomeTitle.textContent = "Descanso en curso";
+    els.operatorHomeSubtitle.textContent = `Iniciado a las ${formatTime(currentBreak.startAtClient)}. Finalízalo desde la sección Descanso.`;
+  } else if (activePart) {
+    els.operatorHomeTitle.textContent = `Parte activo · ${activePart.machine || "Sin máquina"}`;
+    els.operatorHomeSubtitle.textContent = "Continúa registrando horómetros y producción de la jornada.";
+  } else if (completedPart) {
+    els.operatorHomeTitle.textContent = "Jornada registrada";
+    els.operatorHomeSubtitle.textContent = "Tu Parte de hoy quedó guardado y disponible en Mis registros.";
+  } else {
+    els.operatorHomeTitle.textContent = "Listo para comenzar";
+    els.operatorHomeSubtitle.textContent = "Crea el Parte de la jornada y registra tus descansos cuando corresponda.";
+  }
+
+  const online = navigator.onLine;
+  els.operatorHomeConnection.classList.toggle("is-online", online);
+  els.operatorHomeConnection.classList.toggle("is-offline", !online);
+  els.operatorHomeConnection.innerHTML = `<i></i> ${online ? "En línea" : "Sin conexión"}`;
+  els.operatorHomeSyncStatus.textContent = pending ? `${pending} pendiente${pending === 1 ? "" : "s"} de sincronizar` : "Todo sincronizado";
+  els.operatorHomeSyncStatus.classList.toggle("has-pending", pending > 0);
+
+  els.operatorBreakActionLabel.textContent = activeBreak ? "Finalizar descanso" : "Descanso";
+  els.operatorBreakActionMeta.textContent = activeBreak ? `Activo desde ${formatTime(currentBreak.startAtClient)}` : "Iniciar o consultar";
+  els.operatorBreakAction.classList.toggle("is-active", activeBreak);
+
+  els.operatorTodayParts.textContent = String(todayParts.length);
+  els.operatorTodayPartsMeta.textContent = todayParts.length ? `${todayParts.filter((part) => part.status === "completed" || part.horometers?.final?.value).length} finalizado${todayParts.length === 1 ? "" : "s"}` : "Sin registros";
+  els.operatorTodayBreaks.textContent = String(todayBreaks.length);
+  els.operatorTodayBreaksMeta.textContent = activeBreak ? "Uno en curso" : todayBreaks.length ? "Registrados hoy" : "Sin registros";
+  els.operatorPendingRecords.textContent = String(pending);
+  els.operatorPendingMeta.textContent = pending ? "Se enviarán al conectar" : "Todo enviado";
+
+  const latest = buildActivityRecords().find((item) => ["part", "break"].includes(item.type));
+  if (!latest) {
+    els.operatorLatestActivity.innerHTML = '<div class="operator-latest-empty"><span class="operator-latest-empty-icon">' + iconSvg("activity") + '</span><div><strong>Sin actividad todavía</strong><small>Los Partes y descansos aparecerán aquí.</small></div></div>';
+    return;
+  }
+  const status = latest.status === "pending" ? "Pendiente" : "Sincronizado";
+  els.operatorLatestActivity.innerHTML = `<button class="operator-latest-record" type="button" data-operator-latest-section="${latest.type === "part" ? "activity" : "break"}">
+    <span class="operator-latest-icon">${iconSvg(operatorActivityIcon(latest.type))}</span>
+    <span class="operator-latest-copy"><strong>${escapeHtml(latest.title)}</strong><small>${escapeHtml(latest.detail)}</small><em>${escapeHtml(formatDate(latest.date))} · ${escapeHtml(formatTime(latest.date))}</em></span>
+    <span class="operator-latest-status ${latest.status === "pending" ? "is-pending" : ""}">${status}</span>
+    <svg class="ui-icon operator-latest-chevron"><use href="#icon-chevron-right"></use></svg>
+  </button>`;
+  els.operatorLatestActivity.querySelector("[data-operator-latest-section]")?.addEventListener("click", (event) => showSection(event.currentTarget.dataset.operatorLatestSection));
+}
+
 function renderDashboardCards() {
   if (!currentProfile || !els.dashboardCards) return;
   const role = currentProfile.role;
@@ -1596,6 +1666,7 @@ function renderDashboardCards() {
   }));
   renderRecentActivity();
   renderDashboardOverview();
+  renderOperatorHome();
 }
 
 function renderRecentActivity() {

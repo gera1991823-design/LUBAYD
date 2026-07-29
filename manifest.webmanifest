@@ -1,7 +1,7 @@
 {
-  "name": "LUBAYD Operativa 6.0",
+  "name": "LUBAYD Operativa 6.2 - Inicio Operador Pro",
   "short_name": "LUBAYD",
-  "description": "Gestión operativa moderna para partes, descansos, servicios, combustible y chat con soporte offline.",
+  "description": "Gestión operativa LUBAYD con inicio profesional para operadores, trabajo offline, Partes, descansos, servicios y mensajería.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
