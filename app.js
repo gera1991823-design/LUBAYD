@@ -30,18 +30,19 @@ const els = {
   servicePartSelect: $("#servicePartSelect"), serviceMachine: $("#serviceMachine"), serviceOperator: $("#serviceOperator"), serviceTimer: $("#serviceTimer"), serviceStatus: $("#serviceStatus"), serviceStartedAt: $("#serviceStartedAt"), serviceStartReason: $("#serviceStartReason"), serviceEndReason: $("#serviceEndReason"), serviceStartEvidence: $("#serviceStartEvidence"), serviceEndEvidence: $("#serviceEndEvidence"), newServiceButton: $("#newServiceButton"), serviceSessionCount: $("#serviceSessionCount"), serviceSessionList: $("#serviceSessionList"), startServiceButton: $("#startServiceButton"), endServiceButton: $("#endServiceButton"),
   tankPercent: $("#tankPercent"), tankProgress: $("#tankProgress"), tankCapacity: $("#tankCapacity"), tankCurrent: $("#tankCurrent"), tankUpdated: $("#tankUpdated"), editTankButton: $("#editTankButton"), fuelRecentList: $("#fuelRecentList"), fuelForm: $("#fuelForm"), fuelMachine: $("#fuelMachine"), fuelOperator: $("#fuelOperator"), fuelLiters: $("#fuelLiters"), fuelPhotoEvidence: $("#fuelPhotoEvidence"), captureFuelPhotoButton: $("#captureFuelPhotoButton"), saveFuelButton: $("#saveFuelButton"),
   activityList: $("#activityList"), usersList: $("#usersList"),
+  chatMessages: $("#chatMessages"), chatForm: $("#chatForm"), chatInput: $("#chatInput"), chatSendButton: $("#chatSendButton"), chatStatusText: $("#chatStatusText"), chatConnectionBadge: $("#chatConnectionBadge"),
   captureModal: $("#captureModal"), captureTitle: $("#captureTitle"), captureSubtitle: $("#captureSubtitle"), capturePreview: $("#capturePreview"), captureFileInput: $("#captureFileInput"), captureGpsCard: $("#captureGpsCard"), captureGpsStatus: $("#captureGpsStatus"), captureGpsButton: $("#captureGpsButton"), captureMapLink: $("#captureMapLink"), confirmCaptureButton: $("#confirmCaptureButton"),
   pinModal: $("#pinModal"), pinInput: $("#pinInput"), pinConfirm: $("#pinConfirm"), pinError: $("#pinError"), savePinButton: $("#savePinButton"), skipPinButton: $("#skipPinButton"),
   tankModal: $("#tankModal"), tankCapacityInput: $("#tankCapacityInput"), tankCurrentInput: $("#tankCurrentInput"), saveTankButton: $("#saveTankButton"),
   processingOverlay: $("#processingOverlay"), processingTitle: $("#processingTitle"), processingMessage: $("#processingMessage"), toastRegion: $("#toastRegion")
 };
 
-const SECTION_TITLES = { dashboard: "Inicio", break: "Descanso", part: "Parte", service: "Servicio", fuel: "Combustible", activity: "Actividad", users: "Usuarios" };
+const SECTION_TITLES = { dashboard: "Inicio", break: "Descanso", part: "Parte", service: "Servicio", fuel: "Combustible", activity: "Actividad", chat: "Chat", users: "Usuarios" };
 const ROLE_LABELS = { operator: "Operador", mechanic: "Mecanico", admin: "Administrador" };
 const ROLE_SECTIONS = {
-  operator: ["dashboard", "break", "part", "activity"],
-  mechanic: ["dashboard", "service", "fuel", "activity"],
-  admin: ["dashboard", "break", "part", "service", "fuel", "activity", "users"]
+  operator: ["dashboard", "break", "part", "activity", "chat"],
+  mechanic: ["dashboard", "service", "fuel", "activity", "chat"],
+  admin: ["dashboard", "break", "part", "service", "fuel", "activity", "chat", "users"]
 };
 const HOROMETER_CONFIG = [
   { key: "initial", label: "Horometro inicial", help: "Inicio de la jornada" },
@@ -85,6 +86,9 @@ let authObserverUnsubscribe = null;
 let reconnectRunning = false;
 let lastSyncError = "";
 let syncRetryHandle = null;
+let chatMessages = [];
+let chatUnsubscribe = null;
+let chatInitialLoadDone = false;
 
 function escapeHtml(value) {
   return String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
@@ -388,6 +392,7 @@ function showSection(section) {
   if (section === "fuel") loadFuelSection().catch(console.warn);
   if (section === "users") loadUsers().catch(console.warn);
   if (section === "activity") renderActivity();
+  if (section === "chat") { renderChat(); subscribeToChat().catch(console.warn); }
 }
 
 function startClock() {
@@ -407,6 +412,8 @@ function bindEvents() {
   els.registerTab.addEventListener("click", () => switchAuth("register"));
   els.loginForm.addEventListener("submit", loginOnline);
   els.registerForm.addEventListener("submit", registerOnline);
+  els.chatForm?.addEventListener("submit", sendChatMessage);
+  els.chatInput?.addEventListener("input", autoResizeChatInput);
   els.offlineLoginButton.addEventListener("click", loginOffline);
   els.menuButton.addEventListener("click", () => els.sidebar.classList.toggle("open"));
   els.syncButton.addEventListener("click", () => syncNow(true));
@@ -502,6 +509,7 @@ async function loginOffline() {
 
 async function lockApplication() {
   if (!currentProfile) return;
+  stopChatSubscription();
   await OfflineDB.setLocked(currentProfile.uid, true).catch(() => {});
   lastOfflineProfile = { ...currentProfile, locked: true };
   localSession = false;
@@ -534,11 +542,11 @@ async function saveOfflinePin() {
 function friendlyError(error) {
   const code = error?.code || "";
   const messages = {
-    "auth/invalid-credential": "Correo o contrasena incorrectos.",
+    "auth/invalid-credential": "Correo o contraseña incorrectos.",
     "auth/user-not-found": "El usuario no existe.",
-    "auth/wrong-password": "Contrasena incorrecta.",
+    "auth/wrong-password": "Contraseña incorrecta.",
     "auth/email-already-in-use": "Ese correo ya esta registrado.",
-    "auth/weak-password": "La contrasena debe tener al menos 6 caracteres.",
+    "auth/weak-password": "La contraseña debe tener al menos 6 caracteres.",
     "auth/network-request-failed": "No se pudo conectar con Firebase.",
     "permission-denied": "Firestore rechazo el Parte por permisos. Publica firestore.rules de la version 3.4 en el proyecto APP LUBAYD.",
     "storage/unauthorized": "Storage rechazo la foto. Publica las reglas de Storage incluidas.",
@@ -560,6 +568,7 @@ async function loadAllLocalData() {
   fuelLoads = currentProfile?.role === "admin" ? await OfflineDB.getAllFuelLoads().catch(() => []) : await OfflineDB.getFuelLoads(currentUser.uid).catch(() => []);
   tank = await OfflineDB.getTank().catch(() => null) || tank;
   operatorParts = await OfflineDB.getOperatorParts(todayKey()).catch(() => []);
+  chatMessages = await OfflineDB.getChatMessages(150).catch(() => []);
   await repairPendingParts().catch((error) => console.warn("Reparacion de partes pendientes", error));
   updateConnection();
   await updateSyncUi();
@@ -572,6 +581,7 @@ async function refreshServerData() {
   if (["operator", "admin"].includes(role)) tasks.push(loadBreaksFromServer(), loadPartFromServer());
   if (["mechanic", "admin"].includes(role)) tasks.push(loadOperatorParts(), loadServicesFromServer(), loadFuelSection());
   await Promise.all(tasks);
+  await subscribeToChat().catch((error) => console.warn("Chat", error));
   renderAll();
 }
 
@@ -628,6 +638,138 @@ async function loadServicesFromServer() {
   services = currentProfile.role === "admin" ? await OfflineDB.getAllServices() : await OfflineDB.getServicesForMechanic(currentUser.uid);
 }
 
+
+function chatSort(records) {
+  return [...records].sort((a, b) => String(a.createdAtClient || "").localeCompare(String(b.createdAtClient || "")));
+}
+
+function mergeChatMessages(incoming) {
+  const map = new Map(chatMessages.map((message) => [message.id, message]));
+  incoming.forEach((message) => {
+    const current = map.get(message.id);
+    if (current?.syncStatus === "pending" && message.syncStatus === "synced") {
+      map.set(message.id, { ...current, ...message, syncStatus: "synced" });
+    } else if (!current || current.syncStatus !== "pending") {
+      map.set(message.id, { ...(current || {}), ...message });
+    }
+  });
+  chatMessages = chatSort(Array.from(map.values())).slice(-200);
+}
+
+function chatMessageTemplate(message) {
+  const mine = message.senderUid === currentUser?.uid;
+  const pending = message.syncStatus === "pending";
+  const role = roleLabel(message.senderRole || "operator");
+  return `<article class="chat-message ${mine ? "mine" : "other"} ${pending ? "pending" : ""}" data-message-id="${escapeHtml(message.id)}">
+    ${mine ? "" : `<div class="chat-avatar">${escapeHtml(initials(message.senderName || "Usuario"))}</div>`}
+    <div class="chat-bubble">
+      <header><strong>${escapeHtml(mine ? "Tu" : (message.senderName || "Usuario"))}</strong><span>${escapeHtml(role)}</span></header>
+      <p>${escapeHtml(message.text || "").replace(/\n/g, "<br>")}</p>
+      <footer><time>${escapeHtml(formatTime(message.createdAtClient))}</time>${pending ? "<span>Pendiente</span>" : "<span>Enviado</span>"}</footer>
+    </div>
+  </article>`;
+}
+
+function renderChat(scrollToEnd = false) {
+  if (!els.chatMessages) return;
+  const ordered = chatSort(chatMessages);
+  els.chatMessages.innerHTML = ordered.length
+    ? ordered.map(chatMessageTemplate).join("")
+    : '<div class="empty-state">Todavia no hay mensajes. Se el primero en escribir.</div>';
+
+  const onlineChat = navigator.onLine && firebaseReady && !localSession && Boolean(auth?.currentUser);
+  if (els.chatStatusText) {
+    els.chatStatusText.textContent = onlineChat
+      ? "Mensajes en tiempo real"
+      : "Modo offline: puedes escribir y se enviara al reconectar";
+  }
+  if (els.chatConnectionBadge) {
+    els.chatConnectionBadge.textContent = onlineChat ? "En linea" : "Sin conexion";
+    els.chatConnectionBadge.classList.toggle("offline", !onlineChat);
+  }
+  if (scrollToEnd || currentSection === "chat") {
+    requestAnimationFrame(() => { els.chatMessages.scrollTop = els.chatMessages.scrollHeight; });
+  }
+}
+
+function stopChatSubscription() {
+  if (typeof chatUnsubscribe === "function") chatUnsubscribe();
+  chatUnsubscribe = null;
+  chatInitialLoadDone = false;
+}
+
+async function subscribeToChat() {
+  if (!currentUser || !navigator.onLine || localSession) {
+    renderChat();
+    return;
+  }
+  await importFirebase();
+  if (!auth?.currentUser || auth.currentUser.uid !== currentUser.uid) {
+    renderChat();
+    return;
+  }
+  if (chatUnsubscribe) return;
+
+  const q = sdk.query(
+    sdk.collection(db, "chatMessages"),
+    sdk.orderBy("createdAtClient", "desc"),
+    sdk.limit(100)
+  );
+
+  chatUnsubscribe = sdk.onSnapshot(q, async (snapshot) => {
+    const remote = snapshot.docs.map((item) => ({ id: item.id, ...item.data(), syncStatus: "synced" })).reverse();
+    mergeChatMessages(remote);
+    await Promise.all(remote.map((message) => OfflineDB.putChatMessage(message).catch(() => {})));
+    chatInitialLoadDone = true;
+    renderChat(true);
+  }, (error) => {
+    console.warn("Chat en tiempo real", error);
+    if (els.chatStatusText) els.chatStatusText.textContent = "No se pudieron actualizar los mensajes";
+  });
+}
+
+function autoResizeChatInput() {
+  if (!els.chatInput) return;
+  els.chatInput.style.height = "auto";
+  els.chatInput.style.height = `${Math.min(120, Math.max(44, els.chatInput.scrollHeight))}px`;
+}
+
+async function sendChatMessage(event) {
+  event.preventDefault();
+  if (!currentUser || !currentProfile) return;
+  const text = String(els.chatInput?.value || "").trim();
+  if (!text) return;
+  if (text.length > 1000) {
+    showToast("Mensaje demasiado largo", "El mensaje puede tener hasta 1000 caracteres.", "error");
+    return;
+  }
+
+  const message = {
+    id: uuid(),
+    senderUid: currentUser.uid,
+    senderName: currentProfile.name || currentUser.displayName || "Usuario",
+    senderRole: currentProfile.role || "operator",
+    text,
+    createdAtClient: localIso(),
+    syncStatus: "pending"
+  };
+
+  setBusy(els.chatSendButton, true, "Enviando...");
+  try {
+    await OfflineDB.putChatMessage(message);
+    mergeChatMessages([message]);
+    await queueForSync({ id: `chat-${message.id}`, uid: currentUser.uid, type: "chat-message", payload: message, createdAt: Date.now() });
+    els.chatInput.value = "";
+    autoResizeChatInput();
+    renderChat(true);
+    if (navigator.onLine) await syncNow(false);
+  } catch (error) {
+    showToast("No se pudo guardar el mensaje", friendlyError(error), "error");
+  } finally {
+    setBusy(els.chatSendButton, false);
+  }
+}
+
 function renderAll() {
   renderDashboardCards();
   renderBreak();
@@ -636,6 +778,7 @@ function renderAll() {
   renderTank();
   renderFuelRecent();
   renderActivity();
+  renderChat();
   updateConnection();
 }
 
@@ -654,6 +797,8 @@ function updateConnection() {
   if (els.topConnectionText) els.topConnectionText.textContent = connectionLabel;
   els.dashboardConnection.textContent = connectionDetail;
   els.offlineBanner.classList.toggle("hidden", online);
+  renderChat();
+  if (online && currentUser && !localSession) subscribeToChat().catch(console.warn);
 }
 
 async function updateSyncUi(state = null) {
@@ -782,7 +927,7 @@ async function reconnectAndSync() {
     const onlineUser = await waitForAuthUser();
     if (!onlineUser) {
       updateConnection();
-      showToast("Conexion recuperada", "Para enviar los pendientes, ingresa una vez con correo y contrasena.", "error");
+      showToast("Conexion recuperada", "Para enviar los pendientes, ingresa una vez con correo y contraseña.", "error");
       return;
     }
     if (onlineUser.uid !== currentProfile.uid) {
@@ -1518,7 +1663,7 @@ async function syncNow(manual) {
 
     if (!auth?.currentUser || auth.currentUser.uid !== currentUser.uid || localSession) {
       updateConnection();
-      if (manual) showToast("Falta validar la sesion", "Bloquea la aplicacion e ingresa con correo y contrasena. Los datos no se perderan.", "error");
+      if (manual) showToast("Falta validar la sesion", "Bloquea la aplicacion e ingresa con correo y contraseña. Los datos no se perderan.", "error");
       return;
     }
 
@@ -1657,6 +1802,25 @@ async function processSyncItem(item) {
       transaction.set(tankRef, { ...currentTank, currentLiters: nextLiters, updatedAtClient: localIso(), updatedBy: record.uid, updatedAt: sdk.serverTimestamp() }, { merge: true });
     });
     await OfflineDB.putFuelLoad({ ...record, syncStatus: "synced" });
+    return;
+  }
+  if (item.type === "chat-message") {
+    const record = { ...item.payload };
+    if (record.senderUid !== currentUser?.uid) {
+      throw new Error("El mensaje pertenece a otro usuario.");
+    }
+    record.senderName = currentProfile?.name || currentUser?.displayName || record.senderName || "Usuario";
+    record.senderRole = currentProfile?.role || record.senderRole || "operator";
+    const remote = {
+      ...cleanRecord(record),
+      syncStatus: "synced",
+      createdAt: sdk.serverTimestamp()
+    };
+    await sdk.setDoc(sdk.doc(db, "chatMessages", record.id), remote, { merge: false });
+    const syncedMessage = { ...record, syncStatus: "synced" };
+    await OfflineDB.putChatMessage(syncedMessage);
+    mergeChatMessages([syncedMessage]);
+    renderChat(true);
     return;
   }
   if (item.type === "tank-update") {

@@ -134,6 +134,24 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+
+    // Chat general interno. Todos los usuarios activos pueden leer y enviar.
+    match /chatMessages/{messageId} {
+      allow read: if hasProfile() && profile().active == true;
+
+      allow create: if hasProfile()
+                    && profile().active == true
+                    && request.resource.data.senderUid == request.auth.uid
+                    && request.resource.data.senderName is string
+                    && request.resource.data.senderRole == profile().role
+                    && request.resource.data.text is string
+                    && request.resource.data.text.size() > 0
+                    && request.resource.data.text.size() <= 1000
+                    && request.resource.data.createdAtClient is string;
+
+      allow update, delete: if false;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

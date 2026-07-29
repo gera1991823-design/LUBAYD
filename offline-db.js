@@ -2,7 +2,7 @@
 
 (() => {
   const DB_NAME = "lubayd-operativa-offline";
-  const DB_VERSION = 3;
+  const DB_VERSION = 4;
   const STORES = {
     profiles: "profiles",
     settings: "settings",
@@ -12,7 +12,8 @@
     fuelLoads: "fuelLoads",
     operatorParts: "operatorParts",
     tank: "tank",
-    queue: "queue"
+    queue: "queue",
+    chatMessages: "chatMessages"
   };
 
   let dbPromise = null;
@@ -57,6 +58,7 @@
         createStore(db, STORES.operatorParts, { keyPath: "id" }, [["operatorUid", "operatorUid"], ["dateKey", "dateKey"], ["status", "status"]]);
         createStore(db, STORES.tank, { keyPath: "id" });
         createStore(db, STORES.queue, { keyPath: "id" }, [["uid", "uid"], ["status", "status"], ["createdAt", "createdAt"]]);
+        createStore(db, STORES.chatMessages, { keyPath: "id" }, [["senderUid", "senderUid"], ["createdAtClient", "createdAtClient"]]);
 
         if (event.oldVersion > 0 && event.oldVersion < 3 && db.objectStoreNames.contains(STORES.parts)) {
           const store = request.transaction.objectStore(STORES.parts);
@@ -224,6 +226,15 @@
   async function putTank(record) { return put(STORES.tank, { ...record, id: record.id || "main", updatedAtLocal: Date.now() }); }
   async function getTank() { return (await get(STORES.tank, "main")) || null; }
 
+
+  async function putChatMessage(record) { return put(STORES.chatMessages, { ...record, updatedAtLocal: Date.now() }); }
+  async function getChatMessages(limit = 150) {
+    const records = await all(STORES.chatMessages);
+    return records
+      .sort((a, b) => String(a.createdAtClient || "").localeCompare(String(b.createdAtClient || "")))
+      .slice(-Math.max(1, Number(limit || 150)));
+  }
+
   async function enqueue(item) {
     if (!item?.id || !item?.uid || !item?.type) throw new Error("Elemento de sincronizacion incompleto.");
     const old = await get(STORES.queue, item.id);
@@ -250,6 +261,7 @@
     putService, getService, getServicesForMechanic, getAllServices, getServicesForPart,
     putFuelLoad, getFuelLoads, getAllFuelLoads,
     putTank, getTank,
+    putChatMessage, getChatMessages,
     enqueue, getPendingQueue, updateQueue, deleteQueue, countPending, requestPersistentStorage,
     setSetting, getSetting
   };
