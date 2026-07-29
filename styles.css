@@ -4179,3 +4179,708 @@ body[data-role="admin"] #serviceSection {
   .admin-records-actions { width: 100%; display: grid; grid-template-columns: 1fr 1fr; }
   .admin-records-actions > * { width: 100%; justify-content: center; }
 }
+
+/* ==========================================================
+   LUBAYD V5.4 - MOBILE PRO
+   Ajuste final para iPhone/Android: escala, fluidez y jerarquia
+   ========================================================== */
+
+:root {
+  --mobile-gutter: 12px;
+  --mobile-radius: 18px;
+  --mobile-nav-height: 60px;
+  --mobile-soft-shadow: 0 8px 24px rgba(7, 63, 39, .085);
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+button,
+select,
+input,
+textarea,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.content-section.active {
+  animation: mobileSectionEnter .22s ease-out both;
+}
+
+@keyframes mobileSectionEnter {
+  from { opacity: .55; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .content-section.active { animation: none; }
+}
+
+@media (max-width: 760px) {
+  html,
+  body {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    background: #f3f8f5;
+  }
+
+  body {
+    padding-bottom: calc(var(--mobile-nav-height) + env(safe-area-inset-bottom) + 12px);
+    overscroll-behavior-y: contain;
+  }
+
+  .app-shell,
+  .main-shell,
+  .main-content,
+  .content-section,
+  .dashboard-section,
+  .pro-workflow-section {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .content-section {
+    padding: 0 var(--mobile-gutter) 20px;
+  }
+
+  /* Cabecera móvil compacta */
+  .mobile-dashboard-hero {
+    margin: 0 calc(var(--mobile-gutter) * -1);
+    padding: 14px var(--mobile-gutter) 30px;
+    border-radius: 0 0 22px 22px;
+    background:
+      radial-gradient(circle at 88% 15%, rgba(37, 190, 104, .25), transparent 33%),
+      linear-gradient(145deg, #004f32 0%, #007a42 68%, #07914d 100%);
+    box-shadow: 0 10px 24px rgba(0, 74, 43, .16);
+  }
+
+  .mobile-greeting {
+    display: grid;
+    grid-template-columns: 48px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .mobile-profile-button .profile-photo-frame {
+    width: 48px;
+    height: 48px;
+    border-width: 2px;
+    box-shadow: 0 5px 13px rgba(0, 34, 20, .2);
+  }
+
+  .mobile-profile-button .profile-photo-edit {
+    width: 20px;
+    height: 20px;
+  }
+
+  .mobile-profile-button .profile-photo-edit .ui-icon {
+    width: 11px;
+    height: 11px;
+  }
+
+  .mobile-greeting-copy h1 {
+    font-size: clamp(20px, 6.1vw, 25px);
+    line-height: 1.02;
+    letter-spacing: -.035em;
+  }
+
+  .mobile-greeting-copy p {
+    margin-top: 4px;
+    font-size: 11px;
+    color: rgba(255,255,255,.72);
+  }
+
+  .mobile-date {
+    gap: 5px;
+    font-size: 10px;
+  }
+
+  .mobile-date .ui-icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  /* KPI: menos altura e iconos contenidos */
+  .pro-dashboard-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin: -20px 0 10px;
+  }
+
+  .pro-metric-card {
+    min-height: 82px;
+    padding: 10px;
+    grid-template-columns: 38px minmax(0, 1fr);
+    gap: 8px;
+    border-radius: 16px;
+    border-color: rgba(14, 100, 61, .12);
+    box-shadow: var(--mobile-soft-shadow);
+  }
+
+  .pro-metric-icon,
+  .pro-metric-icon .pro-icon,
+  .pro-metric-icon svg {
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+  }
+
+  .pro-metric-card > div > span {
+    font-size: 9px;
+    line-height: 1.15;
+    letter-spacing: .01em;
+  }
+
+  .pro-metric-card strong {
+    margin-top: 2px;
+    font-size: 19px;
+    line-height: 1;
+  }
+
+  .pro-metric-card small {
+    margin-top: 4px;
+    font-size: 8px;
+    line-height: 1.15;
+  }
+
+  .metric-progress {
+    height: 3px;
+    margin-top: 6px;
+  }
+
+  /* Tercer indicador ocupa la fila completa cuando hay 3 tarjetas visibles */
+  .pro-dashboard-metrics > .pro-metric-card:nth-child(3):nth-last-child(1),
+  body[data-role="mechanic"] .pro-dashboard-metrics > .pro-metric-card:nth-child(3) {
+    grid-column: 1 / -1;
+    grid-template-columns: 40px minmax(0, 1fr);
+    min-height: 76px;
+  }
+
+  /* Tarjetas principales */
+  .dashboard-pro-grid,
+  .dashboard-pro-lower-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .dashboard-pro-grid > article,
+  .dashboard-pro-lower-grid > article {
+    margin: 0;
+  }
+
+  .dashboard-card,
+  .panel-card,
+  .workflow-hero-card,
+  .workflow-side-card,
+  .workflow-list-card,
+  .workflow-form-card,
+  .workflow-session-card {
+    border-radius: var(--mobile-radius);
+    box-shadow: var(--mobile-soft-shadow);
+  }
+
+  .dashboard-card-heading h2 {
+    font-size: 17px;
+    letter-spacing: -.02em;
+  }
+
+  /* Tanque: compacto, legible y sin ilustración dominante */
+  .pro-tank-card {
+    padding: 15px;
+  }
+
+  .pro-tank-layout {
+    min-height: 118px;
+    grid-template-columns: minmax(112px, .88fr) minmax(0, 1.12fr);
+    gap: 8px;
+  }
+
+  .tank-illustration {
+    width: 100%;
+    max-width: 142px;
+    height: 105px;
+    justify-self: center;
+  }
+
+  .pro-tank-copy > span {
+    font-size: 10px;
+  }
+
+  .pro-tank-copy > strong {
+    margin: 1px 0 2px;
+    font-size: 32px;
+    line-height: 1;
+  }
+
+  .pro-tank-copy > small {
+    font-size: 10px;
+  }
+
+  .pro-tank-copy dl {
+    margin-top: 8px;
+    grid-template-columns: 1fr 1fr;
+    gap: 7px;
+  }
+
+  .pro-tank-copy dt {
+    font-size: 8px;
+  }
+
+  .pro-tank-copy dd {
+    font-size: 14px;
+  }
+
+  .pro-level-track {
+    height: 5px;
+    margin: 5px 0 11px;
+  }
+
+  .dashboard-action-button {
+    min-height: 44px;
+    padding: 0 14px;
+    border-radius: 13px;
+    font-size: 12px;
+  }
+
+  .dashboard-action-button .ui-icon {
+    width: 17px;
+    height: 17px;
+  }
+
+  /* Ocultar gráficos pesados del inicio móvil; siguen disponibles en Reportes */
+  .pro-fuel-chart-card,
+  .fleet-summary-card {
+    display: none;
+  }
+
+  .pro-upcoming-card,
+  .pro-activity-card {
+    min-height: auto;
+    padding: 14px;
+  }
+
+  /* Encabezados de formularios */
+  .workflow-page-heading {
+    margin-top: 8px;
+    padding: 14px;
+    gap: 9px;
+    border-radius: 18px;
+  }
+
+  .workflow-heading-icon {
+    width: 48px;
+    height: 48px;
+    flex: 0 0 48px;
+    border-radius: 14px;
+  }
+
+  .workflow-heading-icon svg {
+    width: 42px;
+    height: 42px;
+  }
+
+  .workflow-page-heading h1 {
+    font-size: 21px;
+    line-height: 1.08;
+  }
+
+  .workflow-page-heading p {
+    margin-top: 5px;
+    font-size: 11px;
+    line-height: 1.4;
+  }
+
+  /* Flujo de servicio: 2 x 2, sin texto cortado */
+  .service-progress-strip,
+  .part-progress-strip {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 7px;
+    padding: 8px;
+    overflow: visible;
+    border-radius: 16px;
+    scroll-snap-type: none;
+  }
+
+  .service-progress-strip > i,
+  .part-progress-strip > i {
+    display: none;
+  }
+
+  .service-progress-step,
+  .part-progress-step {
+    min-width: 0;
+    min-height: 42px;
+    padding: 7px 8px;
+    display: grid;
+    grid-template-columns: 25px minmax(0, 1fr);
+    align-items: center;
+    gap: 7px;
+    border: 1px solid #e2ebe5;
+    border-radius: 12px;
+    background: #f8fbf9;
+  }
+
+  .service-progress-step > span,
+  .part-progress-step > span {
+    width: 25px;
+    height: 25px;
+    font-size: 11px;
+  }
+
+  .service-progress-step strong,
+  .part-progress-step strong {
+    font-size: 10px;
+    line-height: 1.15;
+    white-space: normal;
+  }
+
+  .part-progress-step small {
+    display: none;
+  }
+
+  .service-progress-step.active,
+  .part-progress-step.active {
+    border-color: rgba(7, 145, 73, .28);
+    background: #eef9f2;
+  }
+
+  /* Selector de Parte y datos del servicio */
+  .service-part-selector-card,
+  .workflow-session-card {
+    padding: 13px;
+    gap: 10px;
+  }
+
+  .workflow-session-icon {
+    width: 46px;
+    height: 46px;
+    flex-basis: 46px;
+    border-radius: 13px;
+  }
+
+  .workflow-session-icon svg {
+    width: 40px;
+    height: 40px;
+  }
+
+  .service-selector-main,
+  .part-session-select {
+    min-width: 100%;
+    width: 100%;
+  }
+
+  .field > span {
+    margin-bottom: 5px;
+    font-size: 10px;
+  }
+
+  .field input,
+  .field select,
+  .field textarea {
+    min-height: 46px;
+    font-size: 16px; /* evita zoom automático de Safari */
+    border-radius: 12px;
+  }
+
+  .field textarea {
+    min-height: 96px;
+  }
+
+  .pro-service-summary {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    padding: 8px;
+    border-radius: 14px;
+  }
+
+  .pro-service-summary > div {
+    min-width: 0;
+    padding: 9px 10px;
+    border-radius: 11px;
+  }
+
+  .pro-service-summary span {
+    font-size: 8px;
+  }
+
+  .pro-service-summary strong {
+    font-size: 14px;
+  }
+
+  .service-new-button,
+  .pro-new-button {
+    min-height: 46px;
+    width: 100%;
+    border-radius: 13px;
+    font-size: 13px;
+  }
+
+  /* Reloj y acciones: menos ilustración, más información útil */
+  .service-pro-grid {
+    gap: 10px;
+  }
+
+  .service-clock-pro-card {
+    min-height: 210px;
+    padding: 16px;
+  }
+
+  .service-clock-icon {
+    width: 92px;
+    height: 92px;
+    margin: 0 auto 4px;
+  }
+
+  .service-clock-icon svg {
+    width: 88px;
+    height: 88px;
+  }
+
+  .service-clock-pro-card .eyebrow {
+    font-size: 9px;
+  }
+
+  .service-pro-timer {
+    margin-top: 3px;
+    font-size: 31px;
+    line-height: 1;
+  }
+
+  .service-clock-pro-card > strong {
+    margin-top: 7px;
+    font-size: 15px;
+  }
+
+  .service-clock-pro-card > p {
+    margin: 4px 0 0;
+    font-size: 10px;
+  }
+
+  .workflow-form-card,
+  .workflow-list-card,
+  .workflow-hero-card,
+  .workflow-side-card {
+    padding: 13px;
+  }
+
+  .workflow-card-title {
+    gap: 9px;
+  }
+
+  .workflow-card-title > svg {
+    width: 42px;
+    height: 42px;
+    flex-basis: 42px;
+  }
+
+  .workflow-card-title h3 {
+    font-size: 16px;
+  }
+
+  .workflow-card-title p {
+    font-size: 10px;
+    line-height: 1.35;
+  }
+
+  .pro-action-button {
+    min-height: 54px;
+    padding: 9px 12px;
+    border-radius: 14px;
+  }
+
+  .pro-action-button .action-icon {
+    width: 38px;
+    height: 38px;
+    flex-basis: 38px;
+  }
+
+  .pro-action-button .action-icon svg {
+    width: 33px;
+    height: 33px;
+  }
+
+  .pro-action-button strong {
+    font-size: 13px;
+  }
+
+  .pro-action-button small {
+    font-size: 8px;
+  }
+
+  .pro-evidence-box {
+    min-height: 58px;
+    padding: 10px;
+    border-radius: 12px;
+    font-size: 10px;
+  }
+
+  /* Descanso: reloj e iconos más contenidos */
+  .break-clock-layout {
+    gap: 12px;
+  }
+
+  .break-clock-ring {
+    width: 154px;
+    height: 154px;
+  }
+
+  .break-clock-art {
+    top: 23px;
+    width: 64px;
+    height: 64px;
+  }
+
+  .break-clock-value {
+    bottom: 28px;
+    font-size: 22px;
+  }
+
+  .break-actions {
+    gap: 8px;
+  }
+
+  /* Navegación móvil: menor altura, mejor zona táctil */
+  .mobile-bottom-nav,
+  body[data-role="admin"] .mobile-bottom-nav {
+    min-height: var(--mobile-nav-height);
+    height: calc(var(--mobile-nav-height) + env(safe-area-inset-bottom));
+    padding: 5px 8px calc(5px + env(safe-area-inset-bottom));
+    background: rgba(0, 83, 51, .97);
+    border-top: 1px solid rgba(255,255,255,.11);
+    box-shadow: 0 -5px 18px rgba(0, 44, 27, .18);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+
+  .mobile-nav-item,
+  body[data-role="admin"] .mobile-nav-item {
+    min-height: 48px;
+    padding: 4px 3px;
+    gap: 2px;
+    border-radius: 11px;
+    transition: transform .16s ease, background-color .16s ease, color .16s ease;
+  }
+
+  .mobile-nav-item:active {
+    transform: scale(.96);
+  }
+
+  .mobile-nav-item .ui-icon,
+  body[data-role="admin"] .mobile-nav-item .ui-icon {
+    width: 19px;
+    height: 19px;
+  }
+
+  .mobile-nav-item small,
+  body[data-role="admin"] .mobile-nav-item small {
+    font-size: 8px;
+    line-height: 1;
+  }
+
+  .mobile-nav-item.active,
+  body[data-role="admin"] .mobile-nav-item.active {
+    background: rgba(255,255,255,.14);
+    box-shadow: none;
+  }
+
+  /* Evita que la barra tape el contenido final */
+  .content-section::after {
+    content: "";
+    display: block;
+    height: 8px;
+  }
+
+  .service-history-card,
+  .workflow-list-card:last-child {
+    margin-bottom: 8px;
+  }
+}
+
+@media (max-width: 390px) {
+  :root { --mobile-gutter: 9px; }
+
+  .mobile-dashboard-hero {
+    padding-top: 12px;
+  }
+
+  .mobile-greeting {
+    grid-template-columns: 44px minmax(0,1fr) auto;
+  }
+
+  .mobile-profile-button .profile-photo-frame {
+    width: 44px;
+    height: 44px;
+  }
+
+  .mobile-greeting-copy h1 {
+    font-size: 20px;
+  }
+
+  .mobile-date {
+    font-size: 9px;
+  }
+
+  .pro-metric-card {
+    min-height: 78px;
+    padding: 8px;
+    grid-template-columns: 34px minmax(0,1fr);
+  }
+
+  .pro-metric-icon,
+  .pro-metric-icon .pro-icon,
+  .pro-metric-icon svg {
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+  }
+
+  .pro-tank-layout {
+    grid-template-columns: 102px minmax(0,1fr);
+  }
+
+  .tank-illustration {
+    height: 92px;
+  }
+
+  .pro-tank-copy > strong {
+    font-size: 28px;
+  }
+
+  .service-progress-step,
+  .part-progress-step {
+    padding: 6px;
+  }
+
+  .service-progress-step strong,
+  .part-progress-step strong {
+    font-size: 9px;
+  }
+
+  .workflow-heading-icon {
+    display: none;
+  }
+
+  .workflow-page-heading {
+    display: block;
+  }
+
+  .service-clock-icon {
+    width: 82px;
+    height: 82px;
+  }
+
+  .service-clock-icon svg {
+    width: 78px;
+    height: 78px;
+  }
+}

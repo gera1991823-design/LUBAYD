@@ -1,14 +1,14 @@
 "use strict";
 
-const CACHE_NAME = "lubayd-operativa-v5.3.0-reportes-turnos-mobile";
+const CACHE_NAME = "lubayd-operativa-v5.4.0-reportes-turnos-mobile";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./styles.css?v=5.3.0",
-  "./app.js?v=5.3.0",
-  "./offline-db.js?v=5.3.0",
-  "./sync-manager.js?v=5.3.0",
-  "./manifest.webmanifest?v=5.3.0",
+  "./styles.css?v=5.4.0",
+  "./app.js?v=5.4.0",
+  "./offline-db.js?v=5.4.0",
+  "./sync-manager.js?v=5.4.0",
+  "./manifest.webmanifest?v=5.4.0",
   "./logo-original.png",
   "./icon-192.png",
   "./icon-512.png",
