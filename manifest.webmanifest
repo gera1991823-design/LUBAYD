@@ -1,7 +1,7 @@
 {
-  "name": "LUBAYD Operativa 5.2 Reportes",
+  "name": "LUBAYD Operativa 5.5 Chat Directo",
   "short_name": "LUBAYD",
-  "description": "Panel administrativo de consulta con reportes por turno, servicios, descansos y combustible, optimizado para móviles.",
+  "description": "Gestión operativa LUBAYD con mensajería privada, trabajo offline, partes, servicios, descansos y combustible.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

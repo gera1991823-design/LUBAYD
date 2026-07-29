@@ -36,7 +36,7 @@ const els = {
   activityList: $("#activityList"), operatorActivityTabs: $("#operatorActivityTabs"), operatorPartsActivity: $("#operatorPartsActivity"), operatorBreaksActivity: $("#operatorBreaksActivity"), generalActivityList: $("#generalActivityList"), activityDateFilter: $("#activityDateFilter"), usersList: $("#usersList"),
   adminActivityControls: $("#adminActivityControls"), adminActivityType: $("#adminActivityType"), adminActivityPerson: $("#adminActivityPerson"), adminActivityDate: $("#adminActivityDate"), adminActivitySearch: $("#adminActivitySearch"), adminActivityRefresh: $("#adminActivityRefresh"), adminActivityTotal: $("#adminActivityTotal"), adminActivityParts: $("#adminActivityParts"), adminActivityBreaks: $("#adminActivityBreaks"), adminActivityServices: $("#adminActivityServices"), adminActivityFuel: $("#adminActivityFuel"),
   cleanupParts: $("#cleanupParts"), cleanupServices: $("#cleanupServices"), cleanupFuel: $("#cleanupFuel"), cleanupTank: $("#cleanupTank"), cleanupConfirmInput: $("#cleanupConfirmInput"), cleanupDataButton: $("#cleanupDataButton"),
-  chatMessages: $("#chatMessages"), chatForm: $("#chatForm"), chatInput: $("#chatInput"), chatSendButton: $("#chatSendButton"), chatStatusText: $("#chatStatusText"), chatConnectionBadge: $("#chatConnectionBadge"),
+  chatMessages: $("#chatMessages"), chatForm: $("#chatForm"), chatInput: $("#chatInput"), chatSendButton: $("#chatSendButton"), chatStatusText: $("#chatStatusText"), chatConnectionBadge: $("#chatConnectionBadge"), directChatShell: $("#directChatShell"), chatUserSearch: $("#chatUserSearch"), chatContactList: $("#chatContactList"), chatDirectoryStatus: $("#chatDirectoryStatus"), chatUnreadTotal: $("#chatUnreadTotal"), chatBackButton: $("#chatBackButton"), chatRecipientAvatar: $("#chatRecipientAvatar"), chatRecipientName: $("#chatRecipientName"), chatRecipientMeta: $("#chatRecipientMeta"),
   reportsConnectionBadge: $("#reportsConnectionBadge"), refreshReportsButton: $("#refreshReportsButton"), reportDateFrom: $("#reportDateFrom"), reportDateTo: $("#reportDateTo"), reportOperator: $("#reportOperator"), reportMachine: $("#reportMachine"), reportShift: $("#reportShift"), applyReportsButton: $("#applyReportsButton"), clearReportsButton: $("#clearReportsButton"), reportsLastUpdated: $("#reportsLastUpdated"),
   reportFuelTotal: $("#reportFuelTotal"), reportFuelDetail: $("#reportFuelDetail"), reportServiceHours: $("#reportServiceHours"), reportServiceDetail: $("#reportServiceDetail"), reportMachineCount: $("#reportMachineCount"), reportDominantShift: $("#reportDominantShift"), fuelByShiftChart: $("#fuelByShiftChart"), reportSummaryChart: $("#reportSummaryChart"), breaksByDayChart: $("#breaksByDayChart"), breaksByOperatorChart: $("#breaksByOperatorChart"), fuelByDayChart: $("#fuelByDayChart"), fuelByOperatorChart: $("#fuelByOperatorChart"), fuelByMachineChart: $("#fuelByMachineChart"), serviceByMachineChart: $("#serviceByMachineChart"), reportServiceTable: $("#reportServiceTable"), reportServiceTableCount: $("#reportServiceTableCount"),
   captureModal: $("#captureModal"), captureTitle: $("#captureTitle"), captureSubtitle: $("#captureSubtitle"), capturePreview: $("#capturePreview"), captureFileInput: $("#captureFileInput"), captureGpsCard: $("#captureGpsCard"), captureGpsStatus: $("#captureGpsStatus"), captureGpsButton: $("#captureGpsButton"), captureMapLink: $("#captureMapLink"), confirmCaptureButton: $("#confirmCaptureButton"),
@@ -48,9 +48,9 @@ const els = {
 const SECTION_TITLES = { dashboard: "Inicio", break: "Descansos", part: "Partes", service: "Servicios", fuel: "Combustible", activity: "Actividad", chat: "Chat", reports: "Reportes", users: "Usuarios" };
 const ROLE_LABELS = { operator: "Operador", mechanic: "Mecanico", admin: "Administrador" };
 const ROLE_SECTIONS = {
-  operator: ["dashboard", "break", "part", "activity"],
+  operator: ["dashboard", "break", "part", "activity", "chat"],
   mechanic: ["dashboard", "service", "fuel", "activity", "chat"],
-  admin: ["dashboard", "part", "service", "break", "reports", "users"]
+  admin: ["dashboard", "part", "service", "break", "reports", "users", "chat"]
 };
 const HOROMETER_CONFIG = [
   { key: "initial", label: "Horometro inicial", help: "Inicio de la jornada" },
@@ -95,6 +95,9 @@ let reconnectRunning = false;
 let lastSyncError = "";
 let syncRetryHandle = null;
 let chatMessages = [];
+let chatUsers = [];
+let selectedChatUserUid = "";
+let chatDirectoryLoading = false;
 let chatUnsubscribe = null;
 let partsUnsubscribe = null;
 let legacyAdminParts = [];
@@ -111,6 +114,8 @@ let adminRecordUnsubscribers = [];
 let adminProfiles = new Map();
 let operatorActivityTab = "parts";
 const REPORT_CACHE_KEY = "lubayd-admin-reports-v1";
+const CHAT_DIRECTORY_KEY = "lubayd-direct-chat-directory-v1";
+const CHAT_SELECTED_KEY_PREFIX = "lubayd-direct-chat-selected-v1";
 const DATA_RESET_SETTING_KEY = "lastAppliedOperationalResetAt";
 let profilePhotoTargetUid = "";
 
@@ -370,6 +375,9 @@ async function resolveProfile(user) {
 }
 
 async function enterApplication(user, profile, offline) {
+  stopChatSubscription();
+  chatUsers = [];
+  selectedChatUserUid = "";
   currentUser = user;
   currentProfile = profile;
   localSession = offline;
@@ -472,7 +480,14 @@ function showSection(section) {
   if (section === "fuel") loadFuelSection().catch(console.warn);
   if (section === "users") loadUsers().catch(console.warn);
   if (section === "activity") renderActivity();
-  if (section === "chat") { renderChat(); subscribeToChat().catch(console.warn); }
+  if (section === "chat") {
+    renderChat();
+    loadChatDirectory(false).catch((error) => {
+      console.warn("Directorio de chat", error);
+      if (els.chatDirectoryStatus) els.chatDirectoryStatus.textContent = "No se pudo actualizar el directorio";
+    });
+    subscribeToChat().catch(console.warn);
+  }
   if (section === "reports") loadAdminReports(false).catch((error) => { console.warn("Reportes", error); showToast("No se pudieron cargar los reportes", friendlyError(error), "error"); });
 }
 
@@ -496,6 +511,8 @@ function bindEvents() {
   els.registerForm.addEventListener("submit", registerOnline);
   els.chatForm?.addEventListener("submit", sendChatMessage);
   els.chatInput?.addEventListener("input", autoResizeChatInput);
+  els.chatUserSearch?.addEventListener("input", () => renderChatContacts());
+  els.chatBackButton?.addEventListener("click", clearChatSelection);
   els.refreshReportsButton?.addEventListener("click", () => loadAdminReports(true));
   els.applyReportsButton?.addEventListener("click", renderAdminReports);
   els.clearReportsButton?.addEventListener("click", resetReportFilters);
@@ -639,6 +656,9 @@ async function lockApplication() {
   await OfflineDB.setLocked(currentProfile.uid, true).catch(() => {});
   lastOfflineProfile = { ...currentProfile, locked: true };
   localSession = false;
+  chatUsers = [];
+  chatMessages = [];
+  selectedChatUserUid = "";
   currentUser = null;
   currentProfile = null;
   if (auth?.currentUser) await sdk.signOut(auth).catch(() => {});
@@ -674,7 +694,7 @@ function friendlyError(error) {
     "auth/email-already-in-use": "Ese correo ya esta registrado.",
     "auth/weak-password": "La contraseña debe tener al menos 6 caracteres.",
     "auth/network-request-failed": "No se pudo conectar con Firebase.",
-    "permission-denied": "Firestore rechazo el Parte por permisos. Publica firestore.rules de la version 3.4 en el proyecto APP LUBAYD.",
+    "permission-denied": "Firestore rechazó la operación por permisos. Publicá firestore.rules de la versión 5.5 en el proyecto APP LUBAYD.",
     "storage/unauthorized": "Storage rechazo la foto. Publica las reglas de Storage incluidas.",
     "storage/retry-limit-exceeded": "La foto no pudo cargarse por un problema de red.",
     "unavailable": "Firebase no esta disponible temporalmente."
@@ -717,7 +737,8 @@ async function refreshServerData() {
   if (role === "admin") tasks.push(loadBreaksFromServer(), loadOperatorParts(true), loadServicesFromServer(), loadFuelSection());
   await Promise.all(tasks);
   if (role === "admin") await subscribeToAdminRecords().catch((error) => console.warn("Registros administrativos", error));
-  if (role !== "admin") await subscribeToChat().catch((error) => console.warn("Chat", error));
+  await loadChatDirectory(false).catch((error) => console.warn("Directorio de chat", error));
+  await subscribeToChat().catch((error) => console.warn("Chat", error));
   renderAll();
 }
 
@@ -1021,6 +1042,81 @@ function chatSort(records) {
   return [...records].sort((a, b) => String(a.createdAtClient || "").localeCompare(String(b.createdAtClient || "")));
 }
 
+function directConversationId(uidA, uidB) {
+  return [String(uidA || ""), String(uidB || "")].sort().join("__");
+}
+
+function selectedChatUser() {
+  return chatUsers.find((profile) => profile.uid === selectedChatUserUid) || null;
+}
+
+function chatConversationMessages(uid = selectedChatUserUid) {
+  if (!currentUser?.uid || !uid) return [];
+  const conversationId = directConversationId(currentUser.uid, uid);
+  return chatSort(chatMessages.filter((message) => message.conversationId === conversationId));
+}
+
+function chatAvatarMarkup(profile, className = "") {
+  const name = profile?.name || profile?.email || "Usuario";
+  if (profile?.photoURL) {
+    return `<img class="${escapeHtml(className)}" src="${escapeHtml(profile.photoURL)}" alt="Foto de ${escapeHtml(name)}">`;
+  }
+  return `<span class="${escapeHtml(className)}">${escapeHtml(initials(name))}</span>`;
+}
+
+function cachedChatDirectory() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(CHAT_DIRECTORY_KEY) || "[]");
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (_) {
+    return [];
+  }
+}
+
+function saveChatDirectory() {
+  try {
+    const safe = chatUsers.map(({ uid, name, email, role, active, photoURL }) => ({ uid, name, email, role, active, photoURL }));
+    localStorage.setItem(CHAT_DIRECTORY_KEY, JSON.stringify(safe));
+  } catch (_) {}
+}
+
+function selectedChatStorageKey() {
+  return `${CHAT_SELECTED_KEY_PREFIX}:${currentUser?.uid || "anonymous"}`;
+}
+
+async function loadChatDirectory(force = false) {
+  if (!currentUser) return;
+  if (!chatUsers.length) {
+    chatUsers = cachedChatDirectory().filter((profile) => profile.uid && profile.uid !== currentUser.uid && profile.active !== false);
+    const stored = localStorage.getItem(selectedChatStorageKey()) || "";
+    if (stored && chatUsers.some((profile) => profile.uid === stored)) selectedChatUserUid = stored;
+    renderChat();
+  }
+  if (!navigator.onLine || localSession) {
+    if (els.chatDirectoryStatus) els.chatDirectoryStatus.textContent = chatUsers.length ? "Directorio guardado en el dispositivo" : "Conectate para cargar usuarios";
+    return;
+  }
+  if (chatDirectoryLoading && !force) return;
+  chatDirectoryLoading = true;
+  if (els.chatDirectoryStatus) els.chatDirectoryStatus.textContent = "Actualizando usuarios...";
+  try {
+    await importFirebase();
+    const snapshot = await sdk.getDocs(sdk.collection(db, "users"));
+    chatUsers = snapshot.docs
+      .map((item) => ({ uid: item.id, ...item.data() }))
+      .filter((profile) => profile.uid !== currentUser.uid && profile.active !== false)
+      .sort((a, b) => String(a.name || a.email || "").localeCompare(String(b.name || b.email || ""), "es"));
+    saveChatDirectory();
+    if (selectedChatUserUid && !chatUsers.some((profile) => profile.uid === selectedChatUserUid)) selectedChatUserUid = "";
+    const stored = localStorage.getItem(selectedChatStorageKey()) || "";
+    if (!selectedChatUserUid && stored && chatUsers.some((profile) => profile.uid === stored)) selectedChatUserUid = stored;
+    if (els.chatDirectoryStatus) els.chatDirectoryStatus.textContent = `${chatUsers.length} usuario${chatUsers.length === 1 ? "" : "s"} disponible${chatUsers.length === 1 ? "" : "s"}`;
+    renderChat();
+  } finally {
+    chatDirectoryLoading = false;
+  }
+}
+
 function mergeChatMessages(incoming) {
   const map = new Map(chatMessages.map((message) => [message.id, message]));
   incoming.forEach((message) => {
@@ -1031,40 +1127,128 @@ function mergeChatMessages(incoming) {
       map.set(message.id, { ...(current || {}), ...message });
     }
   });
-  chatMessages = chatSort(Array.from(map.values())).slice(-200);
+  chatMessages = chatSort(Array.from(map.values())).slice(-600);
 }
 
 function chatMessageTemplate(message) {
   const mine = message.senderUid === currentUser?.uid;
   const pending = message.syncStatus === "pending";
-  const role = roleLabel(message.senderRole || "operator");
+  const read = Array.isArray(message.readBy) && message.recipientUid && message.readBy.includes(message.recipientUid);
   return `<article class="chat-message ${mine ? "mine" : "other"} ${pending ? "pending" : ""}" data-message-id="${escapeHtml(message.id)}">
-    ${mine ? "" : `<div class="chat-avatar">${escapeHtml(initials(message.senderName || "Usuario"))}</div>`}
     <div class="chat-bubble">
-      <header><strong>${escapeHtml(mine ? "Tu" : (message.senderName || "Usuario"))}</strong><span>${escapeHtml(role)}</span></header>
       <p>${escapeHtml(message.text || "").replace(/\n/g, "<br>")}</p>
-      <footer><time>${escapeHtml(formatTime(message.createdAtClient))}</time>${pending ? "<span>Pendiente</span>" : "<span>Enviado</span>"}</footer>
+      <footer><time>${escapeHtml(formatTime(message.createdAtClient))}</time><span>${pending ? "Pendiente" : (mine && read ? "Leído" : "Enviado")}</span></footer>
     </div>
   </article>`;
 }
 
+function chatContactLastMessage(uid) {
+  const messages = chatConversationMessages(uid);
+  return messages.length ? messages[messages.length - 1] : null;
+}
+
+function chatUnreadCount(uid) {
+  return chatConversationMessages(uid).filter((message) => message.recipientUid === currentUser?.uid && !(message.readBy || []).includes(currentUser.uid)).length;
+}
+
+function renderChatContacts() {
+  if (!els.chatContactList) return;
+  const query = String(els.chatUserSearch?.value || "").trim().toLowerCase();
+  const filtered = chatUsers
+    .filter((profile) => {
+      const haystack = `${profile.name || ""} ${profile.email || ""} ${roleLabel(profile.role || "operator")}`.toLowerCase();
+      return !query || haystack.includes(query);
+    })
+    .map((profile) => ({ profile, last: chatContactLastMessage(profile.uid), unread: chatUnreadCount(profile.uid) }))
+    .sort((a, b) => {
+      const byMessage = String(b.last?.createdAtClient || "").localeCompare(String(a.last?.createdAtClient || ""));
+      return byMessage || String(a.profile.name || a.profile.email || "").localeCompare(String(b.profile.name || b.profile.email || ""), "es");
+    });
+
+  if (!filtered.length) {
+    els.chatContactList.innerHTML = `<div class="empty-state compact">${chatUsers.length ? "No hay usuarios que coincidan con la búsqueda." : "No hay otros usuarios disponibles."}</div>`;
+  } else {
+    els.chatContactList.innerHTML = filtered.map(({ profile, last, unread }) => {
+      const selected = profile.uid === selectedChatUserUid;
+      const preview = last ? `${last.senderUid === currentUser?.uid ? "Vos: " : ""}${last.text || ""}` : roleLabel(profile.role || "operator");
+      return `<button class="chat-contact ${selected ? "active" : ""}" type="button" data-chat-user="${escapeHtml(profile.uid)}">
+        <span class="chat-contact-avatar">${chatAvatarMarkup(profile)}</span>
+        <span class="chat-contact-copy"><strong>${escapeHtml(profile.name || profile.email || "Usuario")}</strong><small>${escapeHtml(preview.slice(0, 74))}</small></span>
+        <span class="chat-contact-side">${last ? `<time>${escapeHtml(formatTime(last.createdAtClient))}</time>` : ""}${unread ? `<b>${unread > 99 ? "99+" : unread}</b>` : ""}</span>
+      </button>`;
+    }).join("");
+    els.chatContactList.querySelectorAll("[data-chat-user]").forEach((button) => button.addEventListener("click", () => selectChatUser(button.dataset.chatUser)));
+  }
+
+  const totalUnread = chatUsers.reduce((sum, profile) => sum + chatUnreadCount(profile.uid), 0);
+  if (els.chatUnreadTotal) {
+    els.chatUnreadTotal.textContent = totalUnread > 99 ? "99+" : String(totalUnread);
+    els.chatUnreadTotal.classList.toggle("hidden", totalUnread === 0);
+  }
+}
+
+function selectChatUser(uid) {
+  if (!chatUsers.some((profile) => profile.uid === uid)) return;
+  selectedChatUserUid = uid;
+  try { localStorage.setItem(selectedChatStorageKey(), uid); } catch (_) {}
+  renderChat(true);
+  markCurrentConversationRead().catch((error) => console.warn("Lectura de mensajes", error));
+}
+
+function clearChatSelection() {
+  selectedChatUserUid = "";
+  try { localStorage.removeItem(selectedChatStorageKey()); } catch (_) {}
+  renderChat(false);
+}
+
+async function markCurrentConversationRead() {
+  if (!selectedChatUserUid || !currentUser?.uid) return;
+  const unread = chatConversationMessages().filter((message) => message.recipientUid === currentUser.uid && !(message.readBy || []).includes(currentUser.uid));
+  if (!unread.length) return;
+  unread.forEach((message) => {
+    message.readBy = Array.from(new Set([...(message.readBy || []), currentUser.uid]));
+    OfflineDB.putChatMessage(message).catch(() => {});
+  });
+  renderChatContacts();
+  if (!navigator.onLine || localSession || !auth?.currentUser) return;
+  await Promise.all(unread.map((message) => sdk.updateDoc(sdk.doc(db, "directMessages", message.id), { readBy: sdk.arrayUnion(currentUser.uid) }).catch((error) => console.warn("Marcar mensaje leído", error))));
+}
+
 function renderChat(scrollToEnd = false) {
   if (!els.chatMessages) return;
-  const ordered = chatSort(chatMessages);
-  els.chatMessages.innerHTML = ordered.length
-    ? ordered.map(chatMessageTemplate).join("")
-    : '<div class="empty-state">Todavia no hay mensajes. Se el primero en escribir.</div>';
-
+  renderChatContacts();
+  const recipient = selectedChatUser();
   const onlineChat = navigator.onLine && firebaseReady && !localSession && Boolean(auth?.currentUser);
-  if (els.chatStatusText) {
-    els.chatStatusText.textContent = onlineChat
-      ? "Mensajes en tiempo real"
-      : "Modo offline: puedes escribir y se enviara al reconectar";
-  }
+
   if (els.chatConnectionBadge) {
-    els.chatConnectionBadge.textContent = onlineChat ? "En linea" : "Sin conexion";
+    els.chatConnectionBadge.textContent = onlineChat ? "En línea" : "Sin conexión";
     els.chatConnectionBadge.classList.toggle("offline", !onlineChat);
   }
+  els.directChatShell?.classList.toggle("has-active-chat", Boolean(recipient));
+
+  if (!recipient) {
+    if (els.chatRecipientAvatar) els.chatRecipientAvatar.innerHTML = "—";
+    if (els.chatRecipientName) els.chatRecipientName.textContent = "Seleccioná un usuario";
+    if (els.chatRecipientMeta) els.chatRecipientMeta.textContent = "Elegí un contacto para comenzar";
+    if (els.chatStatusText) els.chatStatusText.textContent = "Sin conversación";
+    els.chatMessages.innerHTML = '<div class="chat-welcome-state"><span class="chat-welcome-icon"><svg class="ui-icon"><use href="#icon-chat"></use></svg></span><strong>Conversaciones privadas</strong><p>Seleccioná un usuario de la lista para enviarle un mensaje.</p></div>';
+    if (els.chatInput) { els.chatInput.disabled = true; els.chatInput.placeholder = "Seleccioná un usuario para escribir..."; }
+    if (els.chatSendButton) els.chatSendButton.disabled = true;
+    return;
+  }
+
+  if (els.chatRecipientAvatar) els.chatRecipientAvatar.innerHTML = chatAvatarMarkup(recipient);
+  if (els.chatRecipientName) els.chatRecipientName.textContent = recipient.name || recipient.email || "Usuario";
+  if (els.chatRecipientMeta) els.chatRecipientMeta.textContent = `${roleLabel(recipient.role || "operator")} · ${recipient.email || "Usuario activo"}`;
+  if (els.chatStatusText) els.chatStatusText.textContent = onlineChat ? "Mensajes en tiempo real" : "Mensajes guardados sin conexión";
+  if (els.chatInput) { els.chatInput.disabled = false; els.chatInput.placeholder = `Mensaje para ${(recipient.name || "usuario").split(/\s+/)[0]}...`; }
+  if (els.chatSendButton) els.chatSendButton.disabled = false;
+
+  const ordered = chatConversationMessages();
+  els.chatMessages.innerHTML = ordered.length
+    ? ordered.map(chatMessageTemplate).join("")
+    : `<div class="chat-welcome-state compact"><span class="chat-welcome-icon"><svg class="ui-icon"><use href="#icon-chat"></use></svg></span><strong>Iniciá la conversación</strong><p>Todavía no hay mensajes con ${escapeHtml(recipient.name || recipient.email || "este usuario")}.</p></div>`;
+
   if (scrollToEnd || currentSection === "chat") {
     requestAnimationFrame(() => { els.chatMessages.scrollTop = els.chatMessages.scrollHeight; });
   }
@@ -1089,17 +1273,17 @@ async function subscribeToChat() {
   if (chatUnsubscribe) return;
 
   const q = sdk.query(
-    sdk.collection(db, "chatMessages"),
-    sdk.orderBy("createdAtClient", "desc"),
-    sdk.limit(100)
+    sdk.collection(db, "directMessages"),
+    sdk.where("participantUids", "array-contains", currentUser.uid)
   );
 
   chatUnsubscribe = sdk.onSnapshot(q, async (snapshot) => {
-    const remote = snapshot.docs.map((item) => ({ id: item.id, ...item.data(), syncStatus: "synced" })).reverse();
+    const remote = snapshot.docs.map((item) => ({ id: item.id, ...item.data(), syncStatus: "synced" }));
     mergeChatMessages(remote);
     await Promise.all(remote.map((message) => OfflineDB.putChatMessage(message).catch(() => {})));
     chatInitialLoadDone = true;
     renderChat(true);
+    if (selectedChatUserUid) markCurrentConversationRead().catch(() => {});
   }, (error) => {
     console.warn("Chat en tiempo real", error);
     if (els.chatStatusText) els.chatStatusText.textContent = "No se pudieron actualizar los mensajes";
@@ -1115,6 +1299,11 @@ function autoResizeChatInput() {
 async function sendChatMessage(event) {
   event.preventDefault();
   if (!currentUser || !currentProfile) return;
+  const recipient = selectedChatUser();
+  if (!recipient) {
+    showToast("Seleccioná un usuario", "Elegí un contacto antes de enviar el mensaje.", "error");
+    return;
+  }
   const text = String(els.chatInput?.value || "").trim();
   if (!text) return;
   if (text.length > 1000) {
@@ -1122,21 +1311,31 @@ async function sendChatMessage(event) {
     return;
   }
 
+  const participantUids = [currentUser.uid, recipient.uid].sort();
   const message = {
     id: uuid(),
+    conversationId: directConversationId(currentUser.uid, recipient.uid),
+    participantUids,
     senderUid: currentUser.uid,
     senderName: currentProfile.name || currentUser.displayName || "Usuario",
     senderRole: currentProfile.role || "operator",
+    recipientUid: recipient.uid,
+    recipientName: recipient.name || recipient.email || "Usuario",
     text,
+    readBy: [currentUser.uid],
     createdAtClient: localIso(),
     syncStatus: "pending"
   };
 
-  setBusy(els.chatSendButton, true, "Enviando...");
+  if (els.chatSendButton) {
+    els.chatSendButton.disabled = true;
+    els.chatSendButton.classList.add("is-sending");
+    els.chatSendButton.setAttribute("aria-busy", "true");
+  }
   try {
     await OfflineDB.putChatMessage(message);
     mergeChatMessages([message]);
-    await queueForSync({ id: `chat-${message.id}`, uid: currentUser.uid, type: "chat-message", payload: message, createdAt: Date.now() });
+    await queueForSync({ id: `direct-chat-${message.id}`, uid: currentUser.uid, type: "direct-chat-message", payload: message, createdAt: Date.now() });
     els.chatInput.value = "";
     autoResizeChatInput();
     renderChat(true);
@@ -1144,7 +1343,11 @@ async function sendChatMessage(event) {
   } catch (error) {
     showToast("No se pudo guardar el mensaje", friendlyError(error), "error");
   } finally {
-    setBusy(els.chatSendButton, false);
+    if (els.chatSendButton) {
+      els.chatSendButton.disabled = !selectedChatUserUid;
+      els.chatSendButton.classList.remove("is-sending");
+      els.chatSendButton.removeAttribute("aria-busy");
+    }
   }
 }
 
@@ -1160,8 +1363,8 @@ function renderAll() {
     renderPart();
     renderService();
     renderActivity();
-    renderChat();
   }
+  renderChat();
   renderTank();
   renderFuelRecent();
   updateConnection();
@@ -1183,7 +1386,7 @@ function updateConnection() {
   els.dashboardConnection.textContent = connectionDetail;
   els.offlineBanner.classList.toggle("hidden", online);
   renderChat();
-  if (online && currentUser && !localSession && currentProfile?.role !== "admin") subscribeToChat().catch(console.warn);
+  if (online && currentUser && !localSession) subscribeToChat().catch(console.warn);
 }
 
 async function updateSyncUi(state = null) {
@@ -1299,6 +1502,7 @@ function renderDashboardCards() {
     cards.push({ kind: "break", icon: "bed", title: "Descanso", section: "break" });
     cards.push({ kind: "part", icon: "clipboard", title: "Nuevo Parte", section: "part", newPart: true });
     cards.push({ kind: "activity", icon: "activity", title: "Actividad", section: "activity" });
+    cards.push({ kind: "chat", icon: "chat", title: "Mensajes", section: "chat" });
   } else if (role === "mechanic") {
     cards.push({ kind: "service", icon: "wrench", title: "Servicio", section: "service" });
     cards.push({ kind: "fuel", icon: "fuel", title: "Combustible", section: "fuel" });
@@ -1309,6 +1513,7 @@ function renderDashboardCards() {
     cards.push({ kind: "service", icon: "wrench", title: `Servicios (${services.length})`, section: "service" });
     cards.push({ kind: "break", icon: "bed", title: `Descansos (${breakRecords.length})`, section: "break" });
     cards.push({ kind: "reports", icon: "chart", title: "Reportes y gráficos", section: "reports" });
+    cards.push({ kind: "chat", icon: "chat", title: "Mensajes", section: "chat" });
   }
   els.dashboardCards.innerHTML = cards.map((card) => `<button class="quick-access-card quick-card-${card.kind}" type="button" data-section-link="${card.section}" ${card.newPart ? 'data-new-part="true"' : ""}><span class="quick-access-icon">${iconSvg(card.icon)}</span><strong>${escapeHtml(card.title)}</strong></button>`).join("");
   els.dashboardCards.querySelectorAll("[data-section-link]").forEach((button) => button.addEventListener("click", () => {
@@ -3070,6 +3275,24 @@ async function processSyncItem(item) {
       transaction.set(tankRef, { ...currentTank, currentLiters: nextLiters, updatedAtClient: localIso(), updatedBy: record.uid, updatedAt: sdk.serverTimestamp() }, { merge: true });
     });
     await OfflineDB.putFuelLoad({ ...record, syncStatus: "synced" });
+    return;
+  }
+  if (item.type === "direct-chat-message") {
+    const record = { ...item.payload };
+    if (record.senderUid !== currentUser?.uid) throw new Error("El mensaje pertenece a otro usuario.");
+    if (!record.recipientUid || record.recipientUid === record.senderUid) throw new Error("El destinatario del mensaje no es válido.");
+    const participantUids = [record.senderUid, record.recipientUid].sort();
+    record.participantUids = participantUids;
+    record.conversationId = directConversationId(record.senderUid, record.recipientUid);
+    record.senderName = currentProfile?.name || currentUser?.displayName || record.senderName || "Usuario";
+    record.senderRole = currentProfile?.role || record.senderRole || "operator";
+    record.readBy = Array.from(new Set([...(record.readBy || []), record.senderUid]));
+    const remote = { ...cleanRecord(record), syncStatus: "synced", createdAt: sdk.serverTimestamp() };
+    await sdk.setDoc(sdk.doc(db, "directMessages", record.id), remote, { merge: false });
+    const syncedMessage = { ...record, syncStatus: "synced" };
+    await OfflineDB.putChatMessage(syncedMessage);
+    mergeChatMessages([syncedMessage]);
+    renderChat(true);
     return;
   }
   if (item.type === "chat-message") {

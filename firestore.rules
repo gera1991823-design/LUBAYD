@@ -37,7 +37,9 @@ service cloud.firestore {
                     && request.resource.data.email == request.auth.token.email
                     && request.resource.data.role == 'operator';
 
-      allow read: if isOwner(userId) || isAdmin();
+      allow read: if isOwner(userId)
+                  || isAdmin()
+                  || (hasProfile() && profile().active == true);
 
       allow update: if isAdmin()
                     || (isOwner(userId)
@@ -158,6 +160,45 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+
+    // Mensajeria privada. Solo el remitente y el destinatario pueden leer.
+    match /directMessages/{messageId} {
+      allow read: if hasProfile()
+                  && profile().active == true
+                  && request.auth.uid in resource.data.participantUids;
+
+      allow create: if hasProfile()
+                    && profile().active == true
+                    && request.resource.data.senderUid == request.auth.uid
+                    && request.resource.data.recipientUid is string
+                    && request.resource.data.recipientUid != request.auth.uid
+                    && request.resource.data.participantUids is list
+                    && request.resource.data.participantUids.size() == 2
+                    && request.resource.data.participantUids.hasAll([
+                         request.auth.uid,
+                         request.resource.data.recipientUid
+                       ])
+                    && request.resource.data.conversationId is string
+                    && request.resource.data.senderName is string
+                    && request.resource.data.senderRole == profile().role
+                    && request.resource.data.text is string
+                    && request.resource.data.text.size() > 0
+                    && request.resource.data.text.size() <= 1000
+                    && request.resource.data.readBy is list
+                    && request.auth.uid in request.resource.data.readBy
+                    && request.resource.data.createdAtClient is string;
+
+      // El destinatario solo puede agregar su UID al campo readBy.
+      allow update: if hasProfile()
+                    && profile().active == true
+                    && request.auth.uid in resource.data.participantUids
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['readBy'])
+                    && request.resource.data.readBy is list
+                    && request.resource.data.readBy.hasAll(resource.data.readBy)
+                    && request.auth.uid in request.resource.data.readBy;
+
+      allow delete: if false;
+    }
 
     // Chat general interno. Todos los usuarios activos pueden leer y enviar.
     match /chatMessages/{messageId} {
