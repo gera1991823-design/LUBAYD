@@ -1,12 +1,12 @@
 {
-  "name": "LUBAYD Operativa 5.9 GPS Opcional Offline",
+  "name": "LUBAYD Operativa 6.0",
   "short_name": "LUBAYD",
-  "description": "Gestión operativa LUBAYD con mensajería privada, trabajo offline, partes, servicios, descansos y combustible.",
+  "description": "Gestión operativa moderna para partes, descansos, servicios, combustible y chat con soporte offline.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#f7faf8",
-  "theme_color": "#005b38",
+  "background_color": "#f3f7f4",
+  "theme_color": "#064e35",
   "orientation": "any",
   "icons": [
     {
