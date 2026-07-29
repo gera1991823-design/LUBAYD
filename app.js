@@ -31,18 +31,20 @@ const els = {
   tankPercent: $("#tankPercent"), tankProgress: $("#tankProgress"), tankCapacity: $("#tankCapacity"), tankCurrent: $("#tankCurrent"), tankUpdated: $("#tankUpdated"), editTankButton: $("#editTankButton"), fuelRecentList: $("#fuelRecentList"), fuelForm: $("#fuelForm"), fuelMachine: $("#fuelMachine"), fuelOperator: $("#fuelOperator"), fuelLiters: $("#fuelLiters"), fuelPhotoEvidence: $("#fuelPhotoEvidence"), captureFuelPhotoButton: $("#captureFuelPhotoButton"), saveFuelButton: $("#saveFuelButton"),
   activityList: $("#activityList"), usersList: $("#usersList"),
   chatMessages: $("#chatMessages"), chatForm: $("#chatForm"), chatInput: $("#chatInput"), chatSendButton: $("#chatSendButton"), chatStatusText: $("#chatStatusText"), chatConnectionBadge: $("#chatConnectionBadge"),
+  reportsConnectionBadge: $("#reportsConnectionBadge"), refreshReportsButton: $("#refreshReportsButton"), reportDateFrom: $("#reportDateFrom"), reportDateTo: $("#reportDateTo"), reportOperator: $("#reportOperator"), reportMachine: $("#reportMachine"), applyReportsButton: $("#applyReportsButton"), clearReportsButton: $("#clearReportsButton"), reportsLastUpdated: $("#reportsLastUpdated"),
+  reportBreakCount: $("#reportBreakCount"), reportBreakDetail: $("#reportBreakDetail"), reportBreakAverage: $("#reportBreakAverage"), reportFuelTotal: $("#reportFuelTotal"), reportFuelDetail: $("#reportFuelDetail"), reportServiceHours: $("#reportServiceHours"), reportServiceDetail: $("#reportServiceDetail"), breaksByDayChart: $("#breaksByDayChart"), breaksByOperatorChart: $("#breaksByOperatorChart"), fuelByDayChart: $("#fuelByDayChart"), fuelByOperatorChart: $("#fuelByOperatorChart"), fuelByMachineChart: $("#fuelByMachineChart"), serviceByMachineChart: $("#serviceByMachineChart"), reportServiceTable: $("#reportServiceTable"), reportServiceTableCount: $("#reportServiceTableCount"),
   captureModal: $("#captureModal"), captureTitle: $("#captureTitle"), captureSubtitle: $("#captureSubtitle"), capturePreview: $("#capturePreview"), captureFileInput: $("#captureFileInput"), captureGpsCard: $("#captureGpsCard"), captureGpsStatus: $("#captureGpsStatus"), captureGpsButton: $("#captureGpsButton"), captureMapLink: $("#captureMapLink"), confirmCaptureButton: $("#confirmCaptureButton"),
   pinModal: $("#pinModal"), pinInput: $("#pinInput"), pinConfirm: $("#pinConfirm"), pinError: $("#pinError"), savePinButton: $("#savePinButton"), skipPinButton: $("#skipPinButton"),
   tankModal: $("#tankModal"), tankCapacityInput: $("#tankCapacityInput"), tankCurrentInput: $("#tankCurrentInput"), saveTankButton: $("#saveTankButton"),
   processingOverlay: $("#processingOverlay"), processingTitle: $("#processingTitle"), processingMessage: $("#processingMessage"), toastRegion: $("#toastRegion")
 };
 
-const SECTION_TITLES = { dashboard: "Inicio", break: "Descanso", part: "Parte", service: "Servicio", fuel: "Combustible", activity: "Actividad", chat: "Chat", users: "Usuarios" };
+const SECTION_TITLES = { dashboard: "Inicio", break: "Descanso", part: "Parte", service: "Servicio", fuel: "Combustible", activity: "Actividad", chat: "Chat", reports: "Reportes", users: "Usuarios" };
 const ROLE_LABELS = { operator: "Operador", mechanic: "Mecanico", admin: "Administrador" };
 const ROLE_SECTIONS = {
   operator: ["dashboard", "break", "part", "activity", "chat"],
   mechanic: ["dashboard", "service", "fuel", "activity", "chat"],
-  admin: ["dashboard", "break", "part", "service", "fuel", "activity", "chat", "users"]
+  admin: ["dashboard", "break", "part", "service", "fuel", "activity", "chat", "reports", "users"]
 };
 const HOROMETER_CONFIG = [
   { key: "initial", label: "Horometro inicial", help: "Inicio de la jornada" },
@@ -89,6 +91,13 @@ let syncRetryHandle = null;
 let chatMessages = [];
 let chatUnsubscribe = null;
 let chatInitialLoadDone = false;
+let reportUsers = [];
+let reportBreaks = [];
+let reportFuelLoads = [];
+let reportServices = [];
+let reportLoadedAt = null;
+let reportLoading = false;
+const REPORT_CACHE_KEY = "lubayd-admin-reports-v1";
 
 function escapeHtml(value) {
   return String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
@@ -393,6 +402,7 @@ function showSection(section) {
   if (section === "users") loadUsers().catch(console.warn);
   if (section === "activity") renderActivity();
   if (section === "chat") { renderChat(); subscribeToChat().catch(console.warn); }
+  if (section === "reports") loadAdminReports(false).catch((error) => { console.warn("Reportes", error); showToast("No se pudieron cargar los reportes", friendlyError(error), "error"); });
 }
 
 function startClock() {
@@ -414,6 +424,9 @@ function bindEvents() {
   els.registerForm.addEventListener("submit", registerOnline);
   els.chatForm?.addEventListener("submit", sendChatMessage);
   els.chatInput?.addEventListener("input", autoResizeChatInput);
+  els.refreshReportsButton?.addEventListener("click", () => loadAdminReports(true));
+  els.applyReportsButton?.addEventListener("click", renderAdminReports);
+  els.clearReportsButton?.addEventListener("click", resetReportFilters);
   els.offlineLoginButton.addEventListener("click", loginOffline);
   els.menuButton.addEventListener("click", () => els.sidebar.classList.toggle("open"));
   els.syncButton.addEventListener("click", () => syncNow(true));
@@ -843,6 +856,9 @@ function renderDashboardCards() {
     cards.push({ kind: "service", icon: "🔧", title: "Parte de servicio", text: active ? `${active.machine} · ${formatDuration(active.startAtClient)}` : "Registrar inicio y fin de reparacion.", section: "service", action: "Abrir" });
     cards.push({ kind: "fuel", icon: "⛽", title: "Carga de combustible", text: `${liters(tank.currentLiters)} disponibles en el tanque principal.`, section: "fuel", action: "Registrar" });
   }
+  if (role === "admin") {
+    cards.push({ kind: "reports", icon: "▥", title: "Panel de control", text: "Descansos, combustible y horas de servicio en un solo lugar.", section: "reports", action: "Ver reportes" });
+  }
   cards.push({ kind: "activity", icon: "+", title: role === "operator" ? "Nueva actividad" : "Actividad", text: "Consulta los ultimos movimientos disponibles para tu rol.", section: "activity", action: "Ver actividad" });
   els.dashboardCards.innerHTML = cards.map((card) => `<article class="quick-card quick-card-${card.kind}"><span class="quick-icon">${card.icon}</span><h3>${escapeHtml(card.title)}</h3><p>${escapeHtml(card.text)}</p><button class="primary-button" type="button" data-section-link="${card.section}" ${card.kind === "part" ? 'data-new-part="true"' : ""}>${escapeHtml(card.action)}</button></article>`).join("");
   els.dashboardCards.querySelectorAll("[data-section-link]").forEach((button) => button.addEventListener("click", () => {
@@ -873,6 +889,274 @@ function buildActivityRecords() {
 
 function activityTemplate(item) {
   return `<div class="activity-item"><span class="activity-icon">${item.icon}</span><div class="activity-copy"><strong>${escapeHtml(item.title)}</strong><span>${escapeHtml(item.detail)}</span></div><div class="activity-meta"><span>${formatDate(item.date)}</span><strong>${formatTime(item.date)}</strong>${item.status === "pending" ? "<small>Pendiente</small>" : ""}</div></div>`;
+}
+
+
+function reportDateInputValue(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function reportRecordDateKey(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value).slice(0, 10);
+  return reportDateInputValue(date);
+}
+
+function reportDurationMinutes(start, end) {
+  if (!start || !end) return 0;
+  const diff = new Date(end).getTime() - new Date(start).getTime();
+  return Number.isFinite(diff) && diff > 0 ? diff / 60000 : 0;
+}
+
+function reportNumber(value, digits = 1) {
+  return new Intl.NumberFormat("es-UY", { maximumFractionDigits: digits }).format(Number(value || 0));
+}
+
+function setDefaultReportDates() {
+  if (!els.reportDateFrom || !els.reportDateTo) return;
+  const to = new Date();
+  const from = new Date();
+  from.setDate(from.getDate() - 6);
+  els.reportDateFrom.value = reportDateInputValue(from);
+  els.reportDateTo.value = reportDateInputValue(to);
+}
+
+function resetReportFilters() {
+  setDefaultReportDates();
+  if (els.reportOperator) els.reportOperator.value = "";
+  if (els.reportMachine) els.reportMachine.value = "";
+  renderAdminReports();
+}
+
+function compactReportPayload() {
+  return {
+    users: reportUsers.map((item) => ({ uid: item.uid, name: item.name || item.email || "Usuario", role: item.role || "operator" })),
+    breaks: reportBreaks.map((item) => ({ id: item.id, uid: item.uid, userName: item.userName || "", status: item.status || "", startAtClient: item.startAtClient || "", endAtClient: item.endAtClient || "" })),
+    fuelLoads: reportFuelLoads.map((item) => ({ id: item.id, uid: item.uid, userName: item.userName || "", operatorUid: item.operatorUid || "", operatorName: item.operatorName || "", machine: item.machine || "", liters: Number(item.liters || 0), shift: item.shift || "day", createdAtClient: item.createdAtClient || "" })),
+    services: reportServices.map((item) => ({ id: item.id, partId: item.partId || "", operatorUid: item.operatorUid || "", operatorName: item.operatorName || "", mechanicUid: item.mechanicUid || "", mechanicName: item.mechanicName || "", machine: item.machine || "", status: item.status || "", startReason: item.startReason || "", endReason: item.endReason || "", startAtClient: item.startAtClient || "", endAtClient: item.endAtClient || "" })),
+    loadedAt: reportLoadedAt || localIso()
+  };
+}
+
+function saveReportCache() {
+  try { localStorage.setItem(REPORT_CACHE_KEY, JSON.stringify(compactReportPayload())); }
+  catch (error) { console.warn("Cache de reportes", error); }
+}
+
+function loadReportCache() {
+  try {
+    const cached = JSON.parse(localStorage.getItem(REPORT_CACHE_KEY) || "null");
+    if (!cached) return false;
+    reportUsers = Array.isArray(cached.users) ? cached.users : [];
+    reportBreaks = Array.isArray(cached.breaks) ? cached.breaks : [];
+    reportFuelLoads = Array.isArray(cached.fuelLoads) ? cached.fuelLoads : [];
+    reportServices = Array.isArray(cached.services) ? cached.services : [];
+    reportLoadedAt = cached.loadedAt || null;
+    return true;
+  } catch (error) {
+    console.warn("Lectura de cache de reportes", error);
+    return false;
+  }
+}
+
+function setReportsLoading(loading, message = "") {
+  reportLoading = loading;
+  setBusy(els.refreshReportsButton, loading, "Actualizando...");
+  if (els.reportsConnectionBadge) {
+    els.reportsConnectionBadge.textContent = loading ? "Cargando..." : message || (navigator.onLine ? "En linea" : "Datos guardados");
+    els.reportsConnectionBadge.classList.toggle("offline-report", !navigator.onLine && !loading);
+  }
+}
+
+async function loadAdminReports(force = false) {
+  if (currentProfile?.role !== "admin" || reportLoading) return;
+  if (!els.reportDateFrom.value || !els.reportDateTo.value) setDefaultReportDates();
+
+  if (!navigator.onLine || localSession) {
+    const hasCache = reportUsers.length || loadReportCache();
+    if (!hasCache) {
+      setReportsLoading(false, "Sin conexion");
+      renderAdminReports("No hay datos de reportes guardados en este dispositivo.");
+      return;
+    }
+    setReportsLoading(false, "Datos guardados");
+    populateReportFilters();
+    renderAdminReports();
+    return;
+  }
+
+  if (!force && reportLoadedAt && reportUsers.length) {
+    populateReportFilters();
+    renderAdminReports();
+    return;
+  }
+
+  setReportsLoading(true);
+  try {
+    await importFirebase();
+    const usersSnap = await sdk.getDocs(sdk.collection(db, "users"));
+    reportUsers = usersSnap.docs.map((item) => ({ uid: item.id, ...item.data() }));
+
+    const breakGroups = await Promise.all(reportUsers.map(async (user) => {
+      try {
+        const snap = await sdk.getDocs(sdk.collection(db, "users", user.uid, "breaks"));
+        return snap.docs.map((item) => ({ id: item.id, uid: user.uid, userName: user.name || user.email || "Usuario", ...item.data() }));
+      } catch (error) {
+        console.warn(`Descansos de ${user.uid}`, error);
+        return [];
+      }
+    }));
+
+    const [fuelSnap, serviceSnap] = await Promise.all([
+      sdk.getDocs(sdk.collection(db, "fuelLoads")),
+      sdk.getDocs(sdk.collection(db, "services"))
+    ]);
+
+    reportBreaks = breakGroups.flat();
+    reportFuelLoads = fuelSnap.docs.map((item) => ({ id: item.id, ...item.data() }));
+    reportServices = serviceSnap.docs.map((item) => ({ id: item.id, ...item.data() }));
+    reportLoadedAt = localIso();
+    saveReportCache();
+    populateReportFilters();
+    setReportsLoading(false, "Actualizado");
+    renderAdminReports();
+  } catch (error) {
+    const hasCache = loadReportCache();
+    setReportsLoading(false, hasCache ? "Datos guardados" : "Error");
+    if (hasCache) {
+      populateReportFilters();
+      renderAdminReports();
+      showToast("Mostrando datos guardados", "No se pudo actualizar Firebase. Se muestran los ultimos datos disponibles.", "error");
+      return;
+    }
+    throw error;
+  }
+}
+
+function populateReportFilters() {
+  if (!els.reportOperator || !els.reportMachine) return;
+  const selectedOperator = els.reportOperator.value;
+  const selectedMachine = els.reportMachine.value;
+  const operators = new Map();
+  reportUsers.filter((item) => item.role === "operator").forEach((item) => operators.set(item.uid, item.name || item.email || item.uid));
+  reportBreaks.forEach((item) => { if (item.uid) operators.set(item.uid, item.userName || operators.get(item.uid) || item.uid); });
+  reportFuelLoads.forEach((item) => { if (item.operatorUid) operators.set(item.operatorUid, item.operatorName || operators.get(item.operatorUid) || item.operatorUid); });
+  reportServices.forEach((item) => { if (item.operatorUid) operators.set(item.operatorUid, item.operatorName || operators.get(item.operatorUid) || item.operatorUid); });
+  els.reportOperator.innerHTML = '<option value="">Todos los operadores</option>' + Array.from(operators.entries()).sort((a, b) => a[1].localeCompare(b[1], "es")).map(([uid, name]) => `<option value="${escapeHtml(uid)}">${escapeHtml(name)}</option>`).join("");
+  els.reportOperator.value = operators.has(selectedOperator) ? selectedOperator : "";
+
+  const machines = Array.from(new Set([...reportFuelLoads, ...reportServices].map((item) => String(item.machine || "").trim()).filter(Boolean))).sort((a, b) => a.localeCompare(b, "es", { numeric: true }));
+  els.reportMachine.innerHTML = '<option value="">Todas las maquinas</option>' + machines.map((machine) => `<option value="${escapeHtml(machine)}">${escapeHtml(machine)}</option>`).join("");
+  els.reportMachine.value = machines.includes(selectedMachine) ? selectedMachine : "";
+}
+
+function reportFilters() {
+  const from = els.reportDateFrom?.value || "0000-01-01";
+  const to = els.reportDateTo?.value || "9999-12-31";
+  const operatorUid = els.reportOperator?.value || "";
+  const machine = els.reportMachine?.value || "";
+  return { from, to, operatorUid, machine };
+}
+
+function recordInReportRange(value, filters) {
+  const key = reportRecordDateKey(value);
+  return key && key >= filters.from && key <= filters.to;
+}
+
+function sameReportOperator(record, operatorUid) {
+  if (!operatorUid) return true;
+  return record.uid === operatorUid || record.operatorUid === operatorUid;
+}
+
+function groupReportRows(records, keyFn, valueFn, detailFn = null) {
+  const map = new Map();
+  records.forEach((record) => {
+    const key = keyFn(record) || "Sin dato";
+    const current = map.get(key) || { label: key, value: 0, count: 0, records: [] };
+    current.value += Number(valueFn(record) || 0);
+    current.count += 1;
+    current.records.push(record);
+    map.set(key, current);
+  });
+  return Array.from(map.values()).map((row) => ({ ...row, detail: detailFn ? detailFn(row) : `${row.count} registro${row.count === 1 ? "" : "s"}` }));
+}
+
+function renderReportBars(container, rows, formatter, emptyMessage = "Sin datos para el periodo seleccionado.") {
+  if (!container) return;
+  if (!rows.length) {
+    container.innerHTML = `<div class="empty-state compact">${escapeHtml(emptyMessage)}</div>`;
+    return;
+  }
+  const max = Math.max(...rows.map((row) => Number(row.value || 0)), 1);
+  container.innerHTML = rows.map((row) => {
+    const width = row.value > 0 ? Math.max(3, row.value / max * 100) : 0;
+    return `<div class="report-bar-row"><div class="report-bar-label"><strong>${escapeHtml(row.label)}</strong><span>${escapeHtml(row.detail || "")}</span></div><div class="report-bar-track"><div class="report-bar-fill" style="width:${width.toFixed(2)}%"></div></div><strong class="report-bar-value">${escapeHtml(formatter(row.value, row))}</strong></div>`;
+  }).join("");
+}
+
+function renderAdminReports(message = "") {
+  if (currentProfile?.role !== "admin" || !els.reportBreakCount) return;
+  const filters = reportFilters();
+  if (filters.from > filters.to) {
+    showToast("Fechas invalidas", "La fecha desde no puede ser posterior a la fecha hasta.", "error");
+    return;
+  }
+
+  const breaks = reportBreaks.filter((item) => recordInReportRange(item.startAtClient, filters) && sameReportOperator(item, filters.operatorUid));
+  const fuels = reportFuelLoads.filter((item) => recordInReportRange(item.createdAtClient, filters) && sameReportOperator(item, filters.operatorUid) && (!filters.machine || item.machine === filters.machine));
+  const servicesFiltered = reportServices.filter((item) => recordInReportRange(item.startAtClient, filters) && sameReportOperator(item, filters.operatorUid) && (!filters.machine || item.machine === filters.machine));
+  const completedBreaks = breaks.filter((item) => item.endAtClient);
+  const completedServices = servicesFiltered.filter((item) => item.endAtClient);
+  const breakMinutes = completedBreaks.reduce((sum, item) => sum + reportDurationMinutes(item.startAtClient, item.endAtClient), 0);
+  const serviceHours = completedServices.reduce((sum, item) => sum + reportDurationMinutes(item.startAtClient, item.endAtClient) / 60, 0);
+  const fuelTotal = fuels.reduce((sum, item) => sum + Number(item.liters || 0), 0);
+  const activeServices = servicesFiltered.filter((item) => !item.endAtClient || item.status === "active").length;
+
+  els.reportBreakCount.textContent = reportNumber(breaks.length, 0);
+  els.reportBreakDetail.textContent = `${reportNumber(breakMinutes / 60, 1)} h acumuladas`;
+  els.reportBreakAverage.textContent = `${reportNumber(completedBreaks.length ? breakMinutes / completedBreaks.length : 0, 0)} min`;
+  els.reportFuelTotal.textContent = `${reportNumber(fuelTotal, 1)} L`;
+  els.reportFuelDetail.textContent = `${fuels.length} carga${fuels.length === 1 ? "" : "s"}`;
+  els.reportServiceHours.textContent = `${reportNumber(serviceHours, 1)} h`;
+  els.reportServiceDetail.textContent = `${completedServices.length} finalizado${completedServices.length === 1 ? "" : "s"}${activeServices ? ` · ${activeServices} activo${activeServices === 1 ? "" : "s"}` : ""}`;
+
+  const breaksByDay = groupReportRows(completedBreaks, (item) => reportRecordDateKey(item.startAtClient), (item) => reportDurationMinutes(item.startAtClient, item.endAtClient), (row) => `${row.count} descanso${row.count === 1 ? "" : "s"}`).sort((a, b) => a.label.localeCompare(b.label));
+  const breaksByOperator = groupReportRows(completedBreaks, (item) => item.userName || "Sin operador", (item) => reportDurationMinutes(item.startAtClient, item.endAtClient), (row) => `${row.count} descanso${row.count === 1 ? "" : "s"}`).sort((a, b) => b.value - a.value);
+  const fuelByDay = groupReportRows(fuels, (item) => reportRecordDateKey(item.createdAtClient), (item) => Number(item.liters || 0), (row) => `${row.count} carga${row.count === 1 ? "" : "s"}`).sort((a, b) => a.label.localeCompare(b.label));
+  const fuelByOperator = groupReportRows(fuels, (item) => item.operatorName || item.userName || "Sin operador", (item) => Number(item.liters || 0), (row) => `${row.count} carga${row.count === 1 ? "" : "s"}`).sort((a, b) => b.value - a.value);
+  const fuelByMachine = groupReportRows(fuels, (item) => item.machine || "Sin maquina", (item) => Number(item.liters || 0), (row) => `${row.count} carga${row.count === 1 ? "" : "s"}`).sort((a, b) => b.value - a.value);
+  const serviceByMachine = groupReportRows(completedServices, (item) => item.machine || "Sin maquina", (item) => reportDurationMinutes(item.startAtClient, item.endAtClient) / 60, (row) => `${row.count} servicio${row.count === 1 ? "" : "s"}`).sort((a, b) => b.value - a.value);
+
+  renderReportBars(els.breaksByDayChart, breaksByDay, (value) => `${reportNumber(value, 0)} min`);
+  renderReportBars(els.breaksByOperatorChart, breaksByOperator, (value) => `${reportNumber(value / 60, 1)} h`);
+  renderReportBars(els.fuelByDayChart, fuelByDay, (value) => `${reportNumber(value, 1)} L`);
+  renderReportBars(els.fuelByOperatorChart, fuelByOperator, (value) => `${reportNumber(value, 1)} L`);
+  renderReportBars(els.fuelByMachineChart, fuelByMachine, (value) => `${reportNumber(value, 1)} L`);
+  renderReportBars(els.serviceByMachineChart, serviceByMachine, (value) => `${reportNumber(value, 1)} h`);
+  renderReportServiceTable(servicesFiltered);
+
+  if (els.reportsLastUpdated) {
+    const source = navigator.onLine && !localSession ? "Firebase" : "datos guardados";
+    els.reportsLastUpdated.textContent = message || (reportLoadedAt ? `Actualizado ${formatDateTime(reportLoadedAt)} · ${source}` : "Todavia no se cargaron datos.");
+  }
+}
+
+function renderReportServiceTable(records) {
+  const rows = [...records].sort((a, b) => String(b.startAtClient || "").localeCompare(String(a.startAtClient || ""))).slice(0, 100);
+  els.reportServiceTableCount.textContent = `${records.length} registro${records.length === 1 ? "" : "s"}`;
+  if (!rows.length) {
+    els.reportServiceTable.innerHTML = '<div class="empty-state">Sin servicios para el periodo seleccionado.</div>';
+    return;
+  }
+  els.reportServiceTable.innerHTML = `<table class="report-table"><thead><tr><th>Fecha</th><th>Maquina</th><th>Operador</th><th>Mecanico</th><th>Duracion</th><th>Estado</th></tr></thead><tbody>${rows.map((item) => {
+    const completed = Boolean(item.endAtClient);
+    const duration = completed ? `${reportNumber(reportDurationMinutes(item.startAtClient, item.endAtClient) / 60, 2)} h` : "En curso";
+    return `<tr><td>${escapeHtml(formatDate(item.startAtClient))}<br><small>${escapeHtml(formatTime(item.startAtClient))}</small></td><td><strong>${escapeHtml(item.machine || "-")}</strong></td><td>${escapeHtml(item.operatorName || "-")}</td><td>${escapeHtml(item.mechanicName || "-")}</td><td>${escapeHtml(duration)}</td><td><span class="badge ${completed ? "active" : "warning"}">${completed ? "Finalizado" : "Activo"}</span></td></tr>`;
+  }).join("")}</tbody></table>`;
 }
 
 function renderActivity() {
