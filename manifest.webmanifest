@@ -1,25 +1,37 @@
 {
-  "name": "LUBAYD Operativa 7.4 Inicio y Sesión",
+  "name": "LUBAYD Operativa",
   "short_name": "LUBAYD",
-  "description": "Gestión operativa LUBAYD con inicio institucional para todos los usuarios y cierre de sesión seguro.",
+  "description": "Gestión operativa LUBAYD para partes, descansos, servicios, combustible y reportes.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#f3f7f4",
+  "background_color": "#ffffff",
   "theme_color": "#064e35",
   "orientation": "any",
   "icons": [
     {
-      "src": "./icon-192.png",
+      "src": "./icon-192-v76.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
-      "src": "./icon-512.png",
+      "src": "./icon-512-v76.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "./icon-maskable-192-v76.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "./icon-maskable-512-v76.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }
