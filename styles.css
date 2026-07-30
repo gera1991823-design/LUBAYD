@@ -9313,3 +9313,114 @@ body[data-role] .role-logo-home {
   .lubayd-v6 .role-logo-home-title { font-size: 29px; }
   .lubayd-v6 .role-logo-home-image { width: min(190px, 75%); max-height: 148px; }
 }
+
+
+/* ============================================================
+   LUBAYD V7.5 - bienvenida personalizada, grande y centrada
+   ============================================================ */
+body[data-role].lubayd-v6 #dashboardSection {
+  width: 100% !important;
+  max-width: none !important;
+  min-height: calc(100dvh - 76px) !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+body[data-role].lubayd-v6 .role-logo-home {
+  width: 100% !important;
+  max-width: none !important;
+  min-height: calc(100dvh - 76px) !important;
+  display: grid !important;
+  place-items: center !important;
+  padding: clamp(34px, 5vw, 82px) !important;
+  box-sizing: border-box;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(25, 167, 93, .16), transparent 34rem),
+    linear-gradient(180deg, #f9fcfa 0%, #edf6f1 100%) !important;
+}
+
+.lubayd-v6 .role-logo-home-card {
+  width: min(820px, 88vw) !important;
+  min-height: 520px !important;
+  gap: 34px !important;
+  padding: 62px 70px !important;
+  border-radius: 38px !important;
+  border: 1px solid rgba(7, 111, 66, .18) !important;
+  background: rgba(255, 255, 255, .97) !important;
+  box-shadow: 0 34px 90px rgba(3, 47, 35, .16) !important;
+}
+
+.lubayd-v6 .role-logo-home-title {
+  width: 100%;
+  display: grid;
+  justify-items: center;
+  gap: 9px;
+  margin: 0 !important;
+  text-align: center;
+  color: #0b2e20;
+  line-height: 1.03 !important;
+  letter-spacing: -.045em;
+}
+
+.lubayd-v6 .role-logo-home-title > span {
+  font-size: clamp(39px, 3.6vw, 58px);
+  font-weight: 850;
+}
+
+.lubayd-v6 .role-logo-home-title > strong {
+  max-width: 100%;
+  color: #078548;
+  font-size: clamp(34px, 3.2vw, 52px);
+  font-weight: 900;
+  line-height: 1.08;
+  overflow-wrap: anywhere;
+}
+
+.lubayd-v6 .role-logo-home-image {
+  width: min(370px, 68%) !important;
+  max-height: 285px !important;
+  object-fit: contain;
+  filter: drop-shadow(0 22px 26px rgba(3, 47, 35, .18));
+}
+
+@media (max-width: 980px) {
+  body[data-role].lubayd-v6 #dashboardSection,
+  body[data-role].lubayd-v6 .role-logo-home {
+    min-height: calc(100dvh - 78px - env(safe-area-inset-bottom)) !important;
+  }
+
+  body[data-role].lubayd-v6 .role-logo-home {
+    padding: 22px 16px calc(94px + env(safe-area-inset-bottom)) !important;
+  }
+
+  .lubayd-v6 .role-logo-home-card {
+    width: min(100%, 580px) !important;
+    min-height: 430px !important;
+    gap: 28px !important;
+    padding: 48px 34px !important;
+    border-radius: 30px !important;
+  }
+
+  .lubayd-v6 .role-logo-home-title > span { font-size: clamp(34px, 8.5vw, 46px); }
+  .lubayd-v6 .role-logo-home-title > strong { font-size: clamp(30px, 7.5vw, 42px); }
+  .lubayd-v6 .role-logo-home-image { width: min(300px, 75%) !important; max-height: 230px !important; }
+}
+
+@media (max-width: 430px) {
+  body[data-role].lubayd-v6 .role-logo-home {
+    padding-inline: 12px !important;
+  }
+
+  .lubayd-v6 .role-logo-home-card {
+    width: 100% !important;
+    min-height: 390px !important;
+    gap: 25px !important;
+    padding: 42px 22px !important;
+    border-radius: 26px !important;
+  }
+
+  .lubayd-v6 .role-logo-home-title { gap: 7px; }
+  .lubayd-v6 .role-logo-home-title > span { font-size: clamp(32px, 10vw, 40px); }
+  .lubayd-v6 .role-logo-home-title > strong { font-size: clamp(28px, 9vw, 36px); }
+  .lubayd-v6 .role-logo-home-image { width: min(275px, 82%) !important; max-height: 215px !important; }
+}
