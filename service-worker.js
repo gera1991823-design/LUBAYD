@@ -1,14 +1,14 @@
 "use strict";
 
-const CACHE_NAME = "lubayd-operativa-v6.7.0-reportes-exactos";
+const CACHE_NAME = "lubayd-operativa-v6.8.0-horometro-total-diario";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./styles.css?v=6.7.0",
-  "./app.js?v=6.7.0",
-  "./offline-db.js?v=6.7.0",
-  "./sync-manager.js?v=6.7.0",
-  "./manifest.webmanifest?v=6.7.0",
+  "./styles.css?v=6.8.0",
+  "./app.js?v=6.8.0",
+  "./offline-db.js?v=6.8.0",
+  "./sync-manager.js?v=6.8.0",
+  "./manifest.webmanifest?v=6.8.0",
   "./logo-original.png",
   "./icon-192.png",
   "./icon-512.png",

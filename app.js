@@ -199,13 +199,14 @@ function recordEvidencePreview(evidence, label = "Evidencia") {
 function openPartReadOnly(part) {
   if (!part || !els.recordDetailModal || !els.recordDetailBody) return;
   const production = part.production || {};
-  const hours = partOperatingHours(part);
+  const calc = partHorometerBreakdown(part);
+  const displayHours = (value) => Number.isFinite(value) ? `${reportNumber(value,2)} h` : "Pendiente";
   const horometers = HOROMETER_CONFIG.map((config) => {
     const stage = part.horometers?.[config.key] || {};
     return `<section class="record-detail-section"><div class="record-detail-section-heading"><div><span>${escapeHtml(config.help)}</span><h3>${escapeHtml(config.label)}</h3></div><strong>${stage.value ?? "-"}</strong></div>${recordEvidencePreview(stage.evidence, config.label)}</section>`;
   }).join("");
   els.recordDetailTitle.textContent = `Parte · ${part.machine || "Máquina"}`;
-  els.recordDetailBody.innerHTML = `<div class="record-detail-banner"><span class="record-readonly-badge">Solo lectura</span><div><strong>${escapeHtml(part.operatorName || currentProfile?.name || "Operador")}</strong><small>${escapeHtml(formatDate(part.dateKey || part.createdAtClient))} · ${escapeHtml(part.establishment || "-")}</small></div></div><div class="record-detail-metrics">${detailMetric("Máquina", part.machine || "-")}${detailMetric("Horas operadas", hours ? `${reportNumber(hours,1)} h` : "Sin cierre")}${detailMetric("Troza", production.troza ?? production.trozo ?? 0)}${detailMetric("Pulpa", production.pulpa ?? 0)}</div><div class="record-detail-grid">${horometers}</div>`;
+  els.recordDetailBody.innerHTML = `<div class="record-detail-banner"><span class="record-readonly-badge">Solo lectura</span><div><strong>${escapeHtml(part.operatorName || currentProfile?.name || "Operador")}</strong><small>${escapeHtml(formatDate(part.dateKey || part.createdAtClient))} · ${escapeHtml(part.establishment || "-")}</small></div></div><div class="record-detail-metrics">${detailMetric("Máquina", part.machine || "-")}${detailMetric("Tramo 1", displayHours(calc.before))}${detailMetric("Tramo 2", displayHours(calc.after))}${detailMetric("Total día", displayHours(calc.totalDay))}${detailMetric("Troza", production.troza ?? production.trozo ?? 0)}${detailMetric("Pulpa", production.pulpa ?? 0)}</div><div class="record-detail-grid">${horometers}</div>`;
   els.recordDetailModal.classList.remove("hidden");
 }
 
@@ -2031,13 +2032,40 @@ function partHorometerBreakdown(part) {
   const rest = finiteHorometerValue(part, "break");
   const postBreak = finiteHorometerValue(part, "postBreak");
   const final = finiteHorometerValue(part, "final");
+
+  // Cálculo solicitado:
+  // 1) Primer tramo = horómetro de descanso - horómetro inicial.
+  // 2) Segundo tramo = horómetro final - horómetro post descanso.
+  // 3) Total diario = horómetro final - horómetro inicial.
   const before = safeHorometerDifference(rest, initial);
   const after = safeHorometerDifference(final, postBreak);
+  const restDifference = safeHorometerDifference(postBreak, rest);
+  const totalDay = safeHorometerDifference(final, initial);
   const availableSegments = [before, after].filter((value) => Number.isFinite(value));
-  const total = availableSegments.reduce((sum, value) => sum + value, 0);
-  const complete = Number.isFinite(before) && Number.isFinite(after);
-  const anomaly = (Number.isFinite(rest) && Number.isFinite(initial) && rest < initial) || (Number.isFinite(final) && Number.isFinite(postBreak) && final < postBreak);
-  return { initial, rest, postBreak, final, before, after, total, complete, anomaly, availableSegments: availableSegments.length };
+  const segmentTotal = availableSegments.reduce((sum, value) => sum + value, 0);
+  const hasAllReadings = [initial, rest, postBreak, final].every((value) => Number.isFinite(value));
+  const anomaly = (
+    (Number.isFinite(rest) && Number.isFinite(initial) && rest < initial) ||
+    (Number.isFinite(postBreak) && Number.isFinite(rest) && postBreak < rest) ||
+    (Number.isFinite(final) && Number.isFinite(postBreak) && final < postBreak) ||
+    (Number.isFinite(final) && Number.isFinite(initial) && final < initial)
+  );
+  const complete = hasAllReadings && !anomaly;
+  return {
+    initial,
+    rest,
+    postBreak,
+    final,
+    before,
+    after,
+    restDifference,
+    totalDay,
+    total: Number.isFinite(totalDay) ? totalDay : 0,
+    segmentTotal,
+    complete,
+    anomaly,
+    availableSegments: availableSegments.length
+  };
 }
 
 function machineDayKey(dateKey, machine) { return `${dateKey}|||${machine || "Sin máquina"}`; }
@@ -2054,10 +2082,13 @@ function aggregateHorometers(parts) {
     if (!dateKey) return;
     const calc = partHorometerBreakdown(part);
     const key = machineDayKey(dateKey, machine);
-    const row = map.get(key) || { dateKey, machine, before: 0, after: 0, total: 0, parts: 0, completeParts: 0, partialParts: 0, anomalies: 0, records: [] };
+    const row = map.get(key) || { dateKey, machine, before: 0, after: 0, restDifference: 0, segmentTotal: 0, total: 0, totalKnownParts: 0, parts: 0, completeParts: 0, partialParts: 0, anomalies: 0, records: [] };
     row.before += Number.isFinite(calc.before) ? calc.before : 0;
     row.after += Number.isFinite(calc.after) ? calc.after : 0;
-    row.total += calc.total;
+    row.restDifference += Number.isFinite(calc.restDifference) ? calc.restDifference : 0;
+    row.segmentTotal += calc.segmentTotal;
+    row.total += Number.isFinite(calc.totalDay) ? calc.totalDay : 0;
+    row.totalKnownParts += Number.isFinite(calc.totalDay) ? 1 : 0;
     row.parts += 1;
     row.completeParts += calc.complete ? 1 : 0;
     row.partialParts += calc.complete ? 0 : 1;
@@ -2087,21 +2118,26 @@ function aggregateMachineDay(records, dateFn, valueFn) {
 function renderHorometerSegments(container, rows) {
   if (!container) return;
   if (!rows.length) { container.innerHTML = '<div class="empty-state compact">No hay lecturas de horómetro para los filtros seleccionados.</div>'; return; }
-  const max = Math.max(...rows.map((row) => row.total), 1);
+  const max = Math.max(...rows.map((row) => Math.max(row.total, row.segmentTotal)), 1);
   container.innerHTML = rows.map((row) => {
-    const beforeWidth = row.total > 0 ? row.before / max * 100 : 0;
-    const afterWidth = row.total > 0 ? row.after / max * 100 : 0;
+    const beforeWidth = row.before > 0 ? row.before / max * 100 : 0;
+    const restWidth = row.restDifference > 0 ? row.restDifference / max * 100 : 0;
+    const afterWidth = row.after > 0 ? row.after / max * 100 : 0;
     const status = row.anomalies ? "Revisar" : row.partialParts ? "Parcial" : "Completo";
     const statusClass = row.anomalies ? "danger" : row.partialParts ? "warning" : "complete";
+    const totalText = row.totalKnownParts ? `${reportNumber(row.total,2)} h` : "Pendiente";
+    const restLegend = row.restDifference > 0
+      ? `<span><i class="rest-gap"></i>Diferencia durante descanso <b>${reportNumber(row.restDifference,2)} h</b></span>`
+      : "";
     return `<article class="exact-segment-row">
       <div class="exact-row-identity"><strong>${escapeHtml(row.machine)}</strong><span>${escapeHtml(formatDate(`${row.dateKey}T12:00:00`))}</span></div>
       <div class="exact-segment-main">
-        <div class="exact-segment-track" aria-label="${escapeHtml(row.machine)} ${escapeHtml(row.dateKey)}: ${reportNumber(row.total,2)} horas">
-          <span class="before" style="width:${beforeWidth.toFixed(2)}%"></span><span class="after" style="width:${afterWidth.toFixed(2)}%"></span>
+        <div class="exact-segment-track" aria-label="${escapeHtml(row.machine)} ${escapeHtml(row.dateKey)}: total diario ${escapeHtml(totalText)}">
+          <span class="before" style="width:${beforeWidth.toFixed(2)}%"></span>${restWidth ? `<span class="rest-gap" style="width:${restWidth.toFixed(2)}%"></span>` : ""}<span class="after" style="width:${afterWidth.toFixed(2)}%"></span>
         </div>
-        <div class="exact-segment-legend"><span><i class="before"></i>Inicial → descanso <b>${reportNumber(row.before,2)} h</b></span><span><i class="after"></i>Post descanso → final <b>${reportNumber(row.after,2)} h</b></span></div>
+        <div class="exact-segment-legend"><span><i class="before"></i>Descanso − inicial <b>${reportNumber(row.before,2)} h</b></span><span><i class="after"></i>Final − post descanso <b>${reportNumber(row.after,2)} h</b></span>${restLegend}<span class="total-day"><b>Total día: ${escapeHtml(totalText)}</b></span></div>
       </div>
-      <div class="exact-row-total"><strong>${reportNumber(row.total,2)} h</strong><span class="record-status ${statusClass}">${status}</span></div>
+      <div class="exact-row-total"><strong>${escapeHtml(totalText)}</strong><span class="record-status ${statusClass}">${status}</span></div>
     </article>`;
   }).join("");
 }
@@ -2125,10 +2161,11 @@ function renderHorometerTable(rows) {
   const records = rows.flatMap((row) => row.records.map(({ part, calc }) => ({ row, part, calc })));
   els.horometerTableCount.textContent = `${records.length} registro${records.length === 1 ? "" : "s"}`;
   if (!records.length) { els.horometerDailyTable.innerHTML = '<div class="empty-state">Sin lecturas de horómetro para el período seleccionado.</div>'; return; }
-  els.horometerDailyTable.innerHTML = `<table class="report-table responsive-report-table exact-report-table"><thead><tr><th>Fecha</th><th>Máquina</th><th>Inicial</th><th>Descanso</th><th>Horas 1</th><th>Post descanso</th><th>Final</th><th>Horas 2</th><th>Total</th><th>Estado</th></tr></thead><tbody>${records.map(({ row, part, calc }) => {
-    const state = calc.anomaly ? "Revisar valores" : calc.complete ? "Completo" : calc.availableSegments ? "Parcial" : "Sin diferencias";
+  els.horometerDailyTable.innerHTML = `<table class="report-table responsive-report-table exact-report-table"><thead><tr><th>Fecha</th><th>Máquina</th><th>Inicial</th><th>Descanso</th><th>Tramo 1</th><th>Post descanso</th><th>Final</th><th>Tramo 2</th><th>Total día</th><th>Estado</th></tr></thead><tbody>${records.map(({ row, part, calc }) => {
+    const state = calc.anomaly ? "Revisar valores" : calc.complete ? "Completo" : calc.availableSegments || Number.isFinite(calc.totalDay) ? "Parcial" : "Sin diferencias";
     const stateClass = calc.anomaly ? "danger" : calc.complete ? "active" : "warning";
-    return `<tr><td data-label="Fecha">${escapeHtml(formatDate(`${row.dateKey}T12:00:00`))}</td><td data-label="Máquina"><strong>${escapeHtml(row.machine)}</strong><br><small>${escapeHtml(part.operatorName || "Operador")}</small></td><td data-label="Inicial">${reportValue(calc.initial)}</td><td data-label="Descanso">${reportValue(calc.rest)}</td><td data-label="Horas 1"><strong>${reportValue(calc.before)}${Number.isFinite(calc.before) ? " h" : ""}</strong></td><td data-label="Post descanso">${reportValue(calc.postBreak)}</td><td data-label="Final">${reportValue(calc.final)}</td><td data-label="Horas 2"><strong>${reportValue(calc.after)}${Number.isFinite(calc.after) ? " h" : ""}</strong></td><td data-label="Total"><strong>${reportNumber(calc.total,2)} h</strong></td><td data-label="Estado"><span class="badge ${stateClass}">${state}</span></td></tr>`;
+    const totalDay = Number.isFinite(calc.totalDay) ? `${reportNumber(calc.totalDay,2)} h` : "—";
+    return `<tr><td data-label="Fecha">${escapeHtml(formatDate(`${row.dateKey}T12:00:00`))}</td><td data-label="Máquina"><strong>${escapeHtml(row.machine)}</strong><br><small>${escapeHtml(part.operatorName || "Operador")}</small></td><td data-label="Inicial">${reportValue(calc.initial)}</td><td data-label="Descanso">${reportValue(calc.rest)}</td><td data-label="Tramo 1"><strong>${reportValue(calc.before)}${Number.isFinite(calc.before) ? " h" : ""}</strong></td><td data-label="Post descanso">${reportValue(calc.postBreak)}</td><td data-label="Final">${reportValue(calc.final)}</td><td data-label="Tramo 2"><strong>${reportValue(calc.after)}${Number.isFinite(calc.after) ? " h" : ""}</strong></td><td data-label="Total día"><strong>${escapeHtml(totalDay)}</strong><small class="formula-note">Final − inicial</small></td><td data-label="Estado"><span class="badge ${stateClass}">${state}</span></td></tr>`;
   }).join("")}</tbody></table>`;
 }
 
@@ -2168,7 +2205,8 @@ function renderAdminReports(message = "") {
 
   const preHours = horometerRows.reduce((sum,row) => sum + row.before, 0);
   const postHours = horometerRows.reduce((sum,row) => sum + row.after, 0);
-  const totalHours = preHours + postHours;
+  const totalHours = horometerRows.reduce((sum,row) => sum + row.total, 0);
+  const totalKnownParts = horometerRows.reduce((sum,row) => sum + row.totalKnownParts, 0);
   const completeParts = horometerRows.reduce((sum,row) => sum + row.completeParts, 0);
   const partialParts = horometerRows.reduce((sum,row) => sum + row.partialParts, 0);
   const totalFuel = fuels.reduce((sum,item) => sum + Number(item.liters || 0), 0);
@@ -2177,7 +2215,7 @@ function renderAdminReports(message = "") {
   const serviceHours = completedServices.reduce((sum,item) => sum + reportDurationMinutes(item.startAtClient,item.endAtClient)/60,0);
 
   els.reportOperatingHours.textContent = `${reportNumber(totalHours,2)} h`;
-  els.reportOperatingDetail.textContent = `${completeParts} jornada${completeParts === 1 ? "" : "s"} completa${completeParts === 1 ? "" : "s"}${partialParts ? ` · ${partialParts} parcial${partialParts === 1 ? "" : "es"}` : ""}`;
+  els.reportOperatingDetail.textContent = `${totalKnownParts} jornada${totalKnownParts === 1 ? "" : "s"} con total final − inicial${partialParts ? ` · ${partialParts} parcial${partialParts === 1 ? "" : "es"}` : ""}`;
   els.reportPreBreakHours.textContent = `${reportNumber(preHours,2)} h`;
   els.reportPostBreakHours.textContent = `${reportNumber(postHours,2)} h`;
   els.reportFuelPerDay.textContent = `${reportNumber(litersPerDay,1)} L`;
@@ -2570,7 +2608,8 @@ function renderAdminParts() {
     const breakStage = part.horometers?.break;
     const postBreak = part.horometers?.postBreak;
     const final = part.horometers?.final;
-    const hours = partOperatingHours(part);
+    const calc = partHorometerBreakdown(part);
+    const hours = Number.isFinite(calc.totalDay) ? calc.totalDay : 0;
     const progress = horometerProgress(part);
     const finalized = isPartReadOnly(part);
     const statusClass = part.syncStatus === "pending" ? "warning" : "active";
@@ -2581,7 +2620,7 @@ function renderAdminParts() {
       <button class="admin-part-summary" type="button" data-admin-part-toggle="${escapeHtml(part.id)}">
         <span class="admin-part-primary"><span class="admin-part-machine-icon">${iconSvg("clipboard")}</span><span><strong>${escapeHtml(part.operatorName || "Operador")}</strong><span>${escapeHtml(part.machine || "Sin máquina")} · ${escapeHtml(part.establishment || "-")}</span></span></span>
         <span class="admin-part-metric"><strong>${formatDate(`${part.dateKey || ""}T12:00:00`)}</strong><span>Fecha del Parte</span></span>
-        <span class="admin-part-metric"><strong>${formatHours(hours)}</strong><span>Horas operadas</span></span>
+        <span class="admin-part-metric"><strong>${formatHours(hours)}</strong><span>Producción total</span></span>
         <span class="admin-part-status"><span class="badge ${statusClass}">${statusText}</span><svg class="admin-part-chevron"><use href="#icon-chevron-right"></use></svg></span>
       </button>
       <div class="admin-part-details">
@@ -2596,6 +2635,11 @@ function renderAdminParts() {
           <div class="admin-part-horometer"><span>Horómetro descanso</span><strong>${breakStage?.value ?? "-"}</strong>${partEvidenceLink(breakStage)}</div>
           <div class="admin-part-horometer"><span>Horómetro post descanso</span><strong>${postBreak?.value ?? "-"}</strong>${partEvidenceLink(postBreak)}</div>
           <div class="admin-part-horometer"><span>Horómetro final</span><strong>${final?.value ?? "-"}</strong>${partEvidenceLink(final)}</div>
+        </div>
+        <div class="admin-part-calculation-grid">
+          <div><span>Primer tramo</span><strong>${Number.isFinite(calc.before) ? `${reportNumber(calc.before,2)} h` : "Pendiente"}</strong><small>Descanso − inicial</small></div>
+          <div><span>Segundo tramo</span><strong>${Number.isFinite(calc.after) ? `${reportNumber(calc.after,2)} h` : "Pendiente"}</strong><small>Final − post descanso</small></div>
+          <div class="total"><span>Producción total del día</span><strong>${Number.isFinite(calc.totalDay) ? `${reportNumber(calc.totalDay,2)} h` : "Pendiente"}</strong><small>Final − inicial</small></div>
         </div>
         <div class="admin-part-footer"><span>ID: ${escapeHtml(part.id)}</span><span>Actualizado: ${formatDateTime(created)} · Fuente: ${part._source === "legacy" ? "registro heredado" : "operationalParts"}</span></div>
       </div>
