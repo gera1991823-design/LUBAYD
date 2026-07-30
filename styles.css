@@ -8099,3 +8099,61 @@ a {
     border-left: 0 !important;
   }
 }
+
+
+/* ============================================================
+   LUBAYD V6.4 - gestión de tanque y sesión móvil
+   ============================================================ */
+.tank-manager-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 38px;
+  padding: 8px 12px !important;
+  border: 1px solid #b8dcc6 !important;
+  border-radius: 12px !important;
+  color: #087443 !important;
+  background: #f2fbf5 !important;
+}
+.tank-manager-button .ui-icon { width: 16px; height: 16px; }
+.tank-management-dialog { width: min(520px, calc(100vw - 24px)); display: grid; gap: 16px; }
+.tank-dialog-header { display: flex; align-items: flex-start; gap: 13px; }
+.tank-dialog-header h2 { margin: 4px 0 5px; }
+.tank-dialog-header p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.45; }
+.tank-dialog-icon { width: 48px; height: 48px; flex: 0 0 48px; display: grid; place-items: center; border-radius: 15px; color: #087443; background: linear-gradient(145deg,#f5fff8,#dcf4e5); border: 1px solid #c9e7d4; }
+.tank-dialog-icon .ui-icon { width: 25px; height: 25px; }
+.tank-dialog-summary { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.tank-dialog-summary > div { padding: 13px; border: 1px solid #d8e8de; border-radius: 15px; background: #f8fcf9; }
+.tank-dialog-summary span, .tank-dialog-summary strong { display: block; }
+.tank-dialog-summary span { color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: .08em; }
+.tank-dialog-summary strong { margin-top: 4px; color: #0b4e31; font-size: 20px; }
+.tank-refill-panel, .tank-adjustment-panel { display: grid; gap: 11px; padding: 14px; border: 1px solid #d9e8de; border-radius: 16px; background: #fff; }
+.tank-refill-panel { background: linear-gradient(145deg,#f7fff9,#eef9f2); }
+.tank-load-result { margin: -2px 0 0; color: #476257; font-size: 11px; line-height: 1.4; }
+.tank-load-result.error { color: #a33a31; }
+.tank-adjustment-heading { display: grid; gap: 3px; }
+.tank-adjustment-heading strong { font-size: 13px; }
+.tank-adjustment-heading small { color: var(--muted); font-size: 10px; line-height: 1.4; }
+.tank-cancel-button { justify-self: center; }
+.sidebar-logout-button { border-color: rgba(255,255,255,.28) !important; background: rgba(255,255,255,.12) !important; font-weight: 800 !important; }
+.sidebar-logout-button:hover { background: rgba(255,255,255,.2) !important; }
+
+@media (max-width: 820px) {
+  .lubayd-v6 .sidebar { display: flex !important; flex-direction: column !important; height: 100dvh !important; }
+  .lubayd-v6 .sidebar-nav { flex: 1 1 auto !important; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+  .lubayd-v6 .sidebar-user { flex: 0 0 auto; }
+  .lubayd-v6 .sidebar-footer { flex: 0 0 auto; padding-bottom: max(10px, env(safe-area-inset-bottom)) !important; background: linear-gradient(180deg,rgba(4,60,44,.05),rgba(4,60,44,.96) 18%); }
+  .lubayd-v6 .sidebar-logout-button { min-height: 48px !important; font-size: 13px !important; }
+  .tank-management-dialog { max-height: 92dvh; overflow-y: auto; border-radius: 24px 24px 0 0 !important; padding-bottom: calc(18px + env(safe-area-inset-bottom)); }
+  .tank-dialog-summary { grid-template-columns: 1fr 1fr; }
+  .tank-refill-panel, .tank-adjustment-panel { padding: 12px; }
+  .tank-manager-button { width: 100%; justify-content: center; }
+  body[data-role="mechanic"] .mobile-bottom-nav,
+  body[data-role="admin"] .mobile-bottom-nav { grid-template-columns: repeat(5,minmax(0,1fr)) !important; }
+}
+
+@media (max-width: 390px) {
+  .tank-dialog-header { gap: 10px; }
+  .tank-dialog-icon { width: 42px; height: 42px; flex-basis: 42px; border-radius: 13px; }
+  .tank-dialog-summary strong { font-size: 17px; }
+}

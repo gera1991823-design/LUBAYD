@@ -43,7 +43,7 @@ const els = {
   recordDetailModal: $("#recordDetailModal"), recordDetailTitle: $("#recordDetailTitle"), recordDetailBody: $("#recordDetailBody"),
   captureModal: $("#captureModal"), captureTitle: $("#captureTitle"), captureSubtitle: $("#captureSubtitle"), capturePreview: $("#capturePreview"), captureFileInput: $("#captureFileInput"), captureGpsCard: $("#captureGpsCard"), captureGpsStatus: $("#captureGpsStatus"), captureGpsButton: $("#captureGpsButton"), captureGpsSkipButton: $("#captureGpsSkipButton"), captureGpsRequirement: $("#captureGpsRequirement"), captureGpsHelp: $("#captureGpsHelp"), captureMapLink: $("#captureMapLink"), confirmCaptureButton: $("#confirmCaptureButton"),
   pinModal: $("#pinModal"), pinInput: $("#pinInput"), pinConfirm: $("#pinConfirm"), pinError: $("#pinError"), savePinButton: $("#savePinButton"), skipPinButton: $("#skipPinButton"),
-  tankModal: $("#tankModal"), tankCapacityInput: $("#tankCapacityInput"), tankCurrentInput: $("#tankCurrentInput"), saveTankButton: $("#saveTankButton"),
+  tankModal: $("#tankModal"), tankCapacityInput: $("#tankCapacityInput"), tankCurrentInput: $("#tankCurrentInput"), saveTankButton: $("#saveTankButton"), tankLoadInput: $("#tankLoadInput"), addTankFuelButton: $("#addTankFuelButton"), tankAdjustmentPanel: $("#tankAdjustmentPanel"), tankModalCurrent: $("#tankModalCurrent"), tankModalCapacity: $("#tankModalCapacity"), tankModalHint: $("#tankModalHint"), tankLoadResult: $("#tankLoadResult"),
   processingOverlay: $("#processingOverlay"), processingTitle: $("#processingTitle"), processingMessage: $("#processingMessage"), toastRegion: $("#toastRegion")
 };
 
@@ -52,7 +52,7 @@ const ROLE_LABELS = { operator: "Operador", mechanic: "Mecanico", admin: "Admini
 const ROLE_SECTIONS = {
   operator: ["dashboard", "break", "part", "activity", "chat"],
   mechanic: ["dashboard", "service", "fuel", "activity", "chat"],
-  admin: ["dashboard", "part", "service", "break", "reports", "users", "chat"]
+  admin: ["dashboard", "part", "service", "break", "fuel", "reports", "users", "chat"]
 };
 const HOROMETER_CONFIG = [
   { key: "initial", label: "Horometro inicial", help: "Inicio de la jornada" },
@@ -648,6 +648,8 @@ function bindEvents() {
   els.fuelForm.addEventListener("submit", saveFuelLoad);
   els.editTankButton.addEventListener("click", openTankModal);
   els.saveTankButton.addEventListener("click", saveTank);
+  els.addTankFuelButton?.addEventListener("click", addFuelToMainTank);
+  els.tankLoadInput?.addEventListener("input", updateTankLoadPreview);
   $$('[data-close-tank]').forEach((button) => button.addEventListener("click", () => els.tankModal.classList.add("hidden")));
   $$('[data-close-modal]').forEach((button) => button.addEventListener("click", closeCapture));
   $$('[data-close-record-detail]').forEach((button) => button.addEventListener("click", closeRecordDetail));
@@ -2986,22 +2988,128 @@ async function saveFuelLoad(event) {
   syncNow(false).catch(console.warn);
 }
 
+function updateTankModalSummary() {
+  const capacity = Number(tank?.capacityLiters || 0);
+  const current = Number(tank?.currentLiters || 0);
+  if (els.tankModalCurrent) els.tankModalCurrent.textContent = liters(current);
+  if (els.tankModalCapacity) els.tankModalCapacity.textContent = liters(capacity);
+  updateTankLoadPreview();
+}
+
+function updateTankLoadPreview() {
+  if (!els.tankLoadResult) return;
+  const amount = Number(els.tankLoadInput?.value || 0);
+  const capacity = Number(tank?.capacityLiters || 0);
+  const current = Number(tank?.currentLiters || 0);
+  if (!amount) {
+    els.tankLoadResult.textContent = "El nuevo saldo se calculará automáticamente.";
+    els.tankLoadResult.classList.remove("error");
+    return;
+  }
+  const next = current + amount;
+  if (capacity <= 0) {
+    els.tankLoadResult.textContent = "Primero debe configurarse la capacidad del tanque.";
+    els.tankLoadResult.classList.add("error");
+    return;
+  }
+  if (next > capacity) {
+    els.tankLoadResult.textContent = `La carga supera la capacidad por ${liters(next - capacity)}.`;
+    els.tankLoadResult.classList.add("error");
+    return;
+  }
+  els.tankLoadResult.textContent = `Saldo posterior: ${liters(next)} de ${liters(capacity)}.`;
+  els.tankLoadResult.classList.remove("error");
+}
+
 function openTankModal() {
-  els.tankCapacityInput.value = Number(tank.capacityLiters || 0) || "";
+  const isAdmin = currentProfile?.role === "admin";
+  const isMechanic = currentProfile?.role === "mechanic";
+  if (!isAdmin && !isMechanic) {
+    showToast("Acceso restringido", "Solo administradores y mecánicos pueden gestionar el tanque.", "error");
+    return;
+  }
+  const capacity = Number(tank.capacityLiters || 0);
+  els.tankCapacityInput.value = capacity || "";
   els.tankCurrentInput.value = Number(tank.currentLiters || 0) || "";
+  if (els.tankLoadInput) els.tankLoadInput.value = "";
+  const allowInitialSetup = isAdmin || capacity <= 0;
+  els.tankAdjustmentPanel?.classList.toggle("hidden", !allowInitialSetup);
+  if (els.tankModalHint) {
+    els.tankModalHint.textContent = isAdmin
+      ? "Agrega combustible o realiza un ajuste controlado de capacidad y saldo."
+      : capacity > 0
+        ? "Como mecánico puedes agregar combustible. La capacidad solo puede cambiarla un administrador."
+        : "El tanque todavía no está configurado. Define la capacidad inicial y luego registra la carga.";
+  }
+  updateTankModalSummary();
   els.tankModal.classList.remove("hidden");
+  setTimeout(() => (capacity > 0 ? els.tankLoadInput : els.tankCapacityInput)?.focus(), 50);
+}
+
+async function addFuelToMainTank() {
+  if (!["admin", "mechanic"].includes(currentProfile?.role || "")) return;
+  const amount = Number(els.tankLoadInput?.value || 0);
+  const capacity = Number(tank?.capacityLiters || 0);
+  const current = Number(tank?.currentLiters || 0);
+  if (capacity <= 0) {
+    showToast("Tanque sin configurar", "Define primero la capacidad total del tanque.", "error");
+    return;
+  }
+  if (!Number.isFinite(amount) || amount <= 0) {
+    showToast("Carga inválida", "Ingresa una cantidad de litros mayor que cero.", "error");
+    return;
+  }
+  if (current + amount > capacity) {
+    showToast("Capacidad superada", `Solo puedes agregar hasta ${liters(Math.max(0, capacity - current))}.`, "error");
+    return;
+  }
+  setBusy(els.addTankFuelButton, true, "Guardando carga...");
+  try {
+    const updatedAtClient = localIso();
+    tank = {
+      ...tank,
+      id: "main",
+      currentLiters: current + amount,
+      updatedAtClient,
+      updatedBy: currentUser.uid,
+      updatedByName: currentProfile.name,
+      lastRefillLiters: amount,
+      syncStatus: "pending"
+    };
+    await OfflineDB.putTank(tank);
+    await queueForSync({
+      id: `tank-refill:${uuid()}`,
+      uid: currentUser.uid,
+      type: "tank-refill",
+      payload: { amount, updatedAtClient, updatedBy: currentUser.uid, updatedByName: currentProfile.name }
+    });
+    els.tankModal.classList.add("hidden");
+    renderTank();
+    await updateSyncUi();
+    showToast("Tanque cargado", `${liters(amount)} agregados. Saldo estimado: ${liters(tank.currentLiters)}.`);
+    syncNow(false).catch(console.warn);
+  } finally {
+    setBusy(els.addTankFuelButton, false);
+  }
 }
 
 async function saveTank() {
+  const isAdmin = currentProfile?.role === "admin";
+  const isInitialMechanicSetup = currentProfile?.role === "mechanic" && Number(tank?.capacityLiters || 0) <= 0;
+  if (!isAdmin && !isInitialMechanicSetup) {
+    showToast("Acción restringida", "El mecánico puede cargar combustible, pero no modificar la capacidad.", "error");
+    return;
+  }
   const capacity = Number(els.tankCapacityInput.value || 0);
   const current = Number(els.tankCurrentInput.value || 0);
   if (capacity <= 0 || current < 0 || current > capacity) { showToast("Valores invalidos", "El disponible debe estar entre 0 y la capacidad total.", "error"); return; }
-  tank = { id: "main", capacityLiters: capacity, currentLiters: current, updatedAtClient: localIso(), updatedBy: currentUser.uid, syncStatus: "pending" };
+  tank = { id: "main", capacityLiters: capacity, currentLiters: current, updatedAtClient: localIso(), updatedBy: currentUser.uid, updatedByName: currentProfile.name, syncStatus: "pending" };
   await OfflineDB.putTank(tank);
   await queueForSync({ id: "tank:main", uid: currentUser.uid, type: "tank-update", payload: tank });
   els.tankModal.classList.add("hidden");
   renderTank();
   await updateSyncUi();
+  showToast("Tanque actualizado", "La configuración quedó guardada y pendiente de sincronización.");
   syncNow(false).catch(console.warn);
 }
 
@@ -3589,6 +3697,31 @@ async function processSyncItem(item) {
     await OfflineDB.putChatMessage(syncedMessage);
     mergeChatMessages([syncedMessage]);
     renderChat(true);
+    return;
+  }
+  if (item.type === "tank-refill") {
+    const refill = item.payload || {};
+    const amount = Number(refill.amount || 0);
+    if (amount <= 0) throw new Error("La carga del tanque no tiene una cantidad válida.");
+    const tankRef = sdk.doc(db, "tanks", "main");
+    let syncedTank = null;
+    await sdk.runTransaction(db, async (transaction) => {
+      const tankSnap = await transaction.get(tankRef);
+      if (!tankSnap.exists()) throw new Error("Primero debe configurarse la capacidad del tanque principal.");
+      const remoteTank = tankSnap.data();
+      const capacity = Number(remoteTank.capacityLiters || 0);
+      const current = Number(remoteTank.currentLiters || 0);
+      const next = current + amount;
+      if (capacity <= 0) throw new Error("La capacidad del tanque no está configurada.");
+      if (next > capacity) throw new Error(`La carga supera la capacidad disponible por ${liters(next - capacity)}.`);
+      syncedTank = { ...remoteTank, id: "main", currentLiters: next, updatedAtClient: refill.updatedAtClient || localIso(), updatedBy: refill.updatedBy || currentUser.uid, updatedByName: refill.updatedByName || currentProfile?.name || "Usuario", lastRefillLiters: amount, syncStatus: "synced" };
+      transaction.set(tankRef, { ...cleanRecord(syncedTank), updatedAt: sdk.serverTimestamp() }, { merge: true });
+    });
+    if (syncedTank) {
+      tank = syncedTank;
+      await OfflineDB.putTank(syncedTank);
+      renderTank();
+    }
     return;
   }
   if (item.type === "tank-update") {

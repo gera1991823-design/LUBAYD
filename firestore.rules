@@ -141,13 +141,23 @@ service cloud.firestore {
 
     match /tanks/{tankId} {
       allow read: if isMechanicOrAdmin();
-      allow create: if isAdmin();
 
+      // Administradores y mecánicos pueden crear el tanque inicial.
+      allow create: if isMechanicOrAdmin()
+                    && request.resource.data.capacityLiters is number
+                    && request.resource.data.currentLiters is number
+                    && request.resource.data.capacityLiters > 0
+                    && request.resource.data.currentLiters >= 0
+                    && request.resource.data.currentLiters <= request.resource.data.capacityLiters;
+
+      // El administrador puede ajustar capacidad y saldo.
+      // El mecánico puede cargar o descontar combustible, pero no cambiar la capacidad.
       allow update: if isAdmin()
                     || (isMechanic()
                         && request.resource.data.capacityLiters == resource.data.capacityLiters
+                        && request.resource.data.currentLiters is number
                         && request.resource.data.currentLiters >= 0
-                        && request.resource.data.currentLiters <= resource.data.currentLiters);
+                        && request.resource.data.currentLiters <= resource.data.capacityLiters);
 
       allow delete: if false;
     }
