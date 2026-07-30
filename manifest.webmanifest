@@ -1,7 +1,7 @@
 {
-  "name": "LUBAYD Operativa 6.8 Horómetro Total Diario",
+  "name": "LUBAYD Operativa 6.9 Servicio con Partes Activos",
   "short_name": "LUBAYD",
-  "description": "Gestión operativa LUBAYD con reportes exactos de horómetros, combustible y servicios por máquina y día.",
+  "description": "Gestión operativa LUBAYD con Partes progresivos visibles para mecánicos, servicios, descansos, combustible, reportes y trabajo offline.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

@@ -8535,7 +8535,7 @@ body.mobile-scroll-enabled {
 }
 
 
-/* V6.8 - cálculo exacto de producción de horómetro */
+/* V6.9 - cálculo exacto de producción de horómetro */
 .lubayd-v6 .exact-segment-track .rest-gap {
   background: repeating-linear-gradient(135deg,#d7dfda 0 6px,#edf2ef 6px 12px);
   box-shadow: inset 1px 0 rgba(255,255,255,.65), inset -1px 0 rgba(4,68,40,.08);
@@ -8595,4 +8595,69 @@ body.mobile-scroll-enabled {
 @media (max-width:820px) {
   .lubayd-v6 .admin-part-calculation-grid { grid-template-columns:1fr; }
   .lubayd-v6 .exact-segment-legend .total-day { margin-left:0; width:fit-content; }
+}
+
+
+/* V6.9 - selector de Partes activos para Servicio */
+.lubayd-v6 .service-selector-main {
+  display: grid;
+  gap: 8px;
+  min-width: min(420px, 100%);
+}
+.lubayd-v6 .service-parts-helper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+}
+.lubayd-v6 .service-parts-helper > span {
+  min-width: 0;
+  color: var(--v6-muted, #68786f);
+  font-size: 11px;
+  line-height: 1.35;
+}
+.lubayd-v6 .service-refresh-parts {
+  flex: 0 0 auto;
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 10px;
+  border: 1px solid #bcdcc8;
+  border-radius: 11px;
+  color: #087243;
+  background: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.lubayd-v6 .service-refresh-parts:hover { background: #eef9f2; border-color: #71bd8e; }
+.lubayd-v6 .service-refresh-parts:disabled { opacity: .55; cursor: wait; }
+.lubayd-v6 .service-refresh-parts .ui-icon { width: 15px; height: 15px; }
+.lubayd-v6 #servicePartSelect optgroup { font-weight: 850; color: #075b37; }
+.lubayd-v6 #servicePartSelect option { color: #15251c; font-weight: 500; }
+
+@media (max-width: 820px) {
+  .lubayd-v6 .service-part-selector-card {
+    display: grid !important;
+    grid-template-columns: 52px minmax(0,1fr) !important;
+    gap: 12px !important;
+  }
+  .lubayd-v6 .service-part-selector-card .workflow-session-icon { grid-column: 1; grid-row: 1; }
+  .lubayd-v6 .service-selector-main { grid-column: 2; grid-row: 1; min-width: 0; width: 100%; }
+  .lubayd-v6 .service-part-selector-card .pro-service-summary,
+  .lubayd-v6 .service-part-selector-card .service-new-button { grid-column: 1 / -1; width: 100%; }
+  .lubayd-v6 .service-parts-helper { align-items: flex-start; }
+}
+
+@media (max-width: 430px) {
+  .lubayd-v6 .service-part-selector-card {
+    grid-template-columns: 1fr !important;
+  }
+  .lubayd-v6 .service-part-selector-card .workflow-session-icon { display: none; }
+  .lubayd-v6 .service-selector-main { grid-column: 1; }
+  .lubayd-v6 .service-parts-helper { display: grid; grid-template-columns: 1fr; }
+  .lubayd-v6 .service-refresh-parts { width: 100%; min-height: 40px; }
 }

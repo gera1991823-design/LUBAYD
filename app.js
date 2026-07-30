@@ -56,7 +56,7 @@ const els = {
   adminPartsPanel: $("#adminPartsPanel"), adminPartsList: $("#adminPartsList"), adminPartsCount: $("#adminPartsCount"), adminPartsStatus: $("#adminPartsStatus"), refreshAdminPartsButton: $("#refreshAdminPartsButton"), adminPartsSearch: $("#adminPartsSearch"), adminPartsDateFilter: $("#adminPartsDateFilter"), adminPartsOperatorFilter: $("#adminPartsOperatorFilter"),
   adminBreaksPanel: $("#adminBreaksPanel"), adminBreaksList: $("#adminBreaksList"), adminBreaksCount: $("#adminBreaksCount"), adminBreaksStatus: $("#adminBreaksStatus"), refreshAdminBreaksButton: $("#refreshAdminBreaksButton"), adminBreaksSearch: $("#adminBreaksSearch"), adminBreaksDateFilter: $("#adminBreaksDateFilter"), adminBreaksOperatorFilter: $("#adminBreaksOperatorFilter"), adminBreaksStatusFilter: $("#adminBreaksStatusFilter"),
   adminServicesPanel: $("#adminServicesPanel"), adminServicesList: $("#adminServicesList"), adminServicesCount: $("#adminServicesCount"), adminServicesStatus: $("#adminServicesStatus"), refreshAdminServicesButton: $("#refreshAdminServicesButton"), adminServicesSearch: $("#adminServicesSearch"), adminServicesDateFilter: $("#adminServicesDateFilter"), adminServicesOperatorFilter: $("#adminServicesOperatorFilter"), adminServicesMechanicFilter: $("#adminServicesMechanicFilter"), adminServicesMachineFilter: $("#adminServicesMachineFilter"), adminServicesStatusFilter: $("#adminServicesStatusFilter"),
-  servicePartSelect: $("#servicePartSelect"), serviceMachine: $("#serviceMachine"), serviceOperator: $("#serviceOperator"), serviceTimer: $("#serviceTimer"), serviceStatus: $("#serviceStatus"), serviceStartedAt: $("#serviceStartedAt"), serviceStartReason: $("#serviceStartReason"), serviceEndReason: $("#serviceEndReason"), serviceStartEvidence: $("#serviceStartEvidence"), serviceEndEvidence: $("#serviceEndEvidence"), newServiceButton: $("#newServiceButton"), serviceSessionCount: $("#serviceSessionCount"), serviceSessionList: $("#serviceSessionList"), startServiceButton: $("#startServiceButton"), endServiceButton: $("#endServiceButton"),
+  servicePartSelect: $("#servicePartSelect"), servicePartsStatus: $("#servicePartsStatus"), refreshServicePartsButton: $("#refreshServicePartsButton"), serviceMachine: $("#serviceMachine"), serviceOperator: $("#serviceOperator"), serviceTimer: $("#serviceTimer"), serviceStatus: $("#serviceStatus"), serviceStartedAt: $("#serviceStartedAt"), serviceStartReason: $("#serviceStartReason"), serviceEndReason: $("#serviceEndReason"), serviceStartEvidence: $("#serviceStartEvidence"), serviceEndEvidence: $("#serviceEndEvidence"), newServiceButton: $("#newServiceButton"), serviceSessionCount: $("#serviceSessionCount"), serviceSessionList: $("#serviceSessionList"), startServiceButton: $("#startServiceButton"), endServiceButton: $("#endServiceButton"),
   tankPercent: $("#tankPercent"), tankProgress: $("#tankProgress"), tankCapacity: $("#tankCapacity"), tankCurrent: $("#tankCurrent"), tankUpdated: $("#tankUpdated"), editTankButton: $("#editTankButton"), fuelRecentList: $("#fuelRecentList"), fuelForm: $("#fuelForm"), fuelMachine: $("#fuelMachine"), fuelOperator: $("#fuelOperator"), fuelLiters: $("#fuelLiters"), fuelPhotoEvidence: $("#fuelPhotoEvidence"), captureFuelPhotoButton: $("#captureFuelPhotoButton"), saveFuelButton: $("#saveFuelButton"),
   activityList: $("#activityList"), operatorActivityTabs: $("#operatorActivityTabs"), operatorPartsActivity: $("#operatorPartsActivity"), operatorBreaksActivity: $("#operatorBreaksActivity"), generalActivityList: $("#generalActivityList"), activityDateFilter: $("#activityDateFilter"), usersList: $("#usersList"),
   adminActivityControls: $("#adminActivityControls"), adminActivityType: $("#adminActivityType"), adminActivityPerson: $("#adminActivityPerson"), adminActivityDate: $("#adminActivityDate"), adminActivitySearch: $("#adminActivitySearch"), adminActivityRefresh: $("#adminActivityRefresh"), adminActivityTotal: $("#adminActivityTotal"), adminActivityParts: $("#adminActivityParts"), adminActivityBreaks: $("#adminActivityBreaks"), adminActivityServices: $("#adminActivityServices"), adminActivityFuel: $("#adminActivityFuel"),
@@ -684,6 +684,20 @@ function bindEvents() {
   els.partSessionSelect.addEventListener("change", selectPartSession);
   els.partDateInput.addEventListener("change", handlePartDateChange);
   els.servicePartSelect.addEventListener("change", selectServicePart);
+  els.refreshServicePartsButton?.addEventListener("click", async () => {
+    setBusy(els.refreshServicePartsButton, true, "Actualizando...");
+    if (els.servicePartsStatus) els.servicePartsStatus.textContent = "Consultando Partes en Firebase...";
+    try {
+      await loadOperatorParts(true);
+      if (els.servicePartSelect.value) await selectServicePart();
+      showToast("Partes actualizados", "Se cargaron los Partes disponibles de los operadores.");
+    } catch (error) {
+      if (els.servicePartsStatus) els.servicePartsStatus.textContent = `No se pudieron actualizar los Partes: ${friendlyError(error)}`;
+      showToast("No se pudieron cargar los Partes", friendlyError(error), "error");
+    } finally {
+      setBusy(els.refreshServicePartsButton, false);
+    }
+  });
   els.newServiceButton.addEventListener("click", beginNewServiceSession);
   els.startServiceButton.addEventListener("click", startService);
   els.endServiceButton.addEventListener("click", endService);
@@ -1026,9 +1040,11 @@ async function loadOperatorParts(force = false) {
   }
   try {
     if (firebaseReady && navigator.onLine && !localSession) {
+      // El mecánico debe ver también Partes en curso, aunque todavía no estén finalizados
+      // o pertenezcan a una jornada anterior. Por eso consulta la colección canónica completa.
       const source = isAdmin
         ? sdk.collection(db, "operationalParts")
-        : sdk.query(sdk.collection(db, "operationalParts"), sdk.where("dateKey", "==", date));
+        : sdk.collection(db, "operationalParts");
       const snap = await sdk.getDocs(source);
       const canonical = snap.docs.map((item) => normalizePartRecord({ id: item.id, ...item.data(), syncStatus: "synced", _source: "canonical" }));
 
@@ -1044,10 +1060,12 @@ async function loadOperatorParts(force = false) {
         setAdminPartsStatus(`${canonical.length} Parte${canonical.length === 1 ? "" : "s"} en operationalParts${legacyAdminParts.length ? ` · ${legacyAdminParts.length} registro${legacyAdminParts.length === 1 ? "" : "s"} heredado${legacyAdminParts.length === 1 ? "" : "s"} revisado${legacyAdminParts.length === 1 ? "" : "s"}` : ""}.`);
       } else {
         for (const record of canonical) await OfflineDB.putOperatorPart(record);
-        operatorParts = await OfflineDB.getOperatorParts(date);
+        // Conserva todos los Partes sincronizados para que el mecánico pueda asociar
+        // un servicio a un Parte activo o a un Parte reciente.
+        operatorParts = await OfflineDB.getOperatorParts();
       }
     } else {
-      operatorParts = await OfflineDB.getOperatorParts(isAdmin ? undefined : date);
+      operatorParts = await OfflineDB.getOperatorParts();
     }
     populateServiceParts();
     populateFuelOperators();
@@ -1074,7 +1092,7 @@ async function subscribeToOperationalParts() {
   const date = todayKey();
   const source = isAdmin
     ? sdk.collection(db, "operationalParts")
-    : sdk.query(sdk.collection(db, "operationalParts"), sdk.where("dateKey", "==", date));
+    : sdk.collection(db, "operationalParts");
 
   partsUnsubscribe = sdk.onSnapshot(source, async (snapshot) => {
     const canonical = snapshot.docs.map((item) => normalizePartRecord({ id: item.id, ...item.data(), syncStatus: "synced", _source: "canonical" }));
@@ -1087,7 +1105,7 @@ async function subscribeToOperationalParts() {
       setAdminPartsStatus(`${canonical.length} Parte${canonical.length === 1 ? "" : "s"} sincronizado${canonical.length === 1 ? "" : "s"} en tiempo real.`);
     } else {
       for (const record of canonical) await OfflineDB.putOperatorPart(record);
-      operatorParts = await OfflineDB.getOperatorParts(date);
+      operatorParts = await OfflineDB.getOperatorParts();
     }
     populateServiceParts();
     populateFuelOperators();
@@ -2904,10 +2922,81 @@ async function savePart(event) {
   }
 }
 
+function servicePartTimestamp(part) {
+  const value = part.updatedAtClient || part.createdAtClient || `${part.dateKey || ""}T12:00:00`;
+  const timestamp = new Date(value).getTime();
+  return Number.isFinite(timestamp) ? timestamp : 0;
+}
+
+function recentServicePart(part, days = 7) {
+  const partDate = String(part.dateKey || part.createdAtClient || "").slice(0, 10);
+  if (!partDate) return false;
+  const date = new Date(`${partDate}T12:00:00`);
+  if (Number.isNaN(date.getTime())) return false;
+  const limit = new Date();
+  limit.setHours(23, 59, 59, 999);
+  limit.setDate(limit.getDate() - days);
+  return date >= limit;
+}
+
+function serviceEligibleParts() {
+  const unique = new Map();
+  operatorParts.forEach((part) => {
+    if (!part?.id || !part.machine || !part.operatorUid) return;
+    const current = unique.get(part.id);
+    if (!current || servicePartTimestamp(part) >= servicePartTimestamp(current)) unique.set(part.id, part);
+  });
+
+  const records = Array.from(unique.values()).filter((part) => {
+    const active = !isPartReadOnly(part);
+    const hasRelatedService = services.some((record) => record.partId === part.id && record.status === "active");
+    return active || hasRelatedService || recentServicePart(part, 7);
+  });
+
+  return records.sort((a, b) => {
+    const aActive = !isPartReadOnly(a) ? 1 : 0;
+    const bActive = !isPartReadOnly(b) ? 1 : 0;
+    if (aActive !== bActive) return bActive - aActive;
+    return servicePartTimestamp(b) - servicePartTimestamp(a);
+  });
+}
+
+function servicePartOption(part) {
+  const active = !isPartReadOnly(part);
+  const progress = horometerProgress(part);
+  const status = active ? `En curso · ${progress}/4 horómetros` : "Finalizado";
+  const date = part.dateKey ? formatDate(`${part.dateKey}T12:00:00`) : formatDate(part.createdAtClient);
+  return `<option value="${escapeHtml(part.id)}">${escapeHtml(part.operatorName || "Operador")} · ${escapeHtml(part.machine || "Sin máquina")} · ${escapeHtml(date)} · ${escapeHtml(status)}</option>`;
+}
+
 function populateServiceParts() {
-  const selected = els.servicePartSelect.value;
-  els.servicePartSelect.innerHTML = '<option value="">Seleccionar parte activo</option>' + operatorParts.map((part) => `<option value="${part.id}">${escapeHtml(part.operatorName || "Operador")} - ${escapeHtml(part.machine || "Sin maquina")}</option>`).join("");
-  if (operatorParts.some((part) => part.id === selected)) els.servicePartSelect.value = selected;
+  if (!els.servicePartSelect) return;
+  const selected = els.servicePartSelect.value || currentService?.partId || "";
+  const available = serviceEligibleParts();
+  const active = available.filter((part) => !isPartReadOnly(part));
+  const recent = available.filter((part) => isPartReadOnly(part));
+
+  let options = '<option value="">Seleccionar Parte disponible</option>';
+  if (active.length) options += `<optgroup label="Partes en curso">${active.map(servicePartOption).join("")}</optgroup>`;
+  if (recent.length) options += `<optgroup label="Partes finalizados recientes">${recent.map(servicePartOption).join("")}</optgroup>`;
+  els.servicePartSelect.innerHTML = options;
+
+  if (available.some((part) => part.id === selected)) els.servicePartSelect.value = selected;
+  else els.servicePartSelect.value = "";
+
+  if (els.servicePartsStatus) {
+    if (!navigator.onLine) {
+      els.servicePartsStatus.textContent = `${available.length} Parte${available.length === 1 ? "" : "s"} guardado${available.length === 1 ? "" : "s"} en este dispositivo. Los Partes nuevos aparecerán al sincronizar.`;
+    } else if (!available.length) {
+      els.servicePartsStatus.textContent = "No hay Partes sincronizados disponibles. Presiona Actualizar después de que el operador guarde un horómetro.";
+    } else {
+      els.servicePartsStatus.textContent = `${active.length} en curso · ${recent.length} finalizado${recent.length === 1 ? "" : "s"} reciente${recent.length === 1 ? "" : "s"}`;
+    }
+  }
+
+  const selectedPart = available.find((part) => part.id === els.servicePartSelect.value);
+  els.serviceMachine.textContent = selectedPart?.machine || "-";
+  els.serviceOperator.textContent = selectedPart?.operatorName || "-";
 }
 
 function populateFuelOperators() {
@@ -3086,7 +3175,7 @@ function renderService() {
     ? `Iniciado ${formatDateTime(currentService.startAtClient)}`
     : part
       ? "Completa el motivo y registra la evidencia para iniciar."
-      : "Selecciona un Parte para comenzar.";
+      : "Selecciona un Parte sincronizado. Los Partes en curso aparecen apenas el operador guarda un horómetro.";
 
   if (!serviceDraftMode) els.serviceStartReason.value = currentService?.startReason || "";
   if (active || completed) els.serviceEndReason.value = currentService?.endReason || "";
