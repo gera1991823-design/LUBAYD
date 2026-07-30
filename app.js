@@ -63,7 +63,7 @@ const els = {
   cleanupParts: $("#cleanupParts"), cleanupServices: $("#cleanupServices"), cleanupFuel: $("#cleanupFuel"), cleanupTank: $("#cleanupTank"), cleanupConfirmInput: $("#cleanupConfirmInput"), cleanupDataButton: $("#cleanupDataButton"),
   chatMessages: $("#chatMessages"), chatForm: $("#chatForm"), chatInput: $("#chatInput"), chatSendButton: $("#chatSendButton"), chatStatusText: $("#chatStatusText"), chatConnectionBadge: $("#chatConnectionBadge"), directChatShell: $("#directChatShell"), chatUserSearch: $("#chatUserSearch"), chatContactList: $("#chatContactList"), chatDirectoryStatus: $("#chatDirectoryStatus"), chatUnreadTotal: $("#chatUnreadTotal"), chatBackButton: $("#chatBackButton"), chatRecipientAvatar: $("#chatRecipientAvatar"), chatRecipientName: $("#chatRecipientName"), chatRecipientMeta: $("#chatRecipientMeta"),
   reportsConnectionBadge: $("#reportsConnectionBadge"), refreshReportsButton: $("#refreshReportsButton"), reportDateFrom: $("#reportDateFrom"), reportDateTo: $("#reportDateTo"), reportMachine: $("#reportMachine"), applyReportsButton: $("#applyReportsButton"), clearReportsButton: $("#clearReportsButton"), reportsLastUpdated: $("#reportsLastUpdated"),
-  reportOperatingHours: $("#reportOperatingHours"), reportOperatingDetail: $("#reportOperatingDetail"), reportPreBreakHours: $("#reportPreBreakHours"), reportPostBreakHours: $("#reportPostBreakHours"), reportFuelPerDay: $("#reportFuelPerDay"), reportFuelPerDayDetail: $("#reportFuelPerDayDetail"), reportServiceHours: $("#reportServiceHours"), reportServiceDetail: $("#reportServiceDetail"), horometerDailyCount: $("#horometerDailyCount"), horometerDailyMachineChart: $("#horometerDailyMachineChart"), fuelByMachineDayChart: $("#fuelByMachineDayChart"), fuelDailyTotalChart: $("#fuelDailyTotalChart"), serviceByMachineDayChart: $("#serviceByMachineDayChart"), horometerDailyTable: $("#horometerDailyTable"), horometerTableCount: $("#horometerTableCount"), fuelDailyTable: $("#fuelDailyTable"), fuelTableCount: $("#fuelTableCount"), serviceDailyTable: $("#serviceDailyTable"), serviceTableCount: $("#serviceTableCount"),
+  reportPartHoursTotal: $("#reportPartHoursTotal"), reportPartHoursDetail: $("#reportPartHoursDetail"), reportFuelUsedTotal: $("#reportFuelUsedTotal"), reportFuelUsedDetail: $("#reportFuelUsedDetail"), partHoursChartCount: $("#partHoursChartCount"), fuelUsedChartCount: $("#fuelUsedChartCount"), partHoursByPartChart: $("#partHoursByPartChart"), fuelUsedByMachineChart: $("#fuelUsedByMachineChart"), reportPartCount: $("#reportPartCount"), reportAveragePartHours: $("#reportAveragePartHours"), reportActiveMachineCount: $("#reportActiveMachineCount"), reportAverageFuelLoad: $("#reportAverageFuelLoad"), partFuelCombinedCount: $("#partFuelCombinedCount"), partFuelCombinedTable: $("#partFuelCombinedTable"), horometerDailyCount: $("#horometerDailyCount"), horometerDailyMachineChart: $("#horometerDailyMachineChart"), fuelDailyTotalChart: $("#fuelDailyTotalChart"), serviceByMachineDayChart: $("#serviceByMachineDayChart"), horometerDailyTable: $("#horometerDailyTable"), horometerTableCount: $("#horometerTableCount"), fuelDailyTable: $("#fuelDailyTable"), fuelTableCount: $("#fuelTableCount"), serviceDailyTable: $("#serviceDailyTable"), serviceTableCount: $("#serviceTableCount"),
   recordDetailModal: $("#recordDetailModal"), recordDetailTitle: $("#recordDetailTitle"), recordDetailBody: $("#recordDetailBody"),
   captureModal: $("#captureModal"), captureTitle: $("#captureTitle"), captureSubtitle: $("#captureSubtitle"), capturePreview: $("#capturePreview"), captureFileInput: $("#captureFileInput"), captureGpsCard: $("#captureGpsCard"), captureGpsStatus: $("#captureGpsStatus"), captureGpsButton: $("#captureGpsButton"), captureGpsSkipButton: $("#captureGpsSkipButton"), captureGpsRequirement: $("#captureGpsRequirement"), captureGpsHelp: $("#captureGpsHelp"), captureMapLink: $("#captureMapLink"), confirmCaptureButton: $("#confirmCaptureButton"),
   pinModal: $("#pinModal"), pinInput: $("#pinInput"), pinConfirm: $("#pinConfirm"), pinError: $("#pinError"), savePinButton: $("#savePinButton"), skipPinButton: $("#skipPinButton"),
@@ -2187,6 +2187,49 @@ function renderHorometerTable(rows) {
   }).join("")}</tbody></table>`;
 }
 
+function buildPartHoursRows(parts) {
+  return parts.map((part) => {
+    const calc = partHorometerBreakdown(part);
+    const dateKey = part.dateKey || reportRecordDateKey(part.createdAtClient);
+    return {
+      id: part.id || "",
+      dateKey,
+      machine: part.machine || "Sin máquina",
+      operatorName: part.operatorName || "Operador",
+      value: Number.isFinite(calc.totalDay) ? calc.totalDay : null,
+      complete: calc.complete,
+      anomaly: calc.anomaly,
+      part,
+      calc
+    };
+  }).filter((row) => row.dateKey).sort((a,b) => `${b.dateKey}|${b.machine}|${b.id}`.localeCompare(`${a.dateKey}|${a.machine}|${a.id}`, "es", { numeric: true }));
+}
+
+function renderPartHoursByPart(container, rows) {
+  if (!container) return;
+  const measurable = rows.filter((row) => Number.isFinite(row.value));
+  if (!measurable.length) {
+    container.innerHTML = '<div class="empty-state compact">No hay Partes con horómetro inicial y final para los filtros seleccionados.</div>';
+    return;
+  }
+  const max = Math.max(...measurable.map((row) => row.value), 1);
+  container.innerHTML = measurable.map((row) => {
+    const width = row.value > 0 ? Math.max(2, row.value / max * 100) : 0;
+    const shortId = row.id ? String(row.id).slice(-8) : "—";
+    return `<article class="exact-bar-row part-hours-bar-row"><div class="exact-row-identity"><strong>${escapeHtml(row.machine)}</strong><span>${escapeHtml(formatDate(`${row.dateKey}T12:00:00`))} · ${escapeHtml(row.operatorName)} · Parte ${escapeHtml(shortId)}</span></div><div class="exact-bar-track"><span style="width:${width.toFixed(2)}%"></span></div><strong class="exact-bar-value">${reportNumber(row.value,2)} h</strong></article>`;
+  }).join("");
+}
+
+function renderPartFuelCombinedTable(rows) {
+  if (!els.partFuelCombinedTable || !els.partFuelCombinedCount) return;
+  els.partFuelCombinedCount.textContent = `${rows.length} registro${rows.length === 1 ? "" : "s"}`;
+  if (!rows.length) {
+    els.partFuelCombinedTable.innerHTML = '<div class="empty-state">No hay Partes con horas totales para el período seleccionado.</div>';
+    return;
+  }
+  els.partFuelCombinedTable.innerHTML = `<table class="report-table responsive-report-table exact-report-table part-fuel-table"><thead><tr><th>Fecha</th><th>Parte</th><th>Operador</th><th>Máquina</th><th>Horómetro inicial</th><th>Horómetro final</th><th>Horas totales</th><th>Combustible del día</th></tr></thead><tbody>${rows.map((row) => `<tr><td data-label="Fecha">${escapeHtml(formatDate(`${row.dateKey}T12:00:00`))}</td><td data-label="Parte"><strong>${escapeHtml(String(row.id || "—").slice(-10))}</strong></td><td data-label="Operador">${escapeHtml(row.operatorName)}</td><td data-label="Máquina"><strong>${escapeHtml(row.machine)}</strong></td><td data-label="Horómetro inicial">${reportValue(row.calc.initial)}</td><td data-label="Horómetro final">${reportValue(row.calc.final)}</td><td data-label="Horas totales"><strong>${reportNumber(row.value,2)} h</strong></td><td data-label="Combustible del día"><strong>${reportNumber(row.fuelLiters,1)} L</strong><br><small>${row.fuelLoads} carga${row.fuelLoads === 1 ? "" : "s"}</small></td></tr>`).join("")}</tbody></table>`;
+}
+
 function renderFuelTable(rows) {
   if (!els.fuelDailyTable || !els.fuelTableCount) return;
   els.fuelTableCount.textContent = `${rows.length} fila${rows.length === 1 ? "" : "s"}`;
@@ -2202,7 +2245,7 @@ function renderServiceTable(rows) {
 }
 
 function renderAdminReports(message = "") {
-  if (currentProfile?.role !== "admin" || !els.reportOperatingHours) return;
+  if (currentProfile?.role !== "admin" || !els.reportPartHoursTotal) return;
   const filters = reportFilters();
   if (filters.from > filters.to) {
     showToast("Fechas inválidas", "La fecha desde no puede ser posterior a la fecha hasta.", "error");
@@ -2217,33 +2260,47 @@ function renderAdminReports(message = "") {
   const completedServices = reportServices.filter((item) => item.endAtClient && recordInReportRange(item.startAtClient, filters) && (!filters.machine || item.machine === filters.machine));
 
   const horometerRows = aggregateHorometers(parts);
+  const partHoursRows = buildPartHoursRows(parts);
+  const measurablePartRows = partHoursRows.filter((row) => Number.isFinite(row.value));
   const fuelMachineRows = aggregateMachineDay(fuels, (item) => reportRecordDateKey(item.createdAtClient), (item) => Number(item.liters || 0));
   const serviceMachineRows = aggregateMachineDay(completedServices, (item) => reportRecordDateKey(item.startAtClient), (item) => reportDurationMinutes(item.startAtClient, item.endAtClient) / 60);
   const fuelDailyRows = groupReportRows(fuels, (item) => reportRecordDateKey(item.createdAtClient), (item) => Number(item.liters || 0), (row) => `${row.count} carga${row.count === 1 ? "" : "s"}`).sort((a,b) => a.label.localeCompare(b.label));
 
-  const preHours = horometerRows.reduce((sum,row) => sum + row.before, 0);
-  const postHours = horometerRows.reduce((sum,row) => sum + row.after, 0);
-  const totalHours = horometerRows.reduce((sum,row) => sum + row.total, 0);
-  const totalKnownParts = horometerRows.reduce((sum,row) => sum + row.totalKnownParts, 0);
-  const completeParts = horometerRows.reduce((sum,row) => sum + row.completeParts, 0);
-  const partialParts = horometerRows.reduce((sum,row) => sum + row.partialParts, 0);
+  const fuelByMachineDay = new Map(fuelMachineRows.map((row) => [machineDayKey(row.dateKey,row.machine), row]));
+  const combinedRows = measurablePartRows.map((row) => {
+    const fuel = fuelByMachineDay.get(machineDayKey(row.dateKey,row.machine));
+    return { ...row, fuelLiters: Number(fuel?.value || 0), fuelLoads: Number(fuel?.count || 0) };
+  });
+
+  const totalPartHours = measurablePartRows.reduce((sum,row) => sum + Number(row.value || 0), 0);
+  const averagePartHours = measurablePartRows.length ? totalPartHours / measurablePartRows.length : 0;
   const totalFuel = fuels.reduce((sum,item) => sum + Number(item.liters || 0), 0);
   const fuelDays = new Set(fuels.map((item) => reportRecordDateKey(item.createdAtClient)).filter(Boolean)).size;
-  const litersPerDay = fuelDays ? totalFuel / fuelDays : 0;
-  const serviceHours = completedServices.reduce((sum,item) => sum + reportDurationMinutes(item.startAtClient,item.endAtClient)/60,0);
+  const averageFuelLoad = fuels.length ? totalFuel / fuels.length : 0;
+  const activeMachines = new Set([
+    ...measurablePartRows.map((row) => row.machine),
+    ...fuelMachineRows.map((row) => row.machine),
+    ...serviceMachineRows.map((row) => row.machine)
+  ].filter(Boolean));
 
-  els.reportOperatingHours.textContent = `${reportNumber(totalHours,2)} h`;
-  els.reportOperatingDetail.textContent = `${totalKnownParts} jornada${totalKnownParts === 1 ? "" : "s"} con total final − inicial${partialParts ? ` · ${partialParts} parcial${partialParts === 1 ? "" : "es"}` : ""}`;
-  els.reportPreBreakHours.textContent = `${reportNumber(preHours,2)} h`;
-  els.reportPostBreakHours.textContent = `${reportNumber(postHours,2)} h`;
-  els.reportFuelPerDay.textContent = `${reportNumber(litersPerDay,1)} L`;
-  els.reportFuelPerDayDetail.textContent = `${reportNumber(totalFuel,1)} L totales en ${fuelDays} día${fuelDays === 1 ? "" : "s"} con carga`;
-  els.reportServiceHours.textContent = `${reportNumber(serviceHours,2)} h`;
-  els.reportServiceDetail.textContent = `${completedServices.length} servicio${completedServices.length === 1 ? "" : "s"} finalizado${completedServices.length === 1 ? "" : "s"}`;
+  els.reportPartHoursTotal.textContent = `${reportNumber(totalPartHours,2)} h`;
+  els.reportPartHoursDetail.textContent = `${measurablePartRows.length} Parte${measurablePartRows.length === 1 ? "" : "s"} · promedio ${reportNumber(averagePartHours,2)} h por Parte`;
+  els.reportFuelUsedTotal.textContent = `${reportNumber(totalFuel,1)} L`;
+  els.reportFuelUsedDetail.textContent = filters.from === filters.to
+    ? `${fuels.length} carga${fuels.length === 1 ? "" : "s"} realizada${fuels.length === 1 ? "" : "s"} a ${fuelMachineRows.length} máquina${fuelMachineRows.length === 1 ? "" : "s"}`
+    : `${fuels.length} cargas en ${fuelDays} día${fuelDays === 1 ? "" : "s"}`;
+  els.reportPartCount.textContent = String(measurablePartRows.length);
+  els.reportAveragePartHours.textContent = `${reportNumber(averagePartHours,2)} h`;
+  els.reportActiveMachineCount.textContent = String(activeMachines.size);
+  els.reportAverageFuelLoad.textContent = `${reportNumber(averageFuelLoad,1)} L`;
+  if (els.partHoursChartCount) els.partHoursChartCount.textContent = `${measurablePartRows.length} Parte${measurablePartRows.length === 1 ? "" : "s"}`;
+  if (els.fuelUsedChartCount) els.fuelUsedChartCount.textContent = `${fuels.length} carga${fuels.length === 1 ? "" : "s"}`;
   if (els.horometerDailyCount) els.horometerDailyCount.textContent = `${horometerRows.length} fila${horometerRows.length === 1 ? "" : "s"}`;
 
+  renderPartHoursByPart(els.partHoursByPartChart, partHoursRows);
+  renderExactBarList(els.fuelUsedByMachineChart, fuelMachineRows, (value) => `${reportNumber(value,1)} L`, "Sin combustible registrado para los filtros seleccionados.");
+  renderPartFuelCombinedTable(combinedRows);
   renderHorometerSegments(els.horometerDailyMachineChart, horometerRows);
-  renderExactBarList(els.fuelByMachineDayChart, fuelMachineRows, (value) => `${reportNumber(value,1)} L`, "Sin combustible registrado para los filtros seleccionados.");
   renderVerticalSvgChart(els.fuelDailyTotalChart, fuelDailyRows, (value) => `${reportNumber(value,0)} L`);
   renderExactBarList(els.serviceByMachineDayChart, serviceMachineRows, (value) => `${reportNumber(value,2)} h`, "Sin servicios finalizados para los filtros seleccionados.");
   renderHorometerTable(horometerRows);

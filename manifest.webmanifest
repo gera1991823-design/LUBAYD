@@ -1,7 +1,7 @@
 {
-  "name": "LUBAYD Operativa 7.1 Sin Descripciones",
+  "name": "LUBAYD Operativa 7.2 Reportes Horas y Combustible",
   "short_name": "LUBAYD",
-  "description": "Gestión operativa LUBAYD con encabezados compactos, sin subtítulos descriptivos, y funcionamiento offline.",
+  "description": "Gestión operativa LUBAYD con reportes exactos de horas de horómetro por Parte y combustible cargado por máquina y día.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
