@@ -9105,3 +9105,211 @@ body[data-role="mechanic"] .role-logo-home {
   .lubayd-v6 .report-v73-card-heading{align-items:flex-start;}
   .lubayd-v6 .report-v73-card-heading h2{font-size:15px;}
 }
+
+
+/* ============================================================
+   LUBAYD V7.4 - inicio universal y cierre de sesión profesional
+   ============================================================ */
+
+/* El perfil se administra únicamente desde la barra superior. */
+.lubayd-v6 .sidebar-footer {
+  margin-top: auto;
+  padding: 14px 8px max(12px, env(safe-area-inset-bottom));
+  border-top: 1px solid rgba(255,255,255,.13);
+}
+
+/* Acción de salida clara, cómoda y sin riesgo de pulsaciones accidentales. */
+.lubayd-v6 .sidebar-logout-button {
+  width: 100%;
+  min-height: 60px !important;
+  display: grid !important;
+  grid-template-columns: 38px minmax(0,1fr) 18px;
+  align-items: center;
+  gap: 11px !important;
+  padding: 9px 11px !important;
+  text-align: left;
+  color: #fff !important;
+  border: 1px solid rgba(255,255,255,.22) !important;
+  border-radius: 15px !important;
+  background: linear-gradient(135deg, rgba(255,255,255,.12), rgba(255,255,255,.07)) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.08);
+  transition: transform .18s ease, background .18s ease, border-color .18s ease, box-shadow .18s ease;
+}
+.lubayd-v6 .sidebar-logout-button:hover {
+  transform: translateY(-1px);
+  border-color: rgba(255,255,255,.38) !important;
+  background: linear-gradient(135deg, rgba(255,255,255,.20), rgba(255,255,255,.11)) !important;
+  box-shadow: 0 9px 20px rgba(0,27,18,.17), inset 0 1px 0 rgba(255,255,255,.12);
+}
+.lubayd-v6 .logout-button-icon {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  color: #fff;
+  background: rgba(255,255,255,.13);
+  border: 1px solid rgba(255,255,255,.12);
+}
+.lubayd-v6 .logout-button-icon .ui-icon { width: 19px; height: 19px; }
+.lubayd-v6 .logout-button-copy { min-width: 0; display: grid; gap: 2px; }
+.lubayd-v6 .logout-button-copy strong { font-size: 12px; line-height: 1.2; }
+.lubayd-v6 .logout-button-copy small { color: rgba(255,255,255,.67); font-size: 9px; line-height: 1.2; }
+.lubayd-v6 .logout-button-arrow { width: 16px; height: 16px; color: rgba(255,255,255,.62); }
+
+/* Evita que el botón superior se comprima o parta el texto. */
+.lubayd-v6 .topbar-logout-button {
+  min-width: 136px !important;
+  width: auto !important;
+  min-height: 44px;
+  padding: 0 15px !important;
+  justify-content: center;
+  white-space: nowrap;
+  flex: 0 0 auto;
+  border-radius: 13px;
+  color: #075d3a;
+  border-color: #c8e2d3;
+  background: linear-gradient(180deg, #fff, #f7fbf8);
+  box-shadow: 0 5px 14px rgba(4,72,43,.06);
+}
+.lubayd-v6 .topbar-logout-button span { display: inline !important; white-space: nowrap; }
+.lubayd-v6 .topbar-logout-button:hover {
+  color: #fff;
+  border-color: #087745;
+  background: linear-gradient(135deg, #09864c, #05683d);
+}
+
+/* La página Inicio es igual para Administrador, Operador y Mecánico. */
+body[data-role] #dashboardSection > *:not(.role-logo-home) {
+  display: none !important;
+}
+body[data-role] #dashboardSection {
+  min-height: calc(100vh - 92px);
+  padding: 0 !important;
+  margin: 0 !important;
+}
+body[data-role] .role-logo-home {
+  min-height: calc(100vh - 92px);
+  display: grid !important;
+  place-items: center;
+  padding: clamp(28px, 5vw, 70px);
+  background:
+    radial-gradient(circle at 50% 34%, rgba(25,167,93,.12), transparent 29rem),
+    linear-gradient(180deg, #f9fcfa 0%, #edf6f1 100%);
+}
+.lubayd-v6 .role-logo-home-card {
+  width: min(560px, 84vw);
+  min-height: 360px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  padding: 52px;
+  border: 1px solid rgba(7,111,66,.17);
+  border-radius: 32px;
+  background: rgba(255,255,255,.96);
+  box-shadow: 0 28px 72px rgba(3,47,35,.13);
+}
+.lubayd-v6 .role-logo-home-title {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  color: #0b2e20;
+  font-size: clamp(30px, 4vw, 46px);
+  line-height: 1;
+  letter-spacing: -.045em;
+  font-weight: 850;
+}
+.lubayd-v6 .role-logo-home-image {
+  width: min(285px, 72%);
+  max-height: 215px;
+}
+
+/* Confirmación de salida. */
+.lubayd-v6 .logout-confirm-modal { z-index: 420; }
+.lubayd-v6 .logout-confirm-dialog {
+  position: relative;
+  z-index: 2;
+  width: min(440px, calc(100vw - 28px));
+  display: grid;
+  justify-items: center;
+  gap: 18px;
+  padding: 30px;
+  border: 1px solid #d6e6dc;
+  border-radius: 24px;
+  background: #fff;
+  box-shadow: 0 30px 90px rgba(3,38,26,.24);
+  text-align: center;
+  animation: logout-dialog-in .2s ease both;
+}
+@keyframes logout-dialog-in {
+  from { opacity: 0; transform: translateY(10px) scale(.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.lubayd-v6 .logout-confirm-icon {
+  width: 62px;
+  height: 62px;
+  display: grid;
+  place-items: center;
+  border-radius: 20px;
+  color: #9b2f28;
+  background: linear-gradient(145deg, #fff6f5, #fbe3e0);
+  border: 1px solid #f0c9c5;
+}
+.lubayd-v6 .logout-confirm-icon .ui-icon { width: 29px; height: 29px; }
+.lubayd-v6 .logout-confirm-copy { display: grid; justify-items: center; gap: 7px; }
+.lubayd-v6 .logout-confirm-copy h2 { margin: 0; color: #17271f; font-size: 23px; letter-spacing: -.03em; }
+.lubayd-v6 .logout-confirm-copy p { max-width: 340px; margin: 0; color: #68786f; font-size: 12px; line-height: 1.55; }
+.lubayd-v6 .logout-confirm-actions { width: 100%; display: grid; grid-template-columns: 1fr 1.15fr; gap: 10px; }
+.lubayd-v6 .logout-confirm-actions button { min-height: 46px; border-radius: 13px; font-weight: 800; }
+.lubayd-v6 .danger-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 16px;
+  border: 1px solid #9b352d;
+  color: #fff;
+  background: linear-gradient(135deg, #b4463d, #8f2b25);
+  box-shadow: 0 8px 18px rgba(143,43,37,.18);
+  cursor: pointer;
+}
+.lubayd-v6 .danger-button:hover { background: linear-gradient(135deg, #a83b33, #7f241f); }
+.lubayd-v6 .danger-button:disabled { opacity: .62; cursor: wait; }
+.lubayd-v6 .danger-button .ui-icon { width: 17px; height: 17px; }
+
+@media (max-width: 980px) {
+  .lubayd-v6 .topbar-logout-button {
+    min-width: 44px !important;
+    width: 44px !important;
+    height: 44px;
+    padding: 0 !important;
+  }
+  .lubayd-v6 .topbar-logout-button span { display: none !important; }
+  body[data-role] #dashboardSection,
+  body[data-role] .role-logo-home {
+    min-height: calc(100dvh - 64px - 78px - env(safe-area-inset-bottom));
+  }
+  body[data-role] .role-logo-home {
+    padding: 22px 16px calc(92px + env(safe-area-inset-bottom));
+  }
+  .lubayd-v6 .role-logo-home-card {
+    width: min(100%, 440px);
+    min-height: 280px;
+    gap: 22px;
+    padding: 38px 28px;
+    border-radius: 25px;
+  }
+  .lubayd-v6 .role-logo-home-title { font-size: 32px; }
+  .lubayd-v6 .role-logo-home-image { width: min(220px, 72%); max-height: 172px; }
+}
+
+@media (max-width: 430px) {
+  .lubayd-v6 .logout-confirm-dialog { padding: 24px 20px; border-radius: 21px; }
+  .lubayd-v6 .logout-confirm-actions { grid-template-columns: 1fr; }
+  .lubayd-v6 .logout-confirm-actions #confirmLogoutButton { grid-row: 1; }
+  .lubayd-v6 .role-logo-home-card { min-height: 245px; padding: 30px 22px; }
+  .lubayd-v6 .role-logo-home-title { font-size: 29px; }
+  .lubayd-v6 .role-logo-home-image { width: min(190px, 75%); max-height: 148px; }
+}

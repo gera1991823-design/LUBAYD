@@ -1,7 +1,7 @@
 {
-  "name": "LUBAYD Operativa 7.3 Reportes Producción",
+  "name": "LUBAYD Operativa 7.4 Inicio y Sesión",
   "short_name": "LUBAYD",
-  "description": "Gestión operativa LUBAYD con reportes de horómetros, combustible, Pulpa y Troza expresadas en unidades.",
+  "description": "Gestión operativa LUBAYD con inicio institucional para todos los usuarios y cierre de sesión seguro.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

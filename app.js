@@ -68,6 +68,7 @@ const els = {
   captureModal: $("#captureModal"), captureTitle: $("#captureTitle"), captureSubtitle: $("#captureSubtitle"), capturePreview: $("#capturePreview"), captureFileInput: $("#captureFileInput"), captureGpsCard: $("#captureGpsCard"), captureGpsStatus: $("#captureGpsStatus"), captureGpsButton: $("#captureGpsButton"), captureGpsSkipButton: $("#captureGpsSkipButton"), captureGpsRequirement: $("#captureGpsRequirement"), captureGpsHelp: $("#captureGpsHelp"), captureMapLink: $("#captureMapLink"), confirmCaptureButton: $("#confirmCaptureButton"),
   pinModal: $("#pinModal"), pinInput: $("#pinInput"), pinConfirm: $("#pinConfirm"), pinError: $("#pinError"), savePinButton: $("#savePinButton"), skipPinButton: $("#skipPinButton"),
   tankModal: $("#tankModal"), tankCapacityInput: $("#tankCapacityInput"), tankCurrentInput: $("#tankCurrentInput"), saveTankButton: $("#saveTankButton"), tankLoadInput: $("#tankLoadInput"), addTankFuelButton: $("#addTankFuelButton"), tankAdjustmentPanel: $("#tankAdjustmentPanel"), tankModalCurrent: $("#tankModalCurrent"), tankModalCapacity: $("#tankModalCapacity"), tankModalHint: $("#tankModalHint"), tankLoadResult: $("#tankLoadResult"),
+  logoutConfirmModal: $("#logoutConfirmModal"), cancelLogoutButton: $("#cancelLogoutButton"), confirmLogoutButton: $("#confirmLogoutButton"),
   processingOverlay: $("#processingOverlay"), processingTitle: $("#processingTitle"), processingMessage: $("#processingMessage"), toastRegion: $("#toastRegion")
 };
 
@@ -524,10 +525,10 @@ function applyProfile() {
   const role = currentProfile?.role || "operator";
   const photoURL = currentProfile?.photoURL || currentUser?.photoURL || "";
   document.body.dataset.role = role;
-  els.userAvatar.textContent = initials(name);
-  els.userName.textContent = name;
-  els.userEmail.textContent = email;
-  els.userRoleBadge.textContent = roleLabel(role);
+  if (els.userAvatar) els.userAvatar.textContent = initials(name);
+  if (els.userName) els.userName.textContent = name;
+  if (els.userEmail) els.userEmail.textContent = email;
+  if (els.userRoleBadge) els.userRoleBadge.textContent = roleLabel(role);
   setProfilePhoto(els.sidebarProfileImage, els.userAvatar, photoURL, name);
   setProfilePhoto(els.topbarProfileImage, els.topbarProfileFallback, photoURL, name);
   setProfilePhoto(els.dashboardProfileImage, els.dashboardAvatar, photoURL, name);
@@ -668,10 +669,18 @@ function bindEvents() {
   els.operatorBreakAction?.addEventListener("click", () => showSection("break"));
   els.syncButton.addEventListener("click", () => syncNow(true));
   els.topSyncButton?.addEventListener("click", () => syncNow(true));
-  els.lockButton.addEventListener("click", lockApplication);
-  els.topLogoutButton?.addEventListener("click", lockApplication);
-  els.mobileLogoutButton?.addEventListener("click", lockApplication);
+  els.lockButton.addEventListener("click", openLogoutConfirmation);
+  els.topLogoutButton?.addEventListener("click", openLogoutConfirmation);
+  els.mobileLogoutButton?.addEventListener("click", openLogoutConfirmation);
+  els.cancelLogoutButton?.addEventListener("click", closeLogoutConfirmation);
+  els.logoutConfirmModal?.querySelector("[data-close-logout]")?.addEventListener("click", closeLogoutConfirmation);
+  els.confirmLogoutButton?.addEventListener("click", async () => {
+    els.confirmLogoutButton.disabled = true;
+    try { await lockApplication(); }
+    finally { els.confirmLogoutButton.disabled = false; }
+  });
   [els.sidebarProfileButton, els.topbarProfileButton, els.dashboardProfileButton, els.mobileProfileButton].filter(Boolean).forEach((button) => button.addEventListener("click", () => openProfilePhotoPicker(currentUser?.uid || "")));
+  document.addEventListener("keydown", (event) => { if (event.key === "Escape" && !els.logoutConfirmModal?.classList.contains("hidden")) closeLogoutConfirmation(); });
   els.profilePhotoInput?.addEventListener("change", handleProfilePhotoSelection);
   els.cleanupConfirmInput?.addEventListener("input", updateCleanupButtonState);
   [els.cleanupParts, els.cleanupServices, els.cleanupFuel, els.cleanupTank].filter(Boolean).forEach((input) => input.addEventListener("change", updateCleanupButtonState));
@@ -791,8 +800,19 @@ async function loginOffline() {
   finally { setBusy(els.offlineLoginButton, false); }
 }
 
+function openLogoutConfirmation() {
+  if (!currentProfile || !els.logoutConfirmModal) return;
+  els.logoutConfirmModal.classList.remove("hidden");
+  window.setTimeout(() => els.confirmLogoutButton?.focus(), 40);
+}
+
+function closeLogoutConfirmation() {
+  els.logoutConfirmModal?.classList.add("hidden");
+}
+
 async function lockApplication() {
   if (!currentProfile) return;
+  closeLogoutConfirmation();
   stopChatSubscription();
   stopPartsSubscription();
   stopAdminRecordSubscriptions();
