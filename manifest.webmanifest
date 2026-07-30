@@ -1,7 +1,7 @@
 {
-  "name": "LUBAYD Operativa 6.4 - Inicio Operador Pro",
+  "name": "LUBAYD Operativa 6.6 Horómetros Progresivos",
   "short_name": "LUBAYD",
-  "description": "Gestión operativa LUBAYD con inicio profesional para operadores, trabajo offline, Partes, descansos, servicios y mensajería.",
+  "description": "Gestión operativa LUBAYD con horómetros progresivos, envío por etapas, trabajo offline, partes, servicios, descansos y combustible.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

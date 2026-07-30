@@ -160,9 +160,22 @@ function isPartReadOnly(part) {
   return Boolean(part && (
     part.locked === true ||
     part.status === "completed" ||
-    part.finalizedAtClient ||
-    part.horometers?.final?.value !== undefined
+    part.finalizedAtClient
   ));
+}
+
+function isHorometerStageLocked(stage) {
+  if (!stage || typeof stage !== "object") return false;
+  const hasValue = stage.value !== undefined && stage.value !== null && String(stage.value) !== "";
+  return Boolean(stage.locked === true || stage.savedAtClient || (hasValue && stage.evidence));
+}
+
+function horometerProgress(part) {
+  return HOROMETER_CONFIG.reduce((total, config) => total + (isHorometerStageLocked(part?.horometers?.[config.key]) ? 1 : 0), 0);
+}
+
+function previousHorometerStagesSaved(part, stageIndex) {
+  return HOROMETER_CONFIG.slice(0, stageIndex).every((config) => isHorometerStageLocked(part?.horometers?.[config.key]));
 }
 
 function closeRecordDetail() {
@@ -2504,8 +2517,12 @@ function renderAdminParts() {
     const postBreak = part.horometers?.postBreak;
     const final = part.horometers?.final;
     const hours = partOperatingHours(part);
+    const progress = horometerProgress(part);
+    const finalized = isPartReadOnly(part);
     const statusClass = part.syncStatus === "pending" ? "warning" : "active";
-    const statusText = part.syncStatus === "pending" ? "Pendiente" : "Sincronizado";
+    const statusText = finalized
+      ? "Finalizado"
+      : `${progress}/4 horómetros${part.syncStatus === "pending" ? " · enviando" : " · actualizado"}`;
     return `<article class="admin-part-card" data-admin-part-card="${escapeHtml(part.id)}">
       <button class="admin-part-summary" type="button" data-admin-part-toggle="${escapeHtml(part.id)}">
         <span class="admin-part-primary"><span class="admin-part-machine-icon">${iconSvg("clipboard")}</span><span><strong>${escapeHtml(part.operatorName || "Operador")}</strong><span>${escapeHtml(part.machine || "Sin máquina")} · ${escapeHtml(part.establishment || "-")}</span></span></span>
@@ -2593,65 +2610,169 @@ function renderAdminServices() {
 function renderPart() {
   const editing = Boolean(currentPart);
   const readOnly = isPartReadOnly(currentPart);
+  const progress = horometerProgress(currentPart);
+  const allStagesSaved = progress === HOROMETER_CONFIG.length;
   const dateKey = currentPart?.dateKey || partDraftDate || todayKey();
+
   els.partDateInput.value = dateKey;
   els.partDateInput.max = todayKey();
   els.establishmentInput.value = currentPart?.establishment || "LAS CANIAS";
   els.machineInput.value = currentPart?.machine || "";
   els.trozoInput.value = currentPart?.production?.troza ?? currentPart?.production?.trozo ?? "";
   els.pulpaInput.value = currentPart?.production?.pulpa ?? "";
+
   els.machineInput.disabled = editing || readOnly;
   els.partDateInput.disabled = editing || readOnly;
   els.establishmentInput.disabled = readOnly;
   els.trozoInput.disabled = readOnly;
   els.pulpaInput.disabled = readOnly;
   els.partForm?.classList.toggle("is-readonly", readOnly);
-  els.savePartButton.disabled = readOnly;
-  els.savePartButton.textContent = readOnly ? "Parte finalizado · Solo lectura" : "Guardar Parte";
-  els.partStatus.textContent = readOnly ? "Solo lectura" : currentPart ? (currentPart.syncStatus === "pending" ? "Pendiente" : "Guardado") : "Nuevo";
-  els.partStatus.className = `badge ${readOnly ? "neutral" : currentPart?.syncStatus === "pending" ? "warning" : currentPart ? "active" : "neutral"}`;
+
+  els.savePartButton.disabled = readOnly || !allStagesSaved;
+  els.savePartButton.textContent = readOnly
+    ? "Parte finalizado · Solo lectura"
+    : allStagesSaved
+      ? "Finalizar Parte"
+      : `Completa los horómetros (${progress}/4)`;
+
+  if (readOnly) {
+    els.partStatus.textContent = "Solo lectura";
+    els.partStatus.className = "badge neutral";
+  } else if (currentPart) {
+    els.partStatus.textContent = `${progress}/4 guardados`;
+    els.partStatus.className = `badge ${progress === 4 ? "active" : "warning"}`;
+    els.partStatus.title = currentPart.syncStatus === "pending" ? "Hay cambios pendientes de sincronización" : "Información sincronizada";
+  } else {
+    els.partStatus.textContent = "Nuevo";
+    els.partStatus.className = "badge neutral";
+    els.partStatus.title = "";
+  }
+
   renderPartSessionSelector();
+
   els.horometerStages.innerHTML = HOROMETER_CONFIG.map((config, index) => {
     const stage = currentPart?.horometers?.[config.key] || {};
     const evidence = stage.evidence;
-    return `<article class="stage-card stage-card-pro ${readOnly ? "is-readonly" : ""}"><div class="stage-title"><span class="stage-number">${index + 1}</span><span class="stage-title-copy"><strong>${escapeHtml(config.label)}</strong><small>${escapeHtml(config.help)}</small></span></div><label class="field stage-value-field"><span>Valor</span><input type="number" inputmode="decimal" step="0.1" min="0" data-horometer-value="${config.key}" value="${escapeHtml(stage.value ?? "")}" placeholder="0" ${readOnly ? "disabled" : ""}></label><div class="stage-actions"><button class="secondary-button stage-capture-button" type="button" data-horometer-capture="${config.key}" ${readOnly ? "disabled" : ""}>${readOnly ? "Evidencia registrada" : evidence ? "Repetir foto" : "Foto y GPS opcional"}</button><span class="stage-status ${evidence ? "ready" : ""}">${evidence ? "Completo" : "Pendiente"}</span></div>${evidence ? `<div class="stage-evidence">${evidence.photoUrl || evidence.photoBlob ? `<img src="${evidence.photoUrl || URL.createObjectURL(evidence.photoBlob)}" alt="${escapeHtml(config.label)}">` : ""}${evidence.location ? `<a href="${mapUrl(evidence.location)}" target="_blank" rel="noopener">Ver ubicacion en mapa</a>` : `<span class="evidence-location-missing">Sin ubicacion GPS</span>`}</div>` : ""}</article>`;
+    const locked = isHorometerStageLocked(stage);
+    const previousSaved = previousHorometerStagesSaved(currentPart, index);
+    const available = !readOnly && !locked && previousSaved;
+    const waiting = !locked && !previousSaved;
+    const disabled = readOnly || locked || waiting;
+    const statusText = locked ? "Guardado" : available ? "Disponible" : "Pendiente";
+    const statusClass = locked ? "ready" : available ? "current" : "waiting";
+    const buttonText = locked
+      ? "Horómetro guardado"
+      : waiting
+        ? "Completa el paso anterior"
+        : "Foto y guardar horómetro";
+    const savedCopy = locked && stage.savedAtClient
+      ? `<small class="stage-saved-copy">Guardado ${escapeHtml(formatDateTime(stage.savedAtClient))}</small>`
+      : "";
+
+    return `<article class="stage-card stage-card-pro ${locked ? "is-stage-locked" : available ? "is-stage-current" : "is-stage-waiting"}">
+      <div class="stage-title">
+        <span class="stage-number">${index + 1}</span>
+        <span class="stage-title-copy"><strong>${escapeHtml(config.label)}</strong><small>${escapeHtml(config.help)}</small>${savedCopy}</span>
+      </div>
+      <label class="field stage-value-field"><span>Valor</span><input type="number" inputmode="decimal" step="0.1" min="0" data-horometer-value="${config.key}" value="${escapeHtml(stage.value ?? "")}" placeholder="0" ${disabled ? "disabled" : ""}></label>
+      <div class="stage-actions">
+        <button class="secondary-button stage-capture-button" type="button" data-horometer-capture="${config.key}" ${disabled ? "disabled" : ""}>${buttonText}</button>
+        <span class="stage-status ${statusClass}">${statusText}</span>
+      </div>
+      ${evidence ? `<div class="stage-evidence">${evidence.photoUrl || evidence.photoBlob ? `<img src="${evidence.photoUrl || URL.createObjectURL(evidence.photoBlob)}" alt="${escapeHtml(config.label)}">` : ""}${evidence.location ? `<a href="${mapUrl(evidence.location)}" target="_blank" rel="noopener">Ver ubicación en mapa</a>` : `<span class="evidence-location-missing">Sin ubicación GPS</span>`}</div>` : ""}
+    </article>`;
   }).join("");
 }
 
 function captureHorometer(key) {
-  if (isPartReadOnly(currentPart)) { showToast("Parte finalizado", "Este Parte está disponible únicamente para consulta.", "error"); return; }
+  if (isPartReadOnly(currentPart)) {
+    showToast("Parte finalizado", "Este Parte está disponible únicamente para consulta.", "error");
+    return;
+  }
+
   let part;
   try { part = ensurePart(); }
-  catch (error) { showToast("No se pudo iniciar el parte", error.message, "error"); return; }
-  const input = document.querySelector(`[data-horometer-value="${key}"]`);
-  const value = input?.value;
-  if (!value) { showToast("Falta el horometro", "Ingresa el valor antes de tomar la evidencia.", "error"); return; }
-  const config = HOROMETER_CONFIG.find((item) => item.key === key);
-  openCapture({ title: config.label, subtitle: "La fotografia es obligatoria. El GPS es opcional y se sincronizara cuando haya Internet.", showGps: true, requireGps: false, onConfirm: async (evidence) => {
-    part.horometers[key] = { value: Number(value), evidence };
-    part.updatedAtClient = localIso();
-    part.syncStatus = "pending";
-    currentPart = part;
-    userParts = userParts.filter((item) => item.id !== part.id).concat(part);
-    await OfflineDB.putPart(part);
-    await OfflineDB.putOperatorPart(part);
+  catch (error) {
+    showToast("No se pudo iniciar el Parte", error.message, "error");
+    return;
+  }
+
+  const stageIndex = HOROMETER_CONFIG.findIndex((item) => item.key === key);
+  const config = HOROMETER_CONFIG[stageIndex];
+  const existingStage = part.horometers?.[key];
+
+  if (!config) return;
+  if (isHorometerStageLocked(existingStage)) {
+    showToast("Horómetro ya guardado", "Esta lectura quedó bloqueada y no puede modificarse.", "error");
     renderPart();
-  }});
+    return;
+  }
+  if (!previousHorometerStagesSaved(part, stageIndex)) {
+    const previous = HOROMETER_CONFIG[Math.max(0, stageIndex - 1)];
+    showToast("Paso anterior pendiente", `Primero debes guardar ${previous.label.toLowerCase()}.`, "error");
+    return;
+  }
+
+  const input = document.querySelector(`[data-horometer-value="${key}"]`);
+  const value = String(input?.value ?? "").trim();
+  const numericValue = Number(value);
+  if (!value || !Number.isFinite(numericValue) || numericValue < 0) {
+    showToast("Valor inválido", "Ingresa un horómetro válido antes de guardar.", "error");
+    input?.focus();
+    return;
+  }
+
+  openCapture({
+    title: `Guardar ${config.label.toLowerCase()}`,
+    subtitle: "Al confirmar, esta lectura quedará bloqueada y se enviará al administrador. La fotografía es obligatoria y el GPS es opcional.",
+    showGps: true,
+    requireGps: false,
+    onConfirm: async (evidence) => {
+      const savedAtClient = localIso();
+      part.horometers[key] = {
+        value: numericValue,
+        evidence,
+        locked: true,
+        savedAtClient,
+        savedByUid: currentUser.uid,
+        sequence: stageIndex + 1
+      };
+      part.status = "active";
+      part.updatedAtClient = savedAtClient;
+      part.syncStatus = "pending";
+      currentPart = normalizePartRecord(part);
+      userParts = userParts.filter((item) => item.id !== currentPart.id).concat(currentPart);
+
+      await OfflineDB.putPart(currentPart);
+      await OfflineDB.putOperatorPart(currentPart);
+      await queueForSync({
+        id: `part:${currentPart.id}`,
+        uid: currentPart.operatorUid,
+        type: "part-upsert",
+        payload: currentPart
+      });
+
+      renderAll();
+      await updateSyncUi();
+      showToast("Horómetro guardado", `${config.label} quedó bloqueado. La información se enviará al administrador.`);
+      syncNow(false).catch((error) => console.warn("Sincronización de horómetro", error));
+    }
+  });
 }
 
 async function savePart(event) {
   event.preventDefault();
   if (isPartReadOnly(currentPart)) { showToast("Parte finalizado", "Este Parte no puede modificarse.", "error"); return; }
-  if (!els.machineInput.value) { showToast("Selecciona la maquina", "La maquina es obligatoria.", "error"); return; }
+  if (!els.machineInput.value) { showToast("Selecciona la máquina", "La máquina es obligatoria.", "error"); return; }
   let part;
   try { part = ensurePart(); }
   catch (error) { showToast("No se pudo guardar", error.message, "error"); return; }
-  document.querySelectorAll("[data-horometer-value]").forEach((input) => {
-    if (input.value) {
-      const key = input.dataset.horometerValue;
-      part.horometers[key] = { ...(part.horometers[key] || {}), value: Number(input.value) };
-    }
-  });
+
+  const missingStage = HOROMETER_CONFIG.find((config) => !isHorometerStageLocked(part.horometers?.[config.key]));
+  if (missingStage) {
+    showToast("Parte incompleto", `Primero guarda ${missingStage.label.toLowerCase()}.`, "error");
+    return;
+  }
   part.dateKey = currentPart?.dateKey || els.partDateInput.value || partDraftDate || todayKey();
   part.establishment = els.establishmentInput.value;
   part.machine = currentPart?.machine || els.machineInput.value;
@@ -3628,6 +3749,7 @@ async function processSyncItem(item) {
           stage.evidence,
           `parts/${record.operatorUid}/${record.id}/${config.key}.jpg`
         );
+        stage.syncStatus = "synced";
         item.payload = record;
         await OfflineDB.updateQueue(item);
       }
