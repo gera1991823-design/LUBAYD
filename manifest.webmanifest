@@ -1,7 +1,7 @@
 {
-  "name": "LUBAYD Operativa 7.2 Reportes Horas y Combustible",
+  "name": "LUBAYD Operativa 7.3 Reportes Producción",
   "short_name": "LUBAYD",
-  "description": "Gestión operativa LUBAYD con reportes exactos de horas de horómetro por Parte y combustible cargado por máquina y día.",
+  "description": "Gestión operativa LUBAYD con reportes de horómetros, combustible, Pulpa y Troza expresadas en unidades.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

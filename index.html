@@ -13,10 +13,10 @@
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <meta content="LUBAYD Operativa" name="apple-mobile-web-app-title"/>
 <title>LUBAYD SA | Gestion de trabajos en campo</title>
-<link href="./manifest.webmanifest?v=7.2.0" rel="manifest"/>
+<link href="./manifest.webmanifest?v=7.3.0" rel="manifest"/>
 <link href="./icon-192.png" rel="icon"/>
 <link href="./icon-192.png" rel="apple-touch-icon"/>
-<link href="./styles.css?v=7.2.0" rel="stylesheet"/>
+<link href="./styles.css?v=7.3.0" rel="stylesheet"/>
 </head>
 <body class="booting lubayd-v6">
 <svg aria-hidden="true" class="svg-sprite" focusable="false">
@@ -77,6 +77,9 @@
 <symbol id="icon-report-service-pro" viewbox="0 0 84 84"><g filter="url(#proShadow)"><circle cx="42" cy="42" fill="url(#proGreenSoft)" r="30" stroke="#0a8044" stroke-width="2.5"></circle><path d="M53 18a18 18 0 0 0-21 23L17 56a7 7 0 0 0 0 10l1 1a7 7 0 0 0 10 0l15-15a18 18 0 0 0 23-21L55 42l-9-9z" fill="url(#proSilver)" stroke="#087b42" stroke-width="2.2"></path><path d="M24 61 49 36" stroke="url(#proGreen)" stroke-linecap="round" stroke-width="8"></path><circle cx="23" cy="62" fill="#fff" r="3.3" stroke="#087b42" stroke-width="2"></circle><path d="M42 12v7M42 65v7M12 42h7M65 42h7" opacity=".8" stroke="#25a95d" stroke-linecap="round" stroke-width="3"></path></g></symbol>
 <symbol id="icon-report-machine-pro" viewbox="0 0 84 84"><g filter="url(#proShadow)"><path d="M13 54h45l8 8H18z" fill="#d7e5dc"></path><path d="M19 49V31h29l9 17h8c5 0 9 4 9 9v5" fill="url(#proGreen)" stroke="#08723d" stroke-linejoin="round" stroke-width="2.5"></path><path d="M34 31V17h17v31" fill="url(#proSilver)" stroke="#08723d" stroke-width="2.5"></path><path d="M39 22h8v8h-8z" fill="#c9f0d6"></path><circle cx="25" cy="61" fill="url(#proSilver)" r="12" stroke="#075f36" stroke-width="3"></circle><circle cx="25" cy="61" fill="#0a8e48" r="5"></circle><circle cx="65" cy="62" fill="url(#proSilver)" r="8" stroke="#075f36" stroke-width="3"></circle><circle cx="65" cy="62" fill="#0a8e48" r="3"></circle><path d="M15 49h42" opacity=".8" stroke="#effff4" stroke-width="3"></path></g></symbol>
 <symbol id="icon-report-shift-pro" viewbox="0 0 84 84"><g filter="url(#proShadow)"><circle cx="29" cy="31" fill="#ffd96a" r="16" stroke="#e4a91b" stroke-width="2.2"></circle><path d="M29 7v8M29 47v8M5 31h8M45 31h8M12 14l6 6M40 42l6 6M46 14l-6 6M18 42l-6 6" stroke="#efb522" stroke-linecap="round" stroke-width="3.5"></path><path d="M66 29c-2 18-17 29-34 24 6 12 20 19 33 14 14-5 21-20 16-34-3 3-8 5-15 4z" fill="url(#proGreen)" stroke="#08723d" stroke-width="2.5"></path><circle cx="60" cy="48" fill="#d8ffe5" r="2"></circle><circle cx="70" cy="56" fill="#d8ffe5" r="1.6"></circle></g></symbol>
+
+<symbol id="icon-report-pulpa-pro" viewBox="0 0 84 84"><g filter="url(#proShadow)"><path d="M15 61 34 25l16 36z" fill="url(#proGreenSoft)" stroke="#087b42" stroke-width="2.5"/><path d="M34 61 50 18l20 43z" fill="#bfe9cc" stroke="#087b42" stroke-width="2.5"/><path d="M23 51h14M43 45h16M29 39h8M49 33h9" stroke="#24a95c" stroke-width="3.5" stroke-linecap="round"/><path d="M11 64h62" stroke="#075f36" stroke-width="4" stroke-linecap="round"/><circle cx="27" cy="63" r="4" fill="#0a8f49"/><circle cx="52" cy="63" r="4" fill="#0a8f49"/></g></symbol>
+<symbol id="icon-report-troza-pro" viewBox="0 0 84 84"><g filter="url(#proShadow)"><path d="M15 27h47a13 13 0 0 1 0 26H15z" fill="url(#proGreenSoft)" stroke="#087b42" stroke-width="2.5"/><ellipse cx="62" cy="40" rx="13" ry="13" fill="#e8f7ed" stroke="#087b42" stroke-width="2.5"/><circle cx="62" cy="40" r="7" fill="none" stroke="#2eaa63" stroke-width="2.5"/><path d="M23 31h25M20 40h29M23 49h25" stroke="#42b772" stroke-width="3.4" stroke-linecap="round"/><path d="M18 58h42a11 11 0 0 1 0 22H18z" fill="#d8f0e1" stroke="#087b42" stroke-width="2.5"/><ellipse cx="60" cy="69" rx="11" ry="11" fill="#f4fff7" stroke="#087b42" stroke-width="2.5"/><circle cx="60" cy="69" r="5.5" fill="none" stroke="#2eaa63" stroke-width="2.2"/></g></symbol>
 </svg>
 <div aria-live="polite" class="toast-region" id="toastRegion"></div>
 <section class="boot-view" id="bootView">
@@ -171,7 +174,7 @@
 <div class="sync-pill"><span id="syncText">Sin pendientes</span><strong class="hidden" id="pendingCount">0</strong></div>
 <button class="sidebar-button" id="syncButton" type="button"><svg class="ui-icon"><use href="#icon-sync"></use></svg><span>Sincronizar ahora</span></button>
 <button class="sidebar-button sidebar-logout-button" id="lockButton" type="button"><svg class="ui-icon"><use href="#icon-logout"></use></svg><span>Cerrar sesión</span></button>
-<small>Version 7.2.0</small>
+<small>Version 7.3.0</small>
 </div>
 </aside>
 <main class="main-content">
@@ -505,88 +508,98 @@
 </section>
 </article>
 </section>
-<section class="content-section reports-modern-section exact-reports-section" id="reportsSection">
-<div class="page-heading reports-title-row report-page-hero exact-report-hero">
-<div class="report-page-title">
-<span class="eyebrow">CONTROL OPERATIVO EXACTO</span>
-<h1>Reportes por máquina y día</h1>
+<section class="content-section reports-modern-section exact-reports-section report-v73" id="reportsSection">
+<div class="report-v73-header">
+  <div class="report-v73-title">
+    <span class="eyebrow">ANÁLISIS OPERATIVO</span>
+    <h1>Reportes operativos</h1>
+  </div>
+  <div class="report-v73-actions">
+    <span class="secure-chip" id="reportsConnectionBadge">Sin cargar</span>
+    <button class="secondary-button compact-button report-export-button" id="exportReportsButton" type="button"><svg class="ui-icon"><use href="#icon-arrow-right"></use></svg><span>Exportar CSV</span></button>
+    <button class="primary-button compact-button" id="refreshReportsButton" type="button"><svg class="ui-icon"><use href="#icon-sync"></use></svg><span>Actualizar</span></button>
+  </div>
+</div>
 
+<article class="panel-card report-v73-filter-card">
+  <div class="report-v73-filters">
+    <label class="field"><span>Desde</span><input id="reportDateFrom" type="date"/></label>
+    <label class="field"><span>Hasta</span><input id="reportDateTo" type="date"/></label>
+    <label class="field"><span>Máquina</span><select id="reportMachine"><option value="">Todas las máquinas</option></select></label>
+    <label class="field"><span>Operador</span><select id="reportOperator"><option value="">Todos los operadores</option></select></label>
+    <label class="field"><span>Turno</span><select id="reportShift"><option value="">Todos los turnos</option><option value="day">Diurno</option><option value="night">Nocturno</option></select></label>
+    <button class="secondary-button report-v73-clear" id="clearReportsButton" type="button"><svg class="ui-icon"><use href="#icon-sync"></use></svg><span>Limpiar filtros</span></button>
+    <button class="primary-button report-v73-apply" id="applyReportsButton" type="button"><svg class="ui-icon"><use href="#icon-search"></use></svg><span>Aplicar</span></button>
+  </div>
+  <div class="report-source-line"><span id="reportsLastUpdated">Todavía no se cargaron datos.</span><small>Las cantidades de Pulpa y Troza se expresan en unidades.</small></div>
+</article>
+
+<div class="report-v73-kpis">
+  <article class="report-v73-kpi hours">
+    <span class="report-v73-kpi-icon"><svg><use href="#icon-hours-pro"></use></svg></span>
+    <div><small>HORÓMETROS</small><h3>Horas totales de horómetro</h3><strong id="reportPartHoursTotal">0 h</strong><span id="reportPartHoursDetail">0 Partes con lectura inicial y final</span></div>
+  </article>
+  <article class="report-v73-kpi fuel">
+    <span class="report-v73-kpi-icon"><svg><use href="#icon-report-fuel-pro"></use></svg></span>
+    <div><small>COMBUSTIBLE</small><h3>Combustible utilizado</h3><strong id="reportFuelUsedTotal">0 L</strong><span id="reportFuelUsedDetail">Suma de cargas a las máquinas</span></div>
+  </article>
+  <article class="report-v73-kpi pulpa">
+    <span class="report-v73-kpi-icon"><svg><use href="#icon-report-pulpa-pro"></use></svg></span>
+    <div><small>PRODUCCIÓN</small><h3>Pulpa del período</h3><strong id="reportPulpaTotal">0 unid.</strong><span id="reportPulpaDetail">0 Partes con producción</span></div>
+  </article>
+  <article class="report-v73-kpi troza">
+    <span class="report-v73-kpi-icon"><svg><use href="#icon-report-troza-pro"></use></svg></span>
+    <div><small>PRODUCCIÓN</small><h3>Troza del período</h3><strong id="reportTrozaTotal">0 unid.</strong><span id="reportTrozaDetail">0 Partes con producción</span></div>
+  </article>
 </div>
-<div class="report-heading-actions">
-<span class="secure-chip" id="reportsConnectionBadge">Sin cargar</span>
-<button class="primary-button compact-button" id="refreshReportsButton" type="button"><svg class="ui-icon"><use href="#icon-sync"></use></svg><span>Actualizar datos</span></button>
+
+<div class="report-v73-main-grid">
+  <article class="panel-card report-v73-production-card">
+    <div class="report-v73-card-heading">
+      <div><span class="eyebrow">PRODUCCIÓN DIARIA</span><h2>Producción de horómetro por máquina y día</h2></div>
+      <span class="badge neutral" id="horometerDailyCount">0 filas</span>
+    </div>
+    <div class="report-v73-production-head" aria-hidden="true"><span>Máquina</span><span>Antes del descanso</span><span>Después del descanso</span><span>Total del día</span></div>
+    <div class="report-v73-production-list" id="horometerDailyMachineChart"><div class="empty-state">Sin datos.</div></div>
+  </article>
+
+  <article class="panel-card report-v73-fuel-card">
+    <div class="report-v73-card-heading">
+      <div><span class="eyebrow">CONSUMO DIARIO</span><h2>Combustible usado por máquina y día</h2></div>
+      <span class="badge neutral" id="fuelUsedChartCount">0 cargas</span>
+    </div>
+    <div class="exact-bar-list fuel-used-bar-list report-v73-fuel-list" id="fuelUsedByMachineChart"><div class="empty-state">Sin datos.</div></div>
+  </article>
 </div>
+
+<article class="panel-card report-v73-table-card">
+  <div class="report-v73-card-heading">
+    <div><span class="eyebrow">DETALLE CONSOLIDADO</span><h2>Producción y combustible por Parte</h2></div>
+    <span class="badge neutral" id="partFuelCombinedCount">0 registros</span>
+  </div>
+  <div class="report-table-wrap" id="partFuelCombinedTable"><div class="empty-state">Sin datos.</div></div>
+</article>
+
+<div class="report-v73-secondary-grid">
+  <article class="panel-card report-chart-card exact-report-card">
+    <div class="report-v73-card-heading"><div><span class="eyebrow">TOTAL GENERAL</span><h2>Combustible total por día</h2></div></div>
+    <div class="svg-chart" id="fuelDailyTotalChart"></div>
+  </article>
+  <article class="panel-card report-chart-card exact-report-card">
+    <div class="report-v73-card-heading"><div><span class="eyebrow">MANTENIMIENTO</span><h2>Horas de servicio por máquina y día</h2></div></div>
+    <div class="exact-bar-list" id="serviceByMachineDayChart"></div>
+  </article>
 </div>
-<article class="panel-card reports-filter-bar exact-report-filter-card">
-<div class="report-filter-grid exact-report-filters">
-<label class="field"><span>Desde</span><input id="reportDateFrom" type="date"/></label>
-<label class="field"><span>Hasta</span><input id="reportDateTo" type="date"/></label>
-<label class="field"><span>Máquina</span><select id="reportMachine"><option value="">Todas las máquinas</option></select></label>
-<button class="primary-button report-filter-button" id="applyReportsButton" type="button"><svg class="ui-icon"><use href="#icon-search"></use></svg><span>Aplicar filtros</span></button>
-<button class="secondary-button report-filter-button" id="clearReportsButton" type="button">Restablecer</button>
-</div>
-<div class="report-source-line"><span id="reportsLastUpdated">Todavía no se cargaron datos.</span><small>Tramo 1 = descanso − inicial · Tramo 2 = final − post descanso · Total diario = final − inicial.</small></div>
+
+<article class="panel-card report-table-card exact-detail-card report-v73-detail-card">
+  <div class="report-v73-card-heading"><div><span class="eyebrow">LECTURAS</span><h2>Detalle de horómetros</h2></div><span class="badge neutral" id="horometerTableCount">0 registros</span></div>
+  <div class="report-table-wrap" id="horometerDailyTable"><div class="empty-state">Sin datos.</div></div>
 </article>
-<div class="report-feature-kpis">
-<article class="report-feature-card part-hours-feature">
-<span class="report-feature-icon"><svg class="report-pro-icon"><use href="#icon-horometer-pro"></use></svg></span>
-<div class="report-feature-copy"><small>HORÓMETROS</small><h3>Horas totales de horómetro por Parte</h3><strong id="reportPartHoursTotal">0 h</strong><span id="reportPartHoursDetail">0 Partes con lectura inicial y final</span></div>
-</article>
-<article class="report-feature-card fuel-used-feature">
-<span class="report-feature-icon"><svg class="report-pro-icon"><use href="#icon-report-fuel-pro"></use></svg></span>
-<div class="report-feature-copy"><small>COMBUSTIBLE</small><h3>Combustible usado en el día</h3><strong id="reportFuelUsedTotal">0 L</strong><span id="reportFuelUsedDetail">Suma de cargas realizadas a las máquinas</span></div>
-</article>
-</div>
-<div class="exact-report-grid report-main-charts two-columns">
-<article class="panel-card report-chart-card exact-report-card report-primary-chart-card">
-<div class="panel-heading exact-report-heading"><div class="report-chart-heading"><span class="mini-report-icon"><svg class="report-pro-icon"><use href="#icon-horometer-pro"></use></svg></span><div><span class="eyebrow">POR PARTE</span><h3>Horas totales de horómetro por Parte</h3></div></div><span class="badge neutral" id="partHoursChartCount">0 Partes</span></div>
-<div class="exact-bar-list part-hours-bar-list" id="partHoursByPartChart"><div class="empty-state">Sin datos.</div></div>
-</article>
-<article class="panel-card report-chart-card exact-report-card report-primary-chart-card">
-<div class="panel-heading exact-report-heading"><div class="report-chart-heading"><span class="mini-report-icon"><svg class="report-pro-icon"><use href="#icon-report-fuel-pro"></use></svg></span><div><span class="eyebrow">POR MÁQUINA</span><h3>Combustible usado en el día</h3></div></div><span class="badge neutral" id="fuelUsedChartCount">0 cargas</span></div>
-<div class="exact-bar-list fuel-used-bar-list" id="fuelUsedByMachineChart"><div class="empty-state">Sin datos.</div></div>
-</article>
-</div>
-<div class="report-mini-metrics">
-<article class="report-mini-metric"><span>Partes con horómetro completo</span><strong id="reportPartCount">0</strong></article>
-<article class="report-mini-metric"><span>Promedio de horas por Parte</span><strong id="reportAveragePartHours">0 h</strong></article>
-<article class="report-mini-metric"><span>Máquinas con actividad</span><strong id="reportActiveMachineCount">0</strong></article>
-<article class="report-mini-metric"><span>Promedio de combustible por carga</span><strong id="reportAverageFuelLoad">0 L</strong></article>
-</div>
-<article class="panel-card report-table-card exact-detail-card part-fuel-combined-card">
-<div class="panel-heading"><div><span class="eyebrow">RELACIÓN OPERATIVA</span><h3>Horas del Parte y combustible cargado ese día</h3></div><span class="badge neutral" id="partFuelCombinedCount">0 registros</span></div>
-<div class="report-table-wrap" id="partFuelCombinedTable"><div class="empty-state">Sin datos.</div></div>
-</article>
-<article class="panel-card report-chart-card exact-report-card horometer-report-card">
-<div class="panel-heading exact-report-heading">
-<div class="report-chart-heading"><span class="mini-report-icon"><svg class="report-pro-icon"><use href="#icon-horometer-pro"></use></svg></span><div><span class="eyebrow">HORÓMETROS</span><h3>Producción de horómetro por máquina y día</h3></div></div>
-<span class="badge neutral" id="horometerDailyCount">0 filas</span>
-</div>
-<div class="exact-segment-chart" id="horometerDailyMachineChart"><div class="empty-state">Sin datos.</div></div>
-</article>
-<div class="exact-report-grid two-columns">
-<article class="panel-card report-chart-card exact-report-card">
-<div class="panel-heading exact-report-heading"><div class="report-chart-heading"><span class="mini-report-icon"><svg class="ui-icon"><use href="#icon-chart"></use></svg></span><div><span class="eyebrow">TOTAL GENERAL</span><h3>Combustible total por día</h3></div></div></div>
-<div class="svg-chart" id="fuelDailyTotalChart"></div>
-</article>
-<article class="panel-card report-chart-card exact-report-card">
-<div class="panel-heading exact-report-heading"><div class="report-chart-heading"><span class="mini-report-icon"><svg class="report-pro-icon"><use href="#icon-report-service-pro"></use></svg></span><div><span class="eyebrow">MANTENIMIENTO</span><h3>Horas de servicio por máquina y día</h3></div></div></div>
-<div class="exact-bar-list" id="serviceByMachineDayChart"></div>
-</article>
-</div>
-<article class="panel-card report-table-card exact-detail-card">
-<div class="panel-heading"><div><span class="eyebrow">DETALLE DE HORÓMETROS</span><h3>Lecturas y producción diaria</h3></div><span class="badge neutral" id="horometerTableCount">0 registros</span></div>
-<div class="report-table-wrap" id="horometerDailyTable"><div class="empty-state">Sin datos.</div></div>
-</article>
-<div class="exact-report-grid two-columns detail-tables-grid">
-<article class="panel-card report-table-card exact-detail-card">
-<div class="panel-heading"><div><span class="eyebrow">DETALLE DE COMBUSTIBLE</span><h3>Consumo diario por máquina</h3></div><span class="badge neutral" id="fuelTableCount">0 registros</span></div>
-<div class="report-table-wrap" id="fuelDailyTable"><div class="empty-state">Sin datos.</div></div>
-</article>
-<article class="panel-card report-table-card exact-detail-card">
-<div class="panel-heading"><div><span class="eyebrow">DETALLE DE SERVICIOS</span><h3>Horas diarias por máquina</h3></div><span class="badge neutral" id="serviceTableCount">0 registros</span></div>
-<div class="report-table-wrap" id="serviceDailyTable"><div class="empty-state">Sin datos.</div></div>
-</article>
+
+<div class="hidden" aria-hidden="true">
+  <div id="partHoursByPartChart"></div><span id="partHoursChartCount"></span>
+  <strong id="reportPartCount">0</strong><strong id="reportAveragePartHours">0 h</strong><strong id="reportActiveMachineCount">0</strong><strong id="reportAverageFuelLoad">0 L</strong>
+  <div id="fuelDailyTable"></div><span id="fuelTableCount"></span><div id="serviceDailyTable"></div><span id="serviceTableCount"></span>
 </div>
 </section>
 <section class="content-section" id="usersSection">
@@ -689,13 +702,13 @@
 </div>
 <input accept="image/*" class="hidden" id="profilePhotoInput" type="file"/>
 <div class="processing-overlay hidden" id="processingOverlay"><div class="processing-card"><div class="boot-spinner"></div><strong id="processingTitle">Guardando...</strong><span id="processingMessage">No cierres la aplicacion.</span></div></div>
-<script defer="" src="./offline-db.js?v=7.2.0"></script>
-<script defer="" src="./sync-manager.js?v=7.2.0"></script>
-<script defer="" src="./app.js?v=7.2.0"></script>
+<script defer="" src="./offline-db.js?v=7.3.0"></script>
+<script defer="" src="./sync-manager.js?v=7.3.0"></script>
+<script defer="" src="./app.js?v=7.3.0"></script>
 <script>
     if ('serviceWorker' in navigator && location.protocol === 'https:') {
       window.addEventListener('load', function () {
-        navigator.serviceWorker.register('./service-worker.js?v=7.2.0').then(function (registration) {
+        navigator.serviceWorker.register('./service-worker.js?v=7.3.0').then(function (registration) {
           registration.update().catch(function () {});
         }).catch(function (error) { console.warn('Service Worker', error); });
       });
