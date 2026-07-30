@@ -1,744 +1,697 @@
-<!doctype html>
+<!DOCTYPE html>
+
 <html lang="es">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#064e35">
-  <meta name="color-scheme" content="light">
-  <meta name="format-detection" content="telephone=no">
-  <meta name="description" content="Gestion de trabajos en campo LUBAYD SA con trabajo offline, partes, servicios y combustible.">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="LUBAYD Operativa">
-  <title>LUBAYD SA | Gestion de trabajos en campo</title>
-  <link rel="manifest" href="./manifest.webmanifest?v=7.0.0">
-  <link rel="icon" href="./icon-192.png">
-  <link rel="apple-touch-icon" href="./icon-192.png">
-  <link rel="stylesheet" href="./styles.css?v=7.0.0">
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1, viewport-fit=cover" name="viewport"/>
+<meta content="#064e35" name="theme-color"/>
+<meta content="light" name="color-scheme"/>
+<meta content="telephone=no" name="format-detection"/>
+<meta content="Gestion de trabajos en campo LUBAYD SA con trabajo offline, partes, servicios y combustible." name="description"/>
+<meta content="yes" name="mobile-web-app-capable"/>
+<meta content="yes" name="apple-mobile-web-app-capable"/>
+<meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
+<meta content="LUBAYD Operativa" name="apple-mobile-web-app-title"/>
+<title>LUBAYD SA | Gestion de trabajos en campo</title>
+<link href="./manifest.webmanifest?v=7.1.0" rel="manifest"/>
+<link href="./icon-192.png" rel="icon"/>
+<link href="./icon-192.png" rel="apple-touch-icon"/>
+<link href="./styles.css?v=7.1.0" rel="stylesheet"/>
 </head>
 <body class="booting lubayd-v6">
+<svg aria-hidden="true" class="svg-sprite" focusable="false">
+<defs>
+<lineargradient id="proGreen" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#54d479"></stop><stop offset=".5" stop-color="#119f50"></stop><stop offset="1" stop-color="#006438"></stop></lineargradient>
+<lineargradient id="proGreenSoft" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#f5fff8"></stop><stop offset="1" stop-color="#c7ead4"></stop></lineargradient>
+<lineargradient id="proSilver" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#fff"></stop><stop offset=".52" stop-color="#dce6e0"></stop><stop offset="1" stop-color="#9eafa5"></stop></lineargradient>
+<radialgradient cx="32%" cy="22%" id="proGlow" r="70%"><stop offset="0" stop-color="#eafff0" stop-opacity=".95"></stop><stop offset="1" stop-color="#0b8847" stop-opacity="0"></stop></radialgradient>
+<filter height="190%" id="proShadow" width="180%" x="-40%" y="-40%"><fedropshadow dx="0" dy="2.2" flood-color="#003b25" flood-opacity=".27" stddeviation="2"></fedropshadow></filter>
+</defs>
+<symbol id="icon-home" viewbox="0 0 24 24"><path d="M3.2 10.8 12 3.7l8.8 7.1v9.1a1.5 1.5 0 0 1-1.5 1.5H4.7a1.5 1.5 0 0 1-1.5-1.5z"></path><path d="M9 21.4v-6.7h6v6.7"></path></symbol>
+<symbol id="icon-bed" viewbox="0 0 24 24"><path d="M3 4v17M21 21v-7.7a2.3 2.3 0 0 0-2.3-2.3H8.2A2.2 2.2 0 0 0 6 13.2V21M3 16.5h18"></path><path d="M6 11V7.4h5.2A2.8 2.8 0 0 1 14 10.2v.8"></path><circle cx="8" cy="8.8" r="1.2"></circle></symbol>
+<symbol id="icon-clipboard" viewbox="0 0 24 24"><rect height="17" rx="2.1" width="14.4" x="4.8" y="4.6"></rect><path d="M8.4 5V3h7.2v2M8.2 9.4h7.6M8.2 13.3h7.6M8.2 17.2h4.8"></path><path d="m15 17 1.2 1.2 2.3-2.7"></path></symbol>
+<symbol id="icon-wrench" viewbox="0 0 24 24"><path d="M14.8 6.6a5 5 0 0 0-6.2-5.1L6.3 3.8l3.5 3.5-2.5 2.5-3.5-3.5-2.3 2.3a5 5 0 0 0 6.1 6.2L16.4 23l6.5-6.5-8.1-8.1z"></path><circle cx="18.8" cy="18.5" r="1.2"></circle></symbol>
+<symbol id="icon-fuel" viewbox="0 0 24 24"><path d="M4.1 22V4.2A2.2 2.2 0 0 1 6.3 2h8.5A2.2 2.2 0 0 1 17 4.2V22M2.8 22h15.4"></path><rect height="5.8" rx=".8" width="7" x="7" y="5.4"></rect><path d="M17 7h2l2.2 2.5v7.7a2.1 2.1 0 1 1-4.2 0v-3.4M19 7v3h2"></path></symbol>
+<symbol id="icon-activity" viewbox="0 0 24 24"><path d="M2 13h4l2.2-7 3.6 13 2.7-9 2.1 5H22"></path></symbol>
+<symbol id="icon-chat" viewbox="0 0 24 24"><path d="M21.4 14.3a5.1 5.1 0 0 1-5.1 5.1H8l-5.3 2.8 1.6-5A8.7 8.7 0 1 1 21.4 14.3z"></path><path d="M7.4 10.2h9.2M7.4 14h6.2"></path></symbol>
+<symbol id="icon-search" viewbox="0 0 24 24"><circle cx="10.8" cy="10.8" r="7.2"></circle><path d="m16.2 16.2 4.8 4.8"></path></symbol>
+<symbol id="icon-arrow-left" viewbox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6"></path></symbol>
+<symbol id="icon-send" viewbox="0 0 24 24"><path d="m3 3 18 9-18 9 3.5-9z"></path><path d="M6.5 12H21"></path></symbol>
+<symbol id="icon-chart" viewbox="0 0 24 24"><path d="M3 21V10.5h3.8V21M10.1 21V4.8h3.8V21M17.2 21v-7.4H21V21M2 21h20"></path></symbol>
+<symbol id="icon-users" viewbox="0 0 24 24"><circle cx="8.5" cy="7.4" r="3.4"></circle><path d="M2.3 21v-2.1a6.2 6.2 0 0 1 12.4 0V21M15.7 4.4a3.5 3.5 0 0 1 0 6.2M17.2 14.1a5.5 5.5 0 0 1 4.5 5.4V21"></path></symbol>
+<symbol id="icon-menu" viewbox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"></path></symbol>
+<symbol id="icon-calendar" viewbox="0 0 24 24"><rect height="16" rx="2" width="18" x="3" y="5"></rect><path d="M16 3v4M8 3v4M3 10h18"></path></symbol>
+<symbol id="icon-bell" viewbox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path><path d="M13.7 21a2 2 0 0 1-3.4 0"></path></symbol>
+<symbol id="icon-droplet" viewbox="0 0 24 24"><path d="M12 2.4S5 10 5 15a7 7 0 0 0 14 0c0-5-7-12.6-7-12.6z"></path><path d="M8.8 16.1a3.6 3.6 0 0 0 3.1 2.2"></path></symbol>
+<symbol id="icon-briefcase" viewbox="0 0 24 24"><rect height="13" rx="2" width="18" x="3" y="7"></rect><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 12h18M10 12v2h4v-2"></path></symbol>
+<symbol id="icon-tractor" viewbox="0 0 24 24"><circle cx="6.7" cy="18" r="3.1"></circle><circle cx="18.2" cy="18.2" r="2.2"></circle><path d="M3.6 15V9h7.6l3 5h4a3 3 0 0 1 3 3v1M11.2 9V4.8h4.3v6.3M7 14.9h8.4"></path></symbol>
+<symbol id="icon-arrow-right" viewbox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"></path></symbol>
+<symbol id="icon-chevron-right" viewbox="0 0 24 24"><path d="m9 18 6-6-6-6"></path></symbol>
+<symbol id="icon-check" viewbox="0 0 24 24"><path d="m5 12 4 4L19 6"></path></symbol>
+<symbol id="icon-clock" viewbox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></symbol>
+<symbol id="icon-plus" viewbox="0 0 24 24"><path d="M12 5v14M5 12h14"></path></symbol>
+<symbol id="icon-sync" viewbox="0 0 24 24"><path d="M20 7h-5V2M4 17h5v5M5.5 8A8 8 0 0 1 19 6l1 1M18.5 16A8 8 0 0 1 5 18l-1-1"></path></symbol>
+<symbol id="icon-logout" viewbox="0 0 24 24"><path d="m10 17 5-5-5-5M15 12H3"></path><path d="M14 3h5a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-5"></path></symbol>
+<symbol id="icon-more" viewbox="0 0 24 24"><circle cx="5" cy="12" r="1.5"></circle><circle cx="12" cy="12" r="1.5"></circle><circle cx="19" cy="12" r="1.5"></circle></symbol>
+<symbol id="icon-map-pin" viewbox="0 0 24 24"><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0z"></path><circle cx="12" cy="10" r="2.5"></circle></symbol>
+<symbol id="icon-camera" viewbox="0 0 24 24"><path d="M4 7h3l2-3h6l2 3h3a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2z"></path><circle cx="12" cy="14" r="4"></circle></symbol>
+<symbol id="icon-trash" viewbox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 15H6L5 6M10 10v7M14 10v7"></path></symbol>
+<symbol id="icon-user" viewbox="0 0 24 24"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></symbol>
+<symbol id="icon-calendar-pro" viewbox="0 0 72 72"><g filter="url(#proShadow)"><rect fill="url(#proSilver)" height="48" rx="9" stroke="#087f43" stroke-width="2.5" width="52" x="10" y="13"></rect><path d="M10 27h52" stroke="#087f43" stroke-width="4"></path><rect fill="#18a856" height="8" rx="1.6" width="8" x="18" y="32"></rect><rect fill="#0a8d47" height="8" rx="1.6" width="8" x="32" y="32"></rect><rect fill="#1ab35c" height="8" rx="1.6" width="8" x="46" y="32"></rect><rect fill="#0a8d47" height="8" rx="1.6" width="8" x="18" y="45"></rect><rect fill="#1ab35c" height="8" rx="1.6" width="8" x="32" y="45"></rect><rect fill="#08723d" height="8" rx="1.6" width="8" x="46" y="45"></rect><path d="M22 8v12M50 8v12" stroke="#006b3a" stroke-linecap="round" stroke-width="5"></path></g></symbol>
+<symbol id="icon-wrench-pro" viewbox="0 0 72 72"><g filter="url(#proShadow)"><path d="M46 9c-8-4-18-2-24 5-5 6-5 14-1 20L8 47c-3 3-3 8 0 11l6 6c3 3 8 3 11 0l13-13c6 4 14 4 20-1 7-6 9-16 5-24L51 38l-9-9 12-12z" fill="url(#proGreenSoft)" stroke="#0a7f42" stroke-width="2.4"></path><path d="M19 53 43 29" stroke="url(#proGreen)" stroke-linecap="round" stroke-width="9"></path><circle cx="17" cy="55" fill="#fff" r="3.5" stroke="#08723d" stroke-width="2"></circle></g></symbol>
+<symbol id="icon-droplet-pro" viewbox="0 0 72 72"><g filter="url(#proShadow)"><path d="M36 7S14 32 14 47a22 22 0 0 0 44 0C58 32 36 7 36 7z" fill="url(#proGreen)" stroke="#effff4" stroke-width="3"></path><path d="M25 46c1 8 6 12 13 13" fill="none" stroke="#8cf4ae" stroke-linecap="round" stroke-width="4"></path><ellipse cx="31" cy="29" fill="url(#proGlow)" rx="7" ry="11"></ellipse></g></symbol>
+<symbol id="icon-hours-pro" viewbox="0 0 72 72"><g filter="url(#proShadow)"><rect fill="#69cb7d" height="17" rx="2" width="9" x="8" y="44"></rect><rect fill="#36b963" height="27" rx="2" width="9" x="21" y="34"></rect><rect fill="#129b50" height="39" rx="2" width="9" x="34" y="22"></rect><rect fill="url(#proGreen)" height="51" rx="2" width="9" x="47" y="10"></rect><circle cx="52" cy="51" fill="url(#proSilver)" r="14" stroke="#087b42" stroke-width="2.4"></circle><path d="M52 42v9l6 4" fill="none" stroke="#076f3c" stroke-linecap="round" stroke-width="3"></path><circle cx="52" cy="51" fill="#087b42" r="2"></circle></g></symbol>
+<symbol id="icon-tank-pro" viewbox="0 0 180 118"><g filter="url(#proShadow)"><path d="M31 30h101c18 0 32 14 32 32v17c0 18-14 32-32 32H31c-8 0-15-7-15-15V45c0-8 7-15 15-15z" fill="url(#proSilver)" stroke="#325b48" stroke-width="2"></path><ellipse cx="132" cy="70" fill="url(#proGreenSoft)" rx="32" ry="40" stroke="#2d604a" stroke-width="2"></ellipse><ellipse cx="132" cy="70" fill="#dff4e7" opacity=".7" rx="22" ry="31"></ellipse><path d="M25 30V19h9v11M49 30V19h9v11M20 22h44" fill="none" stroke="#2d604a" stroke-width="3"></path><path d="M22 47h-8M22 60h-8M22 73h-8M22 86h-8" stroke="#4b6f5d" stroke-width="3"></path><path d="M19 101 13 115M145 101l7 14M55 107v8M119 107v8" stroke="#244c3a" stroke-linecap="round" stroke-width="5"></path><path d="M78 45s-18 19-18 31a18 18 0 0 0 36 0c0-12-18-31-18-31z" fill="url(#proGreen)" stroke="#f2fff6" stroke-width="2.5"></path><path d="M70 77c1 6 5 9 10 10" fill="none" stroke="#7df0a2" stroke-linecap="round" stroke-width="3"></path></g></symbol>
+<symbol id="icon-break-pro" viewbox="0 0 96 96"><g filter="url(#proShadow)"><ellipse cx="48" cy="78" fill="#b8c8bf" opacity=".45" rx="35" ry="8"></ellipse><path d="M23 36h48v25c0 11-9 20-20 20H43c-11 0-20-9-20-20z" fill="url(#proSilver)" stroke="#087b42" stroke-width="2.6"></path><path d="M71 42h6c9 0 14 7 14 14s-5 14-14 14h-7" fill="none" stroke="#0b8447" stroke-linecap="round" stroke-width="6"></path><path d="M31 49h32" opacity=".8" stroke="#55c879" stroke-linecap="round" stroke-width="4"></path><path d="M36 27c-7-8 6-10 0-18M50 27c-7-8 6-10 0-18M64 27c-7-8 6-10 0-18" fill="none" stroke="#18a958" stroke-linecap="round" stroke-width="4"></path></g></symbol>
+<symbol id="icon-part-pro" viewbox="0 0 96 96"><g filter="url(#proShadow)"><rect fill="url(#proSilver)" height="70" rx="10" stroke="#087b42" stroke-width="2.8" width="54" x="22" y="14"></rect><rect fill="url(#proGreen)" height="14" rx="7" width="30" x="34" y="8"></rect><path d="M34 38h30M34 50h22M34 62h18" stroke="#178d4b" stroke-linecap="round" stroke-width="5"></path><circle cx="67" cy="67" fill="url(#proGreen)" r="17" stroke="#fff" stroke-width="3"></circle><path d="m59 67 6 6 11-13" fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round" stroke-width="4.5"></path></g></symbol>
+<symbol id="icon-horometer-pro" viewbox="0 0 96 96"><g filter="url(#proShadow)"><circle cx="48" cy="48" fill="url(#proSilver)" r="37" stroke="#087b42" stroke-width="3"></circle><path d="M25 58a26 26 0 0 1 46 0" fill="none" stroke="#b8cec1" stroke-linecap="round" stroke-width="7"></path><path d="M25 58a26 26 0 0 1 29-24" fill="none" stroke="url(#proGreen)" stroke-linecap="round" stroke-width="7"></path><path d="M48 49 66 36" stroke="#075f36" stroke-linecap="round" stroke-width="5"></path><circle cx="48" cy="49" fill="#0b8d49" r="5"></circle><rect fill="#eef7f1" height="12" rx="4" stroke="#8ab49b" width="38" x="29" y="64"></rect><path d="M36 70h24" stroke="#146f42" stroke-dasharray="3 3" stroke-width="3"></path></g></symbol>
+<symbol id="icon-camera-pro" viewbox="0 0 96 96"><g filter="url(#proShadow)"><rect fill="url(#proSilver)" height="50" rx="12" stroke="#087b42" stroke-width="3" width="70" x="13" y="28"></rect><path d="M29 28 37 16h22l8 12" fill="url(#proGreenSoft)" stroke="#087b42" stroke-width="3"></path><circle cx="48" cy="53" fill="#dff4e7" r="17" stroke="#0a8a48" stroke-width="5"></circle><circle cx="48" cy="53" fill="url(#proGreen)" r="8"></circle><circle cx="72" cy="39" fill="#20b05d" r="4"></circle></g></symbol>
+<symbol id="icon-location-pro" viewbox="0 0 96 96"><g filter="url(#proShadow)"><path d="M48 9c-18 0-33 14-33 32 0 24 33 48 33 48s33-24 33-48C81 23 66 9 48 9z" fill="url(#proGreen)" stroke="#effff4" stroke-width="3"></path><circle cx="48" cy="41" fill="url(#proSilver)" r="13"></circle><circle cx="48" cy="41" fill="#0a8b48" r="6"></circle></g></symbol>
+<symbol id="icon-production-pro" viewbox="0 0 96 96"><g filter="url(#proShadow)"><path d="M18 70 42 30l22 40z" fill="#9c6a34" stroke="#69451f" stroke-width="2.5"></path><path d="M40 70 62 22l20 48z" fill="#b77b3b" stroke="#6e491f" stroke-width="2.5"></path><ellipse cx="30" cy="70" fill="#d6a26c" rx="18" ry="9" stroke="#6d4723" stroke-width="2.5"></ellipse><ellipse cx="61" cy="70" fill="#e2b47f" rx="21" ry="10" stroke="#6d4723" stroke-width="2.5"></ellipse><circle cx="30" cy="70" fill="#8b5b2d" r="7"></circle><circle cx="61" cy="70" fill="#8b5b2d" r="8"></circle><path d="M24 55h13M52 48h16" stroke="#f1cfab" stroke-linecap="round" stroke-width="3"></path></g></symbol>
+<symbol id="icon-machine-pro" viewbox="0 0 96 96"><g filter="url(#proShadow)"><circle cx="26" cy="70" fill="#32483d" r="14"></circle><circle cx="71" cy="72" fill="#32483d" r="10"></circle><circle cx="26" cy="70" fill="url(#proSilver)" r="7"></circle><circle cx="71" cy="72" fill="url(#proSilver)" r="5"></circle><path d="M16 61V42h31l12 18h15c8 0 14 6 14 14" fill="url(#proGreen)" stroke="#086f3d" stroke-width="3"></path><path d="M43 42V24h20v25M49 30h9" fill="url(#proGreenSoft)" stroke="#086f3d" stroke-width="3"></path><path d="M10 61h55" stroke="#075f36" stroke-width="4"></path></g></symbol>
+<symbol id="icon-service-timer-pro" viewbox="0 0 96 96"><g filter="url(#proShadow)"><circle cx="48" cy="49" fill="url(#proSilver)" r="35" stroke="#087b42" stroke-width="3"></circle><path d="M48 27v22l15 9" fill="none" stroke="#0b8246" stroke-linecap="round" stroke-width="6"></path><path d="M38 9h20M48 9v8" stroke="#087b42" stroke-linecap="round" stroke-width="5"></path><path d="M24 78 12 88M72 78l12 10" stroke="#0a7440" stroke-linecap="round" stroke-width="5"></path><circle cx="48" cy="49" fill="#0e9c51" r="5"></circle></g></symbol>
+<symbol id="icon-service-start-pro" viewbox="0 0 96 96"><g filter="url(#proShadow)"><circle cx="48" cy="48" fill="url(#proGreenSoft)" r="38" stroke="#0a7d43" stroke-width="3"></circle><path d="M35 28a17 17 0 0 0-8 23L14 64l18 18 13-13a17 17 0 0 0 23-8L55 48 44 59 33 48l11-11z" fill="url(#proGreen)" stroke="#086d3c" stroke-width="2.5"></path><path d="m57 34 17 10-17 10z" fill="#fff"></path></g></symbol>
+<symbol id="icon-service-end-pro" viewbox="0 0 96 96"><g filter="url(#proShadow)"><circle cx="48" cy="48" fill="url(#proGreen)" r="38" stroke="#effff4" stroke-width="3"></circle><path d="m27 48 14 14 29-32" fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round" stroke-width="8"></path></g></symbol>
+<symbol id="icon-history-pro" viewbox="0 0 96 96"><g filter="url(#proShadow)"><circle cx="50" cy="48" fill="url(#proSilver)" r="34" stroke="#087b42" stroke-width="3"></circle><path d="M19 24v20h20" fill="none" stroke="#0b914b" stroke-linecap="round" stroke-width="6"></path><path d="M22 42a34 34 0 1 0 5-20" fill="none" stroke="#0b914b" stroke-linecap="round" stroke-width="6"></path><path d="M50 29v21l14 8" fill="none" stroke="#075f36" stroke-linecap="round" stroke-width="5"></path></g></symbol>
+<symbol id="icon-report-fuel-pro" viewbox="0 0 84 84"><g filter="url(#proShadow)"><path d="M18 70V18.5A7.5 7.5 0 0 1 25.5 11h28A7.5 7.5 0 0 1 61 18.5V70" fill="url(#proSilver)" stroke="#087b42" stroke-width="2.6"></path><rect fill="#e8fff0" height="21" rx="4" stroke="#0a8245" stroke-width="2.2" width="27" x="26" y="20"></rect><path d="M31 34c6-7 12-8 17-3" fill="none" stroke="url(#proGreen)" stroke-linecap="round" stroke-width="4"></path><path d="M61 25h6l6 8v26a7 7 0 0 1-14 0V48" fill="none" stroke="#087b42" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"></path><path d="M67 25v10h6" fill="none" stroke="#0d9b50" stroke-width="3.5"></path><rect fill="url(#proGreen)" height="16" rx="5" width="31" x="24" y="49"></rect><path d="M13 70h55" stroke="#075f36" stroke-linecap="round" stroke-width="5"></path><circle cx="39.5" cy="57" fill="#f5fff8" opacity=".9" r="4"></circle></g></symbol>
+<symbol id="icon-report-service-pro" viewbox="0 0 84 84"><g filter="url(#proShadow)"><circle cx="42" cy="42" fill="url(#proGreenSoft)" r="30" stroke="#0a8044" stroke-width="2.5"></circle><path d="M53 18a18 18 0 0 0-21 23L17 56a7 7 0 0 0 0 10l1 1a7 7 0 0 0 10 0l15-15a18 18 0 0 0 23-21L55 42l-9-9z" fill="url(#proSilver)" stroke="#087b42" stroke-width="2.2"></path><path d="M24 61 49 36" stroke="url(#proGreen)" stroke-linecap="round" stroke-width="8"></path><circle cx="23" cy="62" fill="#fff" r="3.3" stroke="#087b42" stroke-width="2"></circle><path d="M42 12v7M42 65v7M12 42h7M65 42h7" opacity=".8" stroke="#25a95d" stroke-linecap="round" stroke-width="3"></path></g></symbol>
+<symbol id="icon-report-machine-pro" viewbox="0 0 84 84"><g filter="url(#proShadow)"><path d="M13 54h45l8 8H18z" fill="#d7e5dc"></path><path d="M19 49V31h29l9 17h8c5 0 9 4 9 9v5" fill="url(#proGreen)" stroke="#08723d" stroke-linejoin="round" stroke-width="2.5"></path><path d="M34 31V17h17v31" fill="url(#proSilver)" stroke="#08723d" stroke-width="2.5"></path><path d="M39 22h8v8h-8z" fill="#c9f0d6"></path><circle cx="25" cy="61" fill="url(#proSilver)" r="12" stroke="#075f36" stroke-width="3"></circle><circle cx="25" cy="61" fill="#0a8e48" r="5"></circle><circle cx="65" cy="62" fill="url(#proSilver)" r="8" stroke="#075f36" stroke-width="3"></circle><circle cx="65" cy="62" fill="#0a8e48" r="3"></circle><path d="M15 49h42" opacity=".8" stroke="#effff4" stroke-width="3"></path></g></symbol>
+<symbol id="icon-report-shift-pro" viewbox="0 0 84 84"><g filter="url(#proShadow)"><circle cx="29" cy="31" fill="#ffd96a" r="16" stroke="#e4a91b" stroke-width="2.2"></circle><path d="M29 7v8M29 47v8M5 31h8M45 31h8M12 14l6 6M40 42l6 6M46 14l-6 6M18 42l-6 6" stroke="#efb522" stroke-linecap="round" stroke-width="3.5"></path><path d="M66 29c-2 18-17 29-34 24 6 12 20 19 33 14 14-5 21-20 16-34-3 3-8 5-15 4z" fill="url(#proGreen)" stroke="#08723d" stroke-width="2.5"></path><circle cx="60" cy="48" fill="#d8ffe5" r="2"></circle><circle cx="70" cy="56" fill="#d8ffe5" r="1.6"></circle></g></symbol>
+</svg>
+<div aria-live="polite" class="toast-region" id="toastRegion"></div>
+<section class="boot-view" id="bootView">
+<div class="boot-card">
+<img alt="LUBAYD SA" src="./logo-original.png"/>
+<div class="boot-spinner"></div>
+<strong>Preparando la aplicacion</strong>
+<span>Restaurando tu sesion y los datos del dispositivo...</span>
+</div>
+</section>
+<section class="auth-layout hidden" id="authView">
+<div class="auth-brand-panel">
+<div class="brand-lockup brand-lockup-light">
+<img alt="LUBAYD SA" class="brand-logo" src="./logo-original.png"/>
+<div><strong>LUBAYD SA</strong><span>Gestion de trabajos en campo</span></div>
+</div>
+<div class="auth-copy">
+<span class="eyebrow eyebrow-light">CONTROL OPERATIVO</span>
+<h1>Control operativo simple, moderno y seguro.</h1>
+<p>Gestiona la jornada, los partes, el servicio mecanico y el combustible desde cualquier dispositivo.</p>
+</div>
+<div class="auth-benefits">
+<article><span>1</span><div><strong>Trabajo offline</strong><small>Los datos quedan pendientes hasta recuperar Internet.</small></div></article>
+<article><span>2</span><div><strong>Permisos por rol</strong><small>Operador, mecanico y administrador.</small></div></article>
+<article><span>3</span><div><strong>Trazabilidad</strong><small>Fotos, ubicacion, hora y usuario responsable.</small></div></article>
+</div>
+</div>
+<div class="auth-form-panel">
+<div class="auth-card">
+<div class="mobile-brand brand-lockup">
+<img alt="LUBAYD SA" class="brand-logo" src="./logo-original.png"/>
+<div><strong>LUBAYD SA</strong><span>Gestion de trabajos en campo</span></div>
+</div>
+<div class="auth-tabs">
+<button class="auth-tab active" id="loginTab" type="button">Iniciar sesion</button>
+<button class="auth-tab" id="registerTab" type="button">Crear usuario</button>
+</div>
+<div class="auth-message hidden" id="authMessage" role="alert"></div>
+<form class="auth-form active" id="loginForm">
+<header><span class="eyebrow">BIENVENIDO</span><h2>Ingresa a tu cuenta</h2><p>La sesion queda guardada en este dispositivo.</p></header>
+<label class="field"><span>Correo electronico</span><input autocomplete="email" id="loginEmail" required="" type="email"/></label>
+<label class="field"><span>Contraseña</span><input autocomplete="current-password" id="loginPassword" minlength="6" required="" type="password"/></label>
+<button class="primary-button" id="loginButton" type="submit">Ingresar con Internet</button>
+</form>
+<section class="offline-login-panel" id="offlineLoginPanel">
+<div class="offline-login-heading"><span class="offline-badge">SIN INTERNET</span><div><h3>Ingresar sin conexion</h3><p id="offlineLoginHint">Usa el PIN configurado en este dispositivo.</p></div></div>
+<div class="saved-user-card"><div class="avatar" id="offlineUserAvatar">U</div><div><strong id="offlineUserName">Dispositivo no configurado</strong><span id="offlineUserEmail">Primero ingresa una vez con Internet</span></div></div>
+<label class="field"><span>PIN offline de 6 numeros</span><input disabled="" id="offlinePinInput" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" type="password"/></label>
+<button class="secondary-button" disabled="" id="offlineLoginButton" type="button">Ingresar sin conexion</button>
+</section>
+<form class="auth-form" id="registerForm">
+<header><span class="eyebrow">NUEVO USUARIO</span><h2>Crear cuenta</h2><p>Los nuevos usuarios se crean inicialmente como operadores.</p></header>
+<label class="field"><span>Nombre y apellido</span><input id="registerName" maxlength="80" required="" type="text"/></label>
+<label class="field"><span>Correo electronico</span><input id="registerEmail" required="" type="email"/></label>
+<label class="field"><span>Contraseña</span><input id="registerPassword" minlength="6" required="" type="password"/></label>
+<label class="field"><span>Repetir contraseña</span><input id="registerPasswordConfirm" minlength="6" required="" type="password"/></label>
+<button class="primary-button" id="registerButton" type="submit">Crear usuario</button>
+</form>
+</div>
+</div>
+</section>
+<div class="app-shell hidden" id="appView">
+<aside class="sidebar" id="sidebar">
+<div class="sidebar-brand brand-lockup brand-lockup-light">
+<img alt="LUBAYD SA" class="brand-logo" src="./logo-original.png"/>
+</div>
+<nav class="sidebar-nav">
+<button class="nav-item active" data-roles="mechanic,admin" data-section="dashboard" type="button"><svg class="ui-icon"><use href="#icon-home"></use></svg><small>Inicio</small></button>
+<button class="nav-item" data-roles="operator,admin" data-section="break" type="button"><svg class="ui-icon"><use href="#icon-bed"></use></svg><small>Descanso</small></button>
+<button class="nav-item" data-roles="operator,admin" data-section="part" type="button"><svg class="ui-icon"><use href="#icon-clipboard"></use></svg><small>Parte</small></button>
+<button class="nav-item" data-roles="mechanic,admin" data-section="service" type="button"><svg class="ui-icon"><use href="#icon-wrench"></use></svg><small>Servicio</small></button>
+<button class="nav-item" data-roles="mechanic,admin" data-section="fuel" type="button"><svg class="ui-icon"><use href="#icon-fuel"></use></svg><small>Combustible</small></button>
+<button class="nav-item" data-roles="operator,mechanic,admin" data-section="chat" type="button"><svg class="ui-icon"><use href="#icon-chat"></use></svg><small>Chat</small></button>
+<button class="nav-item" data-roles="admin" data-section="reports" type="button"><svg class="ui-icon"><use href="#icon-chart"></use></svg><small>Reportes</small></button>
+<button class="nav-item" data-roles="operator,mechanic" data-section="activity" type="button"><svg class="ui-icon"><use href="#icon-activity"></use></svg><small>Actividad</small></button>
+<button class="nav-item" data-roles="admin" data-section="users" type="button"><svg class="ui-icon"><use href="#icon-users"></use></svg><small>Usuarios</small></button>
+</nav>
+<div class="sidebar-user sidebar-profile-clean">
+<button aria-label="Cambiar foto de perfil" class="sidebar-profile-button" id="sidebarProfileButton" type="button">
+<span class="profile-photo-frame profile-photo-small">
+<img alt="Foto de perfil" class="profile-photo-image hidden" id="sidebarProfileImage"/>
+<span class="avatar profile-photo-fallback" id="userAvatar">U</span>
+<span class="profile-photo-edit"><svg class="ui-icon"><use href="#icon-camera"></use></svg></span>
+</span>
+<span class="sidebar-role-copy"><strong class="role-badge" id="userRoleBadge">Operador</strong><small>Editar foto</small></span>
+</button>
+<span class="sr-only" id="userName">Usuario</span>
+<span class="sr-only" id="userEmail">-</span>
+</div>
+<div class="sidebar-footer">
+<div class="connection-pill"><span class="status-dot" id="connectionDot"></span><span id="connectionText">Comprobando</span></div>
+<div class="sync-pill"><span id="syncText">Sin pendientes</span><strong class="hidden" id="pendingCount">0</strong></div>
+<button class="sidebar-button" id="syncButton" type="button"><svg class="ui-icon"><use href="#icon-sync"></use></svg><span>Sincronizar ahora</span></button>
+<button class="sidebar-button sidebar-logout-button" id="lockButton" type="button"><svg class="ui-icon"><use href="#icon-logout"></use></svg><span>Cerrar sesión</span></button>
+<small>Version 7.1.0</small>
+</div>
+</aside>
+<main class="main-content">
+<header class="topbar pro-topbar">
+<button aria-label="Abrir menú" class="icon-button topbar-menu" id="menuButton" type="button"><svg class="ui-icon"><use href="#icon-menu"></use></svg></button>
+<span class="sr-only" id="pageTitle">Inicio</span>
+<div class="topbar-actions">
+<button aria-label="Sincronizar datos" class="notification-button" id="topSyncButton" type="button"><svg class="ui-icon"><use href="#icon-bell"></use></svg><span class="notification-count hidden" id="topPendingCount">0</span><span class="sr-only" id="topConnectionText">Comprobando</span><span class="sr-only" id="topSyncText">Sin pendientes</span><span class="status-dot hidden" id="topConnectionDot"></span></button>
+<button aria-label="Abrir chat" class="notification-button" data-section-link="chat" type="button"><svg class="ui-icon"><use href="#icon-chat"></use></svg></button>
+<span class="topbar-divider"></span>
+<button aria-label="Cambiar foto de perfil" class="topbar-profile-control" id="topbarProfileButton" type="button"><span class="profile-photo-frame topbar-profile-frame"><img alt="Foto de perfil" class="profile-photo-image hidden" id="topbarProfileImage"/><span class="profile-photo-fallback" id="topbarProfileFallback">U</span></span><span class="topbar-profile-copy"><strong id="topbarRoleName">Operador</strong><small>Perfil de usuario</small></span><svg class="ui-icon"><use href="#icon-chevron-right"></use></svg></button>
+<button class="topbar-logout-button" id="topLogoutButton" type="button"><svg class="ui-icon"><use href="#icon-logout"></use></svg><span>Cerrar sesión</span></button>
+<div class="topbar-clock sr-only"><strong id="liveClock">--:--:--</strong></div>
+</div>
+</header>
+<section class="content-section active dashboard-section" id="dashboardSection">
+<div class="mobile-dashboard-hero">
+<div class="mobile-hero-row"><img alt="LUBAYD SA" src="./logo-original.png"/><div class="mobile-hero-actions"><button aria-label="Sincronizar" class="mobile-bell" id="mobileSyncButton" type="button"><svg class="ui-icon"><use href="#icon-bell"></use></svg><span class="notification-count hidden" id="mobilePendingCount">0</span></button><button aria-label="Cerrar sesión" class="mobile-logout-button" id="mobileLogoutButton" type="button"><svg class="ui-icon"><use href="#icon-logout"></use></svg></button></div></div>
+<div class="mobile-greeting"><button aria-label="Agregar o cambiar foto de perfil" class="profile-photo-button mobile-profile-button" id="mobileProfileButton" type="button"><span class="profile-photo-frame"><img alt="Foto de perfil" class="profile-photo-image hidden" id="mobileProfileImage"/><span class="profile-photo-fallback" id="mobileProfileFallback">U</span><span class="profile-photo-edit"><svg class="ui-icon"><use href="#icon-camera"></use></svg></span></span></button><div class="mobile-greeting-copy"><h1 id="mobileGreeting">Hola</h1><div class="operator-greeting-meta"><span class="operator-role-pill">Operador</span><span>Resumen del día</span></div></div><div class="mobile-date"><svg class="ui-icon"><use href="#icon-calendar"></use></svg><span id="mobileDate">-</span></div></div>
+</div>
+<section aria-label="Inicio LUBAYD SA" class="role-logo-home" id="roleLogoHome">
+<div class="role-logo-home-card">
+<img alt="LUBAYD SA" class="role-logo-home-image" src="./logo-original.png"/>
+</div>
+</section>
+<div class="desktop-dashboard-heading pro-dashboard-heading">
+<div class="dashboard-heading-user"><button aria-label="Cambiar foto de perfil" class="profile-photo-button dashboard-profile-button" id="dashboardProfileButton" type="button"><span class="profile-photo-frame profile-photo-large"><img alt="Foto de perfil" class="profile-photo-image hidden" id="dashboardProfileImage"/><span class="profile-photo-fallback" id="dashboardAvatar">U</span><span class="profile-photo-edit"><svg class="ui-icon"><use href="#icon-camera"></use></svg></span></span></button><div><h1 id="dashboardGreeting">Bienvenido</h1><span class="role-chip" id="dashboardRole">Operador</span></div></div>
+<div class="dashboard-date-control"><svg class="ui-icon"><use href="#icon-calendar"></use></svg><span id="liveDate">-</span><svg class="ui-icon chevron"><use href="#icon-chevron-right"></use></svg></div>
+</div>
+<div class="alert warning hidden" id="offlineBanner"><strong>Trabajando sin conexión</strong><span>Puedes continuar normalmente. Los datos y fotos se sincronizarán al recuperar Internet.</span></div>
+<section aria-label="Inicio del operador" class="operator-home-panel" id="operatorHomePanel">
+<article class="operator-time-card">
+<div class="operator-time-copy">
+<span class="operator-home-eyebrow">JORNADA DE HOY</span>
+<strong>Hora actual</strong>
+<div class="operator-home-status-row">
+<span class="operator-home-status is-online" id="operatorHomeConnection"><i></i> En línea</span>
+<span class="operator-home-sync" id="operatorHomeSyncStatus">Todo sincronizado</span>
+</div>
+</div>
+<div class="operator-home-time">
+<strong id="operatorHomeClock">--:--</strong>
+<span id="operatorHomeDay">Hoy</span>
+</div>
+</article>
+<button class="operator-main-action" id="operatorNewPartAction" type="button">
+<span class="operator-action-icon"><svg class="ui-icon"><use href="#icon-clipboard"></use></svg></span>
+<span class="operator-action-copy"><small id="operatorMainActionEyebrow">REGISTRO DE JORNADA</small><strong id="operatorMainActionTitle">Crear nuevo Parte</strong><em id="operatorMainActionMeta">Máquina, horómetros y producción</em></span>
+<svg class="ui-icon operator-action-arrow"><use href="#icon-arrow-right"></use></svg>
+</button>
+<div class="operator-secondary-actions">
+<button class="operator-secondary-action" id="operatorBreakAction" type="button">
+<span><svg class="ui-icon"><use href="#icon-bed"></use></svg></span>
+<strong id="operatorBreakActionLabel">Descanso</strong>
+<small id="operatorBreakActionMeta">Iniciar o finalizar</small>
+</button>
+<button class="operator-secondary-action" data-section-link="activity" type="button">
+<span><svg class="ui-icon"><use href="#icon-activity"></use></svg></span>
+<strong>Mis registros</strong>
+<small>Partes y descansos</small>
+</button>
+<button class="operator-secondary-action" data-section-link="chat" type="button">
+<span><svg class="ui-icon"><use href="#icon-chat"></use></svg></span>
+<strong>Mensajes</strong>
+<small>Comunicación interna</small>
+</button>
+</div>
+<article class="operator-latest-card">
+<header>
+<div><span class="operator-home-eyebrow">ÚLTIMO MOVIMIENTO</span><h3>Actividad reciente</h3></div>
+<button class="text-button" data-section-link="activity" type="button">Ver historial</button>
+</header>
+<div class="operator-latest-content" id="operatorLatestActivity"><div class="operator-latest-empty">Todavía no hay actividad registrada.</div></div>
+</article>
+</section>
+<div class="dashboard-metrics pro-dashboard-metrics">
+<article class="metric-card pro-metric-card"><span class="metric-icon pro-metric-icon"><svg class="pro-icon"><use href="#icon-calendar-pro"></use></svg></span><div><span>Jornadas hoy</span><strong id="metricJourneys">0</strong><small>Completadas</small><i class="metric-progress"><b style="--value:70%"></b></i></div></article>
+<article class="metric-card pro-metric-card"><span class="metric-icon pro-metric-icon"><svg class="pro-icon"><use href="#icon-wrench-pro"></use></svg></span><div><span>Servicios hoy</span><strong id="metricServices">0</strong><small>Completados</small><i class="metric-progress"><b style="--value:58%"></b></i></div></article>
+<article class="metric-card pro-metric-card"><span class="metric-icon pro-metric-icon"><svg class="pro-icon"><use href="#icon-droplet-pro"></use></svg></span><div><span>Combustible cargado</span><strong id="metricFuel">0 L</strong><small id="metricFuelTrend">Total del día</small></div></article>
+<article class="metric-card pro-metric-card"><span class="metric-icon pro-metric-icon"><svg class="pro-icon"><use href="#icon-hours-pro"></use></svg></span><div><span>Horas operadas</span><strong id="metricHours">0 h</strong><small id="metricHoursTrend">Total del día</small></div></article>
+</div>
+<div class="dashboard-pro-grid">
+<article class="dashboard-card pro-tank-card"><div class="dashboard-card-heading"><h2>Estado del tanque principal</h2></div><div class="pro-tank-layout"><svg class="tank-illustration"><use href="#icon-tank-pro"></use></svg><div class="pro-tank-copy"><span>Nivel actual</span><strong id="dashboardTankPercent">0%</strong><small id="dashboardTankRatio">0 L / 0 L</small><dl><div><dt>Volumen</dt><dd id="dashboardTankVolume">0 L</dd></div><div><dt>Capacidad</dt><dd id="dashboardTankCapacity">0 L</dd></div></dl></div></div><div class="pro-level-track"><span id="dashboardTankProgress"></span></div><button class="dashboard-action-button" data-section-link="fuel" type="button"><span>Ver detalle del tanque</span><svg class="ui-icon"><use href="#icon-arrow-right"></use></svg></button><div class="hidden" id="dashboardTankGauge"></div></article>
+<article class="dashboard-card pro-fuel-chart-card"><div class="dashboard-card-heading"><h2>Flujo de combustible (hoy)</h2><span class="chart-period-chip">Hoy</span></div><div class="dashboard-fuel-chart" id="dashboardFuelChart"></div><div class="dashboard-flow-summary"><span id="flowTankStart">0 L</span><span id="flowLoadedToday">0 L</span><span id="flowTankBalance">0 L</span></div></article>
+<article class="dashboard-card upcoming-breaks-card pro-upcoming-card"><div class="dashboard-card-heading"><h2>Próximos descansos</h2></div><div class="upcoming-list" id="upcomingBreaks"><div class="empty-state compact">Sin descansos programados.</div></div></article>
+</div>
+<section class="dashboard-quick-section"><h2>Accesos rápidos</h2><div class="dashboard-grid" id="dashboardCards"></div></section>
+<div class="dashboard-pro-lower-grid"><article class="dashboard-card pro-activity-card"><div class="dashboard-card-heading"><h2>Actividad reciente</h2><button class="text-button" data-section-link="activity" type="button">Ver todas</button></div><div class="activity-list" id="recentActivity"><div class="empty-state">Sin actividad reciente.</div></div></article><article class="dashboard-card fleet-summary-card"><div class="dashboard-card-heading"><h2>Resumen de la flota</h2></div><div class="dashboard-fleet-chart" id="dashboardFleetChart"></div></article></div>
+<div class="dashboard-hidden-status sr-only"><span id="dashboardConnection">En línea</span><span id="dashboardClock">--:--</span><div class="hidden" id="dashboardAvatarLegacy">U</div></div>
+</section>
+<section class="content-section pro-workflow-section" id="breakSection">
+<article class="admin-records-panel" id="adminBreaksPanel">
+<header class="admin-records-header">
+<div class="admin-records-heading">
+<span class="admin-records-icon"><svg><use href="#icon-bed"></use></svg></span>
+<div><span class="eyebrow">CONTROL DE DESCANSOS</span><h1>Descansos de operadores</h1></div>
+</div>
+<div class="admin-records-actions"><span class="badge neutral" id="adminBreaksCount">0 descansos</span><button class="pro-new-button" id="refreshAdminBreaksButton" type="button"><svg><use href="#icon-sync"></use></svg><span>Actualizar</span></button></div>
+</header>
+<span class="admin-records-source-status" id="adminBreaksStatus">Esperando conexion con Firebase...</span>
+<div class="admin-records-filters">
+<label class="field"><span>Buscar</span><input id="adminBreaksSearch" placeholder="Nombre del operador" type="search"/></label>
+<label class="field"><span>Fecha</span><input id="adminBreaksDateFilter" type="date"/></label>
+<label class="field"><span>Operador</span><select id="adminBreaksOperatorFilter"><option value="">Todos los operadores</option></select></label>
+<label class="field"><span>Estado</span><select id="adminBreaksStatusFilter"><option value="">Todos los estados</option><option value="active">En curso</option><option value="completed">Finalizado</option></select></label>
+</div>
+<div class="admin-records-list" id="adminBreaksList"><div class="empty-state">Cargando descansos...</div></div>
+</article>
+<div class="workflow-page-heading">
+<div class="workflow-heading-icon"><svg><use href="#icon-break-pro"></use></svg></div>
+<div><span class="eyebrow">DESCANSO OPERATIVO</span><h1>Gestión de descanso</h1></div>
+<div class="workflow-security"><span class="workflow-security-dot"></span><div><strong>Trazabilidad activa</strong><small>Foto + GPS obligatorios</small></div></div>
+</div>
+<div class="break-pro-grid">
+<article class="workflow-hero-card break-control-card" id="breakStatusVisual">
+<div class="workflow-hero-top"><span class="badge neutral" id="breakBadge">Disponible</span><span class="live-indicator"><i></i> Estado en tiempo real</span></div>
+<div class="break-clock-layout">
+<div class="break-clock-ring"><svg class="break-clock-art"><use href="#icon-break-pro"></use></svg><div class="break-clock-value" id="breakTimer">00:00:00</div></div>
+<div class="break-state-copy"><span class="eyebrow">ESTADO ACTUAL</span><h2 id="breakTitle">Sin descanso activo</h2><p id="breakDescription">Puedes iniciar tu descanso.</p><div class="break-actions"><button class="pro-action-button start" id="startBreakButton" type="button"><span class="action-icon"><svg><use href="#icon-service-start-pro"></use></svg></span><span><strong>Iniciar descanso</strong><small>Capturar foto y GPS</small></span></button><button class="pro-action-button stop" disabled="" id="endBreakButton" type="button"><span class="action-icon"><svg><use href="#icon-service-end-pro"></use></svg></span><span><strong>Finalizar descanso</strong><small>Registrar cierre verificable</small></span></button></div></div>
+</div>
+</article>
+<article class="workflow-side-card verification-card">
+<div class="workflow-card-title"><svg><use href="#icon-check"></use></svg><div><h3>Proceso de validación</h3></div></div>
+<div class="verification-steps"><div class="verification-step"><span><svg><use href="#icon-camera-pro"></use></svg></span><div><strong>1. Evidencia fotográfica</strong><small>Imagen tomada en el momento.</small></div></div><div class="verification-step"><span><svg><use href="#icon-location-pro"></use></svg></span><div><strong>2. Ubicación precisa</strong><small>GPS del dispositivo y acceso al mapa.</small></div></div><div class="verification-step"><span><svg><use href="#icon-clock"></use></svg></span><div><strong>3. Hora certificada</strong><small>Registro local y sincronización con Firebase.</small></div></div></div>
+<div class="workflow-info-note"><svg><use href="#icon-sync"></use></svg><span>También funciona sin conexión. La información se enviará automáticamente al recuperar Internet.</span></div>
+</article>
+</div>
+<article class="workflow-list-card"><div class="workflow-card-title"><svg><use href="#icon-history-pro"></use></svg><div><span class="eyebrow">ÚLTIMOS REGISTROS</span><h3>Historial reciente de descansos</h3></div></div><div class="activity-list pro-activity-list" id="breakRecentList"></div></article>
+</section>
+<section class="content-section pro-workflow-section" id="partSection">
+<div class="workflow-page-heading">
+<div class="workflow-heading-icon"><svg><use href="#icon-part-pro"></use></svg></div>
+<div><span class="eyebrow">PARTE DIARIO</span><h1>Registro operativo del equipo</h1></div>
+<div class="page-actions"><span class="badge neutral" id="partStatus">Borrador</span><button class="pro-new-button" id="newPartButton" type="button"><svg><use href="#icon-plus"></use></svg><span>Nuevo Parte</span></button></div>
+</div>
+<article class="admin-parts-panel" id="adminPartsPanel">
+<header class="admin-parts-header">
+<div class="admin-parts-heading">
+<span class="admin-parts-icon"><svg><use href="#icon-clipboard"></use></svg></span>
+<div><span class="eyebrow">ADMINISTRACIÓN DE PARTES</span><h2>Partes de todos los operadores</h2></div>
+</div>
+<div class="admin-parts-actions"><span class="badge neutral" id="adminPartsCount">0 Partes</span><button class="pro-new-button" id="refreshAdminPartsButton" type="button"><svg><use href="#icon-sync"></use></svg><span>Actualizar</span></button></div>
+</header>
+<div class="admin-parts-status-row"><span class="admin-parts-source-status" id="adminPartsStatus">Esperando conexión con Firebase...</span></div>
+<div class="admin-parts-filters">
+<label class="field"><span>Buscar</span><input id="adminPartsSearch" placeholder="Operador, máquina o establecimiento" type="search"/></label>
+<label class="field"><span>Fecha</span><input id="adminPartsDateFilter" type="date"/></label>
+<label class="field"><span>Operador</span><select id="adminPartsOperatorFilter"><option value="">Todos los operadores</option></select></label>
+</div>
+<div class="admin-parts-list" id="adminPartsList"><div class="empty-state">Cargando Partes...</div></div>
+</article>
+<div class="part-progress-strip"><div class="part-progress-step active"><span>1</span><div><strong>Datos generales</strong><small>Máquina y jornada</small></div></div><i></i><div class="part-progress-step"><span>2</span><div><strong>Horómetros</strong><small>Foto y ubicación</small></div></div><i></i><div class="part-progress-step"><span>3</span><div><strong>Producción</strong><small>Troza y pulpa</small></div></div><i></i><div class="part-progress-step"><span>4</span><div><strong>Guardar</strong><small>Sincronizar Parte</small></div></div></div>
+<article class="workflow-session-card">
+<div class="workflow-session-icon"><svg><use href="#icon-machine-pro"></use></svg></div>
+<div class="part-session-copy"><span class="eyebrow">SESIÓN DE PARTE</span><h3>Selecciona un Parte existente o inicia uno nuevo</h3><p id="partSessionInfo">Todavía no hay Partes para hoy.</p></div>
+<label class="field part-session-select"><span>Partes del día</span><select id="partSessionSelect"><option value="">Nuevo Parte</option></select></label>
+</article>
+<form class="pro-part-form" id="partForm">
+<article class="workflow-form-card">
+<div class="workflow-card-title"><svg><use href="#icon-machine-pro"></use></svg><div><span class="eyebrow">PASO 1</span><h3>Jornada y máquina</h3></div></div>
+<div class="form-grid three pro-form-grid"><label class="field"><span>Establecimiento</span><select id="establishmentInput"><option value="LAS CANIAS">LAS CANIAS</option></select></label><label class="field"><span>Máquina</span><select id="machineInput" required=""><option value="">Seleccionar</option><option>HV 1</option><option>HV 2</option><option>FW 1</option><option>FW 2</option><option>FELLER</option></select></label><label class="field"><span>Fecha</span><input id="partDateInput" required="" type="date"/></label></div>
+</article>
+<article class="workflow-form-card horometer-workflow-card">
+<div class="workflow-card-title"><svg><use href="#icon-horometer-pro"></use></svg><div><span class="eyebrow">PASO 2</span><h3>Registro de horómetros</h3></div></div>
+<div class="stage-list pro-stage-list" id="horometerStages"></div>
+</article>
+<article class="workflow-form-card production-mobile-panel">
+<div class="workflow-card-title production-title-row">
+<span class="production-title-icon"><svg><use href="#icon-production-pro"></use></svg></span>
+<div><span class="eyebrow">PASO 3</span><h3>Producción de la jornada</h3></div>
+</div>
+<div class="production-mobile-list">
+<label class="production-mobile-row" for="trozoInput">
+<span class="production-mobile-icon"><svg><use href="#icon-production-pro"></use></svg></span>
+<span class="production-mobile-copy"><strong>Troza</strong><small>Cantidad producida</small></span>
+<span class="production-mobile-input"><input aria-label="Cantidad de Troza" id="trozoInput" inputmode="decimal" min="0" placeholder="0" step="0.01" type="number"/><em>unid.</em></span>
+</label>
+<label class="production-mobile-row" for="pulpaInput">
+<span class="production-mobile-icon pulp"><svg><use href="#icon-chart"></use></svg></span>
+<span class="production-mobile-copy"><strong>Pulpa</strong><small>Cantidad producida</small></span>
+<span class="production-mobile-input"><input aria-label="Cantidad de Pulpa" id="pulpaInput" inputmode="decimal" min="0" placeholder="0" step="0.01" type="number"/><em>unid.</em></span>
+</label>
+</div>
+<div class="production-save-panel">
+<div class="production-save-copy"><svg><use href="#icon-sync"></use></svg><span><strong>Guardado seguro</strong><small>Disponible sin conexión y con sincronización automática.</small></span></div>
+<button class="pro-save-button production-save-button" id="savePartButton" type="submit"><svg><use href="#icon-check"></use></svg><span>Guardar Parte</span></button>
+</div>
+</article>
+</form>
+</section>
+<section class="content-section pro-workflow-section" id="serviceSection">
+<article class="admin-records-panel" id="adminServicesPanel">
+<header class="admin-records-header">
+<div class="admin-records-heading">
+<span class="admin-records-icon"><svg><use href="#icon-wrench"></use></svg></span>
+<div><span class="eyebrow">CONTROL DE MANTENIMIENTO</span><h1>Servicios mecanicos</h1></div>
+</div>
+<div class="admin-records-actions"><span class="badge neutral" id="adminServicesCount">0 servicios</span><button class="pro-new-button" id="refreshAdminServicesButton" type="button"><svg><use href="#icon-sync"></use></svg><span>Actualizar</span></button></div>
+</header>
+<span class="admin-records-source-status" id="adminServicesStatus">Esperando conexion con Firebase...</span>
+<div class="admin-records-filters admin-service-filters">
+<label class="field"><span>Buscar</span><input id="adminServicesSearch" placeholder="Maquina, operador, mecanico o reparacion" type="search"/></label>
+<label class="field"><span>Fecha</span><input id="adminServicesDateFilter" type="date"/></label>
+<label class="field"><span>Operador</span><select id="adminServicesOperatorFilter"><option value="">Todos los operadores</option></select></label>
+<label class="field"><span>Mecanico</span><select id="adminServicesMechanicFilter"><option value="">Todos los mecanicos</option></select></label>
+<label class="field"><span>Maquina</span><select id="adminServicesMachineFilter"><option value="">Todas las maquinas</option></select></label>
+<label class="field"><span>Estado</span><select id="adminServicesStatusFilter"><option value="">Todos los estados</option><option value="active">En curso</option><option value="completed">Finalizado</option></select></label>
+</div>
+<div class="admin-records-list" id="adminServicesList"><div class="empty-state">Cargando servicios...</div></div>
+</article>
+<div class="workflow-page-heading">
+<div class="workflow-heading-icon"><svg><use href="#icon-wrench-pro"></use></svg></div>
+<div><span class="eyebrow">MANTENIMIENTO</span><h1>Parte de servicio mecánico</h1></div>
+<span class="workflow-security"><span class="workflow-security-dot"></span><div><strong>Edición restringida</strong><small>Mecánico o administrador</small></div></span>
+</div>
+<div class="service-progress-strip"><div class="service-progress-step active"><span>1</span><strong>Seleccionar Parte</strong></div><i></i><div class="service-progress-step"><span>2</span><strong>Iniciar servicio</strong></div><i></i><div class="service-progress-step"><span>3</span><strong>Reparación</strong></div><i></i><div class="service-progress-step"><span>4</span><strong>Finalizar</strong></div></div>
+<article class="workflow-session-card service-part-selector-card">
+<div class="workflow-session-icon"><svg><use href="#icon-machine-pro"></use></svg></div>
+<div class="service-selector-main">
+<label class="field"><span>Parte / operador</span><select id="servicePartSelect"><option value="">Seleccionar Parte disponible</option></select></label>
+<div class="service-parts-helper"><span id="servicePartsStatus">Cargando Partes sincronizados...</span><button class="service-refresh-parts" id="refreshServicePartsButton" type="button"><svg class="ui-icon"><use href="#icon-sync"></use></svg><span>Actualizar</span></button></div>
+</div>
+<div class="service-summary pro-service-summary"><div><span>Máquina</span><strong id="serviceMachine">-</strong></div><div><span>Operador</span><strong id="serviceOperator">-</strong></div></div>
+<button class="pro-new-button service-new-button" disabled="" id="newServiceButton" type="button"><svg><use href="#icon-plus"></use></svg><span>Nuevo servicio</span></button>
+</article>
+<div class="service-pro-grid">
+<article class="workflow-hero-card service-clock-pro-card"><div class="service-clock-icon"><svg><use href="#icon-service-timer-pro"></use></svg></div><span class="eyebrow">RELOJ DE SERVICIO</span><div class="service-pro-timer" id="serviceTimer">00:00:00</div><strong id="serviceStatus">Sin servicio activo</strong><p id="serviceStartedAt">Selecciona un Parte para comenzar.</p><div class="service-live-bar"><span></span></div></article>
+<article class="workflow-form-card service-action-card start-card"><div class="workflow-card-title"><svg><use href="#icon-service-start-pro"></use></svg><div><span class="eyebrow">INICIO</span><h3>Inicio de reparación</h3></div></div><label class="field"><span>Motivo de reparación</span><textarea id="serviceStartReason" maxlength="500" placeholder="Describe la falla o el motivo..." rows="4"></textarea></label><div class="evidence-box pro-evidence-box empty" id="serviceStartEvidence">Foto y ubicación pendientes</div><button class="pro-action-button start full-width" id="startServiceButton" type="button"><span class="action-icon"><svg><use href="#icon-service-start-pro"></use></svg></span><span><strong>Iniciar servicio</strong><small>Comenzar reloj y guardar evidencia</small></span></button></article>
+<article class="workflow-form-card service-action-card end-card"><div class="workflow-card-title"><svg><use href="#icon-service-end-pro"></use></svg><div><span class="eyebrow">FINALIZACIÓN</span><h3>Cierre de reparación</h3></div></div><label class="field"><span>Trabajo realizado</span><textarea id="serviceEndReason" maxlength="500" placeholder="Describe el trabajo, repuestos y resultado..." rows="4"></textarea></label><div class="evidence-box pro-evidence-box empty" id="serviceEndEvidence">Foto y ubicación pendientes</div><button class="pro-action-button stop full-width" disabled="" id="endServiceButton" type="button"><span class="action-icon"><svg><use href="#icon-service-end-pro"></use></svg></span><span><strong>Finalizar servicio</strong><small>Detener reloj y cerrar sesión</small></span></button></article>
+</div>
+<article class="workflow-list-card service-history-card"><div class="workflow-card-title"><svg><use href="#icon-history-pro"></use></svg><div><span class="eyebrow">SERVICIOS ASOCIADOS</span><h3>Historial del Parte</h3></div><span class="badge neutral" id="serviceSessionCount">0 servicios</span></div><div class="service-session-list pro-service-session-list" id="serviceSessionList"><div class="empty-state compact">Selecciona un Parte para ver sus servicios.</div></div></article>
+</section>
+<section class="content-section" id="fuelSection">
+<div class="page-heading"><div><span class="eyebrow">ADMINISTRADOR / MECANICO</span><h1>Carga de combustible</h1></div><span class="secure-chip">Acceso controlado</span></div>
+<div class="fuel-layout">
+<div class="fuel-left-column">
+<article class="panel-card tank-card">
+<div class="panel-heading"><div><span class="eyebrow">TANQUE PRINCIPAL</span><h3>Stock disponible</h3></div><button class="text-button tank-manager-button" data-roles="mechanic,admin" id="editTankButton" type="button"><svg class="ui-icon"><use href="#icon-plus"></use></svg><span>Cargar tanque</span></button></div>
+<div class="tank-level"><div><span>Nivel actual</span><strong id="tankPercent">0%</strong></div><div class="progress-track"><div class="progress-value" id="tankProgress"></div></div></div>
+<div class="tank-metrics"><div><span>Capacidad total</span><strong id="tankCapacity">0 L</strong></div><div><span>Disponible</span><strong id="tankCurrent">0 L</strong></div></div>
+<small id="tankUpdated">Sin datos del tanque.</small>
+</article>
+<article class="panel-card"><div class="panel-heading"><div><span class="eyebrow">CARGAS RECIENTES</span><h3>Ultimas cargas</h3></div></div><div class="activity-list" id="fuelRecentList"></div></article>
+</div>
+<form class="panel-card stack-form" id="fuelForm">
+<div class="panel-heading"><div><span class="eyebrow">NUEVA CARGA</span><h3>Registrar carga de maquina</h3></div></div>
+<label class="field"><span>Maquina</span><select id="fuelMachine" required=""><option value="">Seleccionar</option><option>HV 1</option><option>HV 2</option><option>FW 1</option><option>FW 2</option><option>FELLER</option></select></label>
+<label class="field"><span>Operador relacionado</span><select id="fuelOperator"><option value="">Sin operador seleccionado</option></select></label>
+<label class="field"><span>Litros cargados</span><input id="fuelLiters" inputmode="decimal" min="0.1" required="" step="0.1" type="number"/></label>
+<fieldset class="shift-selector"><legend>Turno de carga</legend><label><input checked="" name="fuelShift" type="radio" value="day"/><span>Diurno</span></label><label><input name="fuelShift" type="radio" value="night"/><span>Nocturno</span></label></fieldset>
+<div class="evidence-box empty" id="fuelPhotoEvidence">Foto obligatoria pendiente</div>
+<button class="secondary-button" id="captureFuelPhotoButton" type="button">Tomar foto</button>
+<button class="primary-button full-width" id="saveFuelButton" type="submit">Registrar carga</button>
+</form>
+</div>
+</section>
+<section class="content-section operator-activity-section" id="activitySection">
+<div class="page-heading activity-page-heading">
+<div><span class="eyebrow">TRAZABILIDAD</span><h1>Actividad</h1></div>
+<label class="activity-date-filter"><svg class="ui-icon"><use href="#icon-calendar"></use></svg><input id="activityDateFilter" type="date"/></label>
+</div>
+<div class="admin-activity-panel hidden" id="adminActivityControls">
+<div class="admin-activity-summary">
+<article><span>Total</span><strong id="adminActivityTotal">0</strong></article>
+<article><span>Partes</span><strong id="adminActivityParts">0</strong></article>
+<article><span>Descansos</span><strong id="adminActivityBreaks">0</strong></article>
+<article><span>Servicios</span><strong id="adminActivityServices">0</strong></article>
+<article><span>Combustible</span><strong id="adminActivityFuel">0</strong></article>
+</div>
+<div class="admin-activity-filters">
+<label class="field"><span>Tipo de registro</span><select id="adminActivityType"><option value="all">Todos</option><option value="part">Partes</option><option value="break">Descansos</option><option value="service">Servicios</option><option value="fuel">Combustible</option></select></label>
+<label class="field"><span>Usuario</span><select id="adminActivityPerson"><option value="">Todos los usuarios</option></select></label>
+<label class="field"><span>Fecha</span><input id="adminActivityDate" type="date"/></label>
+<label class="field admin-activity-search"><span>Buscar</span><input id="adminActivitySearch" placeholder="Operador, mecánico o máquina" type="search"/></label>
+<button class="primary-button compact-button" id="adminActivityRefresh" type="button">Actualizar registros</button>
+</div>
+</div>
+<article class="panel-card operator-activity-card">
+<div class="segmented-tabs" id="operatorActivityTabs" role="tablist"><button class="segmented-tab active" data-activity-tab="parts" type="button"><svg class="ui-icon"><use href="#icon-clipboard"></use></svg><span>Mis Partes</span></button><button class="segmented-tab" data-activity-tab="breaks" type="button"><svg class="ui-icon"><use href="#icon-bed"></use></svg><span>Marcas de descanso</span></button></div>
+<div class="operator-record-list" id="operatorPartsActivity"></div><div class="operator-record-list hidden" id="operatorBreaksActivity"></div><div class="activity-list hidden" id="generalActivityList"></div><div class="hidden" id="activityList"></div>
+</article>
+</section>
+<section class="content-section direct-chat-section" id="chatSection">
+<div class="page-heading chat-page-heading">
+<div><span class="eyebrow">COMUNICACIÓN INTERNA</span><h1>Mensajes</h1></div>
+<span class="secure-chip" id="chatConnectionBadge">Conectando...</span>
+</div>
+<article class="panel-card direct-chat-shell" id="directChatShell">
+<aside aria-label="Usuarios disponibles" class="chat-contacts-panel">
+<header class="chat-contacts-header">
+<div><strong>Contactos</strong><span id="chatDirectoryStatus">Cargando usuarios...</span></div>
+<span class="chat-unread-total hidden" id="chatUnreadTotal">0</span>
+</header>
+<label class="chat-user-search" for="chatUserSearch">
+<svg class="ui-icon"><use href="#icon-search"></use></svg>
+<input autocomplete="off" id="chatUserSearch" placeholder="Buscar por nombre, correo o rol" type="search"/>
+</label>
+<div class="chat-contact-list" id="chatContactList">
+<div class="empty-state compact">Cargando usuarios...</div>
+</div>
+</aside>
+<section aria-label="Conversación seleccionada" class="chat-conversation-panel">
+<header class="chat-conversation-header">
+<button aria-label="Volver a contactos" class="chat-back-button" id="chatBackButton" type="button">
+<svg class="ui-icon"><use href="#icon-arrow-left"></use></svg>
+</button>
+<div class="chat-recipient-avatar" id="chatRecipientAvatar">—</div>
+<div class="chat-recipient-copy">
+<strong id="chatRecipientName">Seleccioná un usuario</strong>
+<span id="chatRecipientMeta">Elegí un contacto para comenzar</span>
+</div>
+<span class="chat-live-status" id="chatStatusText">Sin conversación</span>
+</header>
+<div aria-label="Mensajes privados" aria-live="polite" class="chat-messages direct-chat-messages" id="chatMessages" role="log">
+<div class="chat-welcome-state">
+<span class="chat-welcome-icon"><svg class="ui-icon"><use href="#icon-chat"></use></svg></span>
+<strong>Conversaciones privadas</strong>
+<p>Seleccioná un usuario de la lista para enviarle un mensaje.</p>
+</div>
+</div>
+<form class="chat-composer direct-chat-composer" id="chatForm">
+<label class="chat-input-wrap" for="chatInput">
+<span class="sr-only">Escribir mensaje</span>
+<textarea disabled="" id="chatInput" maxlength="1000" placeholder="Seleccioná un usuario para escribir..." required="" rows="1"></textarea>
+</label>
+<button aria-label="Enviar mensaje" class="primary-button chat-send-button" disabled="" id="chatSendButton" type="submit">
+<svg class="ui-icon"><use href="#icon-send"></use></svg><span>Enviar</span>
+</button>
+</form>
+<p class="chat-offline-note">Los mensajes pendientes se guardan en el dispositivo y se envían al recuperar la conexión.</p>
+</section>
+</article>
+</section>
+<section class="content-section reports-modern-section exact-reports-section" id="reportsSection">
+<div class="page-heading reports-title-row report-page-hero exact-report-hero">
+<div class="report-page-title">
+<span class="eyebrow">CONTROL OPERATIVO EXACTO</span>
+<h1>Reportes por máquina y día</h1>
 
-  <svg class="svg-sprite" aria-hidden="true" focusable="false">
-    <defs>
-      <linearGradient id="proGreen" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#54d479"/><stop offset=".5" stop-color="#119f50"/><stop offset="1" stop-color="#006438"/></linearGradient>
-      <linearGradient id="proGreenSoft" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f5fff8"/><stop offset="1" stop-color="#c7ead4"/></linearGradient>
-      <linearGradient id="proSilver" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff"/><stop offset=".52" stop-color="#dce6e0"/><stop offset="1" stop-color="#9eafa5"/></linearGradient>
-      <radialGradient id="proGlow" cx="32%" cy="22%" r="70%"><stop offset="0" stop-color="#eafff0" stop-opacity=".95"/><stop offset="1" stop-color="#0b8847" stop-opacity="0"/></radialGradient>
-      <filter id="proShadow" x="-40%" y="-40%" width="180%" height="190%"><feDropShadow dx="0" dy="2.2" stdDeviation="2" flood-color="#003b25" flood-opacity=".27"/></filter>
-    </defs>
-    <symbol id="icon-home" viewBox="0 0 24 24"><path d="M3.2 10.8 12 3.7l8.8 7.1v9.1a1.5 1.5 0 0 1-1.5 1.5H4.7a1.5 1.5 0 0 1-1.5-1.5z"/><path d="M9 21.4v-6.7h6v6.7"/></symbol>
-    <symbol id="icon-bed" viewBox="0 0 24 24"><path d="M3 4v17M21 21v-7.7a2.3 2.3 0 0 0-2.3-2.3H8.2A2.2 2.2 0 0 0 6 13.2V21M3 16.5h18"/><path d="M6 11V7.4h5.2A2.8 2.8 0 0 1 14 10.2v.8"/><circle cx="8" cy="8.8" r="1.2"/></symbol>
-    <symbol id="icon-clipboard" viewBox="0 0 24 24"><rect x="4.8" y="4.6" width="14.4" height="17" rx="2.1"/><path d="M8.4 5V3h7.2v2M8.2 9.4h7.6M8.2 13.3h7.6M8.2 17.2h4.8"/><path d="m15 17 1.2 1.2 2.3-2.7"/></symbol>
-    <symbol id="icon-wrench" viewBox="0 0 24 24"><path d="M14.8 6.6a5 5 0 0 0-6.2-5.1L6.3 3.8l3.5 3.5-2.5 2.5-3.5-3.5-2.3 2.3a5 5 0 0 0 6.1 6.2L16.4 23l6.5-6.5-8.1-8.1z"/><circle cx="18.8" cy="18.5" r="1.2"/></symbol>
-    <symbol id="icon-fuel" viewBox="0 0 24 24"><path d="M4.1 22V4.2A2.2 2.2 0 0 1 6.3 2h8.5A2.2 2.2 0 0 1 17 4.2V22M2.8 22h15.4"/><rect x="7" y="5.4" width="7" height="5.8" rx=".8"/><path d="M17 7h2l2.2 2.5v7.7a2.1 2.1 0 1 1-4.2 0v-3.4M19 7v3h2"/></symbol>
-    <symbol id="icon-activity" viewBox="0 0 24 24"><path d="M2 13h4l2.2-7 3.6 13 2.7-9 2.1 5H22"/></symbol>
-    <symbol id="icon-chat" viewBox="0 0 24 24"><path d="M21.4 14.3a5.1 5.1 0 0 1-5.1 5.1H8l-5.3 2.8 1.6-5A8.7 8.7 0 1 1 21.4 14.3z"/><path d="M7.4 10.2h9.2M7.4 14h6.2"/></symbol>
-    <symbol id="icon-search" viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="7.2"/><path d="m16.2 16.2 4.8 4.8"/></symbol>
-    <symbol id="icon-arrow-left" viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6"/></symbol>
-    <symbol id="icon-send" viewBox="0 0 24 24"><path d="m3 3 18 9-18 9 3.5-9z"/><path d="M6.5 12H21"/></symbol>
-    <symbol id="icon-chart" viewBox="0 0 24 24"><path d="M3 21V10.5h3.8V21M10.1 21V4.8h3.8V21M17.2 21v-7.4H21V21M2 21h20"/></symbol>
-    <symbol id="icon-users" viewBox="0 0 24 24"><circle cx="8.5" cy="7.4" r="3.4"/><path d="M2.3 21v-2.1a6.2 6.2 0 0 1 12.4 0V21M15.7 4.4a3.5 3.5 0 0 1 0 6.2M17.2 14.1a5.5 5.5 0 0 1 4.5 5.4V21"/></symbol>
-    <symbol id="icon-menu" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></symbol>
-    <symbol id="icon-calendar" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></symbol>
-    <symbol id="icon-bell" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></symbol>
-    <symbol id="icon-droplet" viewBox="0 0 24 24"><path d="M12 2.4S5 10 5 15a7 7 0 0 0 14 0c0-5-7-12.6-7-12.6z"/><path d="M8.8 16.1a3.6 3.6 0 0 0 3.1 2.2"/></symbol>
-    <symbol id="icon-briefcase" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 12h18M10 12v2h4v-2"/></symbol>
-    <symbol id="icon-tractor" viewBox="0 0 24 24"><circle cx="6.7" cy="18" r="3.1"/><circle cx="18.2" cy="18.2" r="2.2"/><path d="M3.6 15V9h7.6l3 5h4a3 3 0 0 1 3 3v1M11.2 9V4.8h4.3v6.3M7 14.9h8.4"/></symbol>
-    <symbol id="icon-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
-    <symbol id="icon-chevron-right" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
-    <symbol id="icon-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
-    <symbol id="icon-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
-    <symbol id="icon-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
-    <symbol id="icon-sync" viewBox="0 0 24 24"><path d="M20 7h-5V2M4 17h5v5M5.5 8A8 8 0 0 1 19 6l1 1M18.5 16A8 8 0 0 1 5 18l-1-1"/></symbol>
-    <symbol id="icon-logout" viewBox="0 0 24 24"><path d="m10 17 5-5-5-5M15 12H3"/><path d="M14 3h5a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-5"/></symbol>
-    <symbol id="icon-more" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></symbol>
-    <symbol id="icon-map-pin" viewBox="0 0 24 24"><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0z"/><circle cx="12" cy="10" r="2.5"/></symbol>
-    <symbol id="icon-camera" viewBox="0 0 24 24"><path d="M4 7h3l2-3h6l2 3h3a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2z"/><circle cx="12" cy="14" r="4"/></symbol>
-    <symbol id="icon-trash" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 15H6L5 6M10 10v7M14 10v7"/></symbol>
-    <symbol id="icon-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol>
-    <symbol id="icon-calendar-pro" viewBox="0 0 72 72"><g filter="url(#proShadow)"><rect x="10" y="13" width="52" height="48" rx="9" fill="url(#proSilver)" stroke="#087f43" stroke-width="2.5"/><path d="M10 27h52" stroke="#087f43" stroke-width="4"/><rect x="18" y="32" width="8" height="8" rx="1.6" fill="#18a856"/><rect x="32" y="32" width="8" height="8" rx="1.6" fill="#0a8d47"/><rect x="46" y="32" width="8" height="8" rx="1.6" fill="#1ab35c"/><rect x="18" y="45" width="8" height="8" rx="1.6" fill="#0a8d47"/><rect x="32" y="45" width="8" height="8" rx="1.6" fill="#1ab35c"/><rect x="46" y="45" width="8" height="8" rx="1.6" fill="#08723d"/><path d="M22 8v12M50 8v12" stroke="#006b3a" stroke-width="5" stroke-linecap="round"/></g></symbol>
-    <symbol id="icon-wrench-pro" viewBox="0 0 72 72"><g filter="url(#proShadow)"><path d="M46 9c-8-4-18-2-24 5-5 6-5 14-1 20L8 47c-3 3-3 8 0 11l6 6c3 3 8 3 11 0l13-13c6 4 14 4 20-1 7-6 9-16 5-24L51 38l-9-9 12-12z" fill="url(#proGreenSoft)" stroke="#0a7f42" stroke-width="2.4"/><path d="M19 53 43 29" stroke="url(#proGreen)" stroke-width="9" stroke-linecap="round"/><circle cx="17" cy="55" r="3.5" fill="#fff" stroke="#08723d" stroke-width="2"/></g></symbol>
-    <symbol id="icon-droplet-pro" viewBox="0 0 72 72"><g filter="url(#proShadow)"><path d="M36 7S14 32 14 47a22 22 0 0 0 44 0C58 32 36 7 36 7z" fill="url(#proGreen)" stroke="#effff4" stroke-width="3"/><path d="M25 46c1 8 6 12 13 13" fill="none" stroke="#8cf4ae" stroke-width="4" stroke-linecap="round"/><ellipse cx="31" cy="29" rx="7" ry="11" fill="url(#proGlow)"/></g></symbol>
-    <symbol id="icon-hours-pro" viewBox="0 0 72 72"><g filter="url(#proShadow)"><rect x="8" y="44" width="9" height="17" rx="2" fill="#69cb7d"/><rect x="21" y="34" width="9" height="27" rx="2" fill="#36b963"/><rect x="34" y="22" width="9" height="39" rx="2" fill="#129b50"/><rect x="47" y="10" width="9" height="51" rx="2" fill="url(#proGreen)"/><circle cx="52" cy="51" r="14" fill="url(#proSilver)" stroke="#087b42" stroke-width="2.4"/><path d="M52 42v9l6 4" fill="none" stroke="#076f3c" stroke-width="3" stroke-linecap="round"/><circle cx="52" cy="51" r="2" fill="#087b42"/></g></symbol>
-    <symbol id="icon-tank-pro" viewBox="0 0 180 118"><g filter="url(#proShadow)"><path d="M31 30h101c18 0 32 14 32 32v17c0 18-14 32-32 32H31c-8 0-15-7-15-15V45c0-8 7-15 15-15z" fill="url(#proSilver)" stroke="#325b48" stroke-width="2"/><ellipse cx="132" cy="70" rx="32" ry="40" fill="url(#proGreenSoft)" stroke="#2d604a" stroke-width="2"/><ellipse cx="132" cy="70" rx="22" ry="31" fill="#dff4e7" opacity=".7"/><path d="M25 30V19h9v11M49 30V19h9v11M20 22h44" stroke="#2d604a" stroke-width="3" fill="none"/><path d="M22 47h-8M22 60h-8M22 73h-8M22 86h-8" stroke="#4b6f5d" stroke-width="3"/><path d="M19 101 13 115M145 101l7 14M55 107v8M119 107v8" stroke="#244c3a" stroke-width="5" stroke-linecap="round"/><path d="M78 45s-18 19-18 31a18 18 0 0 0 36 0c0-12-18-31-18-31z" fill="url(#proGreen)" stroke="#f2fff6" stroke-width="2.5"/><path d="M70 77c1 6 5 9 10 10" fill="none" stroke="#7df0a2" stroke-width="3" stroke-linecap="round"/></g></symbol>
-
-    <symbol id="icon-break-pro" viewBox="0 0 96 96"><g filter="url(#proShadow)"><ellipse cx="48" cy="78" rx="35" ry="8" fill="#b8c8bf" opacity=".45"/><path d="M23 36h48v25c0 11-9 20-20 20H43c-11 0-20-9-20-20z" fill="url(#proSilver)" stroke="#087b42" stroke-width="2.6"/><path d="M71 42h6c9 0 14 7 14 14s-5 14-14 14h-7" fill="none" stroke="#0b8447" stroke-width="6" stroke-linecap="round"/><path d="M31 49h32" stroke="#55c879" stroke-width="4" stroke-linecap="round" opacity=".8"/><path d="M36 27c-7-8 6-10 0-18M50 27c-7-8 6-10 0-18M64 27c-7-8 6-10 0-18" fill="none" stroke="#18a958" stroke-width="4" stroke-linecap="round"/></g></symbol>
-    <symbol id="icon-part-pro" viewBox="0 0 96 96"><g filter="url(#proShadow)"><rect x="22" y="14" width="54" height="70" rx="10" fill="url(#proSilver)" stroke="#087b42" stroke-width="2.8"/><rect x="34" y="8" width="30" height="14" rx="7" fill="url(#proGreen)"/><path d="M34 38h30M34 50h22M34 62h18" stroke="#178d4b" stroke-width="5" stroke-linecap="round"/><circle cx="67" cy="67" r="17" fill="url(#proGreen)" stroke="#fff" stroke-width="3"/><path d="m59 67 6 6 11-13" fill="none" stroke="#fff" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/></g></symbol>
-    <symbol id="icon-horometer-pro" viewBox="0 0 96 96"><g filter="url(#proShadow)"><circle cx="48" cy="48" r="37" fill="url(#proSilver)" stroke="#087b42" stroke-width="3"/><path d="M25 58a26 26 0 0 1 46 0" fill="none" stroke="#b8cec1" stroke-width="7" stroke-linecap="round"/><path d="M25 58a26 26 0 0 1 29-24" fill="none" stroke="url(#proGreen)" stroke-width="7" stroke-linecap="round"/><path d="M48 49 66 36" stroke="#075f36" stroke-width="5" stroke-linecap="round"/><circle cx="48" cy="49" r="5" fill="#0b8d49"/><rect x="29" y="64" width="38" height="12" rx="4" fill="#eef7f1" stroke="#8ab49b"/><path d="M36 70h24" stroke="#146f42" stroke-width="3" stroke-dasharray="3 3"/></g></symbol>
-    <symbol id="icon-camera-pro" viewBox="0 0 96 96"><g filter="url(#proShadow)"><rect x="13" y="28" width="70" height="50" rx="12" fill="url(#proSilver)" stroke="#087b42" stroke-width="3"/><path d="M29 28 37 16h22l8 12" fill="url(#proGreenSoft)" stroke="#087b42" stroke-width="3"/><circle cx="48" cy="53" r="17" fill="#dff4e7" stroke="#0a8a48" stroke-width="5"/><circle cx="48" cy="53" r="8" fill="url(#proGreen)"/><circle cx="72" cy="39" r="4" fill="#20b05d"/></g></symbol>
-    <symbol id="icon-location-pro" viewBox="0 0 96 96"><g filter="url(#proShadow)"><path d="M48 9c-18 0-33 14-33 32 0 24 33 48 33 48s33-24 33-48C81 23 66 9 48 9z" fill="url(#proGreen)" stroke="#effff4" stroke-width="3"/><circle cx="48" cy="41" r="13" fill="url(#proSilver)"/><circle cx="48" cy="41" r="6" fill="#0a8b48"/></g></symbol>
-    <symbol id="icon-production-pro" viewBox="0 0 96 96"><g filter="url(#proShadow)"><path d="M18 70 42 30l22 40z" fill="#9c6a34" stroke="#69451f" stroke-width="2.5"/><path d="M40 70 62 22l20 48z" fill="#b77b3b" stroke="#6e491f" stroke-width="2.5"/><ellipse cx="30" cy="70" rx="18" ry="9" fill="#d6a26c" stroke="#6d4723" stroke-width="2.5"/><ellipse cx="61" cy="70" rx="21" ry="10" fill="#e2b47f" stroke="#6d4723" stroke-width="2.5"/><circle cx="30" cy="70" r="7" fill="#8b5b2d"/><circle cx="61" cy="70" r="8" fill="#8b5b2d"/><path d="M24 55h13M52 48h16" stroke="#f1cfab" stroke-width="3" stroke-linecap="round"/></g></symbol>
-    <symbol id="icon-machine-pro" viewBox="0 0 96 96"><g filter="url(#proShadow)"><circle cx="26" cy="70" r="14" fill="#32483d"/><circle cx="71" cy="72" r="10" fill="#32483d"/><circle cx="26" cy="70" r="7" fill="url(#proSilver)"/><circle cx="71" cy="72" r="5" fill="url(#proSilver)"/><path d="M16 61V42h31l12 18h15c8 0 14 6 14 14" fill="url(#proGreen)" stroke="#086f3d" stroke-width="3"/><path d="M43 42V24h20v25M49 30h9" fill="url(#proGreenSoft)" stroke="#086f3d" stroke-width="3"/><path d="M10 61h55" stroke="#075f36" stroke-width="4"/></g></symbol>
-    <symbol id="icon-service-timer-pro" viewBox="0 0 96 96"><g filter="url(#proShadow)"><circle cx="48" cy="49" r="35" fill="url(#proSilver)" stroke="#087b42" stroke-width="3"/><path d="M48 27v22l15 9" fill="none" stroke="#0b8246" stroke-width="6" stroke-linecap="round"/><path d="M38 9h20M48 9v8" stroke="#087b42" stroke-width="5" stroke-linecap="round"/><path d="M24 78 12 88M72 78l12 10" stroke="#0a7440" stroke-width="5" stroke-linecap="round"/><circle cx="48" cy="49" r="5" fill="#0e9c51"/></g></symbol>
-    <symbol id="icon-service-start-pro" viewBox="0 0 96 96"><g filter="url(#proShadow)"><circle cx="48" cy="48" r="38" fill="url(#proGreenSoft)" stroke="#0a7d43" stroke-width="3"/><path d="M35 28a17 17 0 0 0-8 23L14 64l18 18 13-13a17 17 0 0 0 23-8L55 48 44 59 33 48l11-11z" fill="url(#proGreen)" stroke="#086d3c" stroke-width="2.5"/><path d="m57 34 17 10-17 10z" fill="#fff"/></g></symbol>
-    <symbol id="icon-service-end-pro" viewBox="0 0 96 96"><g filter="url(#proShadow)"><circle cx="48" cy="48" r="38" fill="url(#proGreen)" stroke="#effff4" stroke-width="3"/><path d="m27 48 14 14 29-32" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></g></symbol>
-    <symbol id="icon-history-pro" viewBox="0 0 96 96"><g filter="url(#proShadow)"><circle cx="50" cy="48" r="34" fill="url(#proSilver)" stroke="#087b42" stroke-width="3"/><path d="M19 24v20h20" fill="none" stroke="#0b914b" stroke-width="6" stroke-linecap="round"/><path d="M22 42a34 34 0 1 0 5-20" fill="none" stroke="#0b914b" stroke-width="6" stroke-linecap="round"/><path d="M50 29v21l14 8" fill="none" stroke="#075f36" stroke-width="5" stroke-linecap="round"/></g></symbol>
-
-    <symbol id="icon-report-fuel-pro" viewBox="0 0 84 84"><g filter="url(#proShadow)"><path d="M18 70V18.5A7.5 7.5 0 0 1 25.5 11h28A7.5 7.5 0 0 1 61 18.5V70" fill="url(#proSilver)" stroke="#087b42" stroke-width="2.6"/><rect x="26" y="20" width="27" height="21" rx="4" fill="#e8fff0" stroke="#0a8245" stroke-width="2.2"/><path d="M31 34c6-7 12-8 17-3" fill="none" stroke="url(#proGreen)" stroke-width="4" stroke-linecap="round"/><path d="M61 25h6l6 8v26a7 7 0 0 1-14 0V48" fill="none" stroke="#087b42" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M67 25v10h6" fill="none" stroke="#0d9b50" stroke-width="3.5"/><rect x="24" y="49" width="31" height="16" rx="5" fill="url(#proGreen)"/><path d="M13 70h55" stroke="#075f36" stroke-width="5" stroke-linecap="round"/><circle cx="39.5" cy="57" r="4" fill="#f5fff8" opacity=".9"/></g></symbol>
-    <symbol id="icon-report-service-pro" viewBox="0 0 84 84"><g filter="url(#proShadow)"><circle cx="42" cy="42" r="30" fill="url(#proGreenSoft)" stroke="#0a8044" stroke-width="2.5"/><path d="M53 18a18 18 0 0 0-21 23L17 56a7 7 0 0 0 0 10l1 1a7 7 0 0 0 10 0l15-15a18 18 0 0 0 23-21L55 42l-9-9z" fill="url(#proSilver)" stroke="#087b42" stroke-width="2.2"/><path d="M24 61 49 36" stroke="url(#proGreen)" stroke-width="8" stroke-linecap="round"/><circle cx="23" cy="62" r="3.3" fill="#fff" stroke="#087b42" stroke-width="2"/><path d="M42 12v7M42 65v7M12 42h7M65 42h7" stroke="#25a95d" stroke-width="3" stroke-linecap="round" opacity=".8"/></g></symbol>
-    <symbol id="icon-report-machine-pro" viewBox="0 0 84 84"><g filter="url(#proShadow)"><path d="M13 54h45l8 8H18z" fill="#d7e5dc"/><path d="M19 49V31h29l9 17h8c5 0 9 4 9 9v5" fill="url(#proGreen)" stroke="#08723d" stroke-width="2.5" stroke-linejoin="round"/><path d="M34 31V17h17v31" fill="url(#proSilver)" stroke="#08723d" stroke-width="2.5"/><path d="M39 22h8v8h-8z" fill="#c9f0d6"/><circle cx="25" cy="61" r="12" fill="url(#proSilver)" stroke="#075f36" stroke-width="3"/><circle cx="25" cy="61" r="5" fill="#0a8e48"/><circle cx="65" cy="62" r="8" fill="url(#proSilver)" stroke="#075f36" stroke-width="3"/><circle cx="65" cy="62" r="3" fill="#0a8e48"/><path d="M15 49h42" stroke="#effff4" stroke-width="3" opacity=".8"/></g></symbol>
-    <symbol id="icon-report-shift-pro" viewBox="0 0 84 84"><g filter="url(#proShadow)"><circle cx="29" cy="31" r="16" fill="#ffd96a" stroke="#e4a91b" stroke-width="2.2"/><path d="M29 7v8M29 47v8M5 31h8M45 31h8M12 14l6 6M40 42l6 6M46 14l-6 6M18 42l-6 6" stroke="#efb522" stroke-width="3.5" stroke-linecap="round"/><path d="M66 29c-2 18-17 29-34 24 6 12 20 19 33 14 14-5 21-20 16-34-3 3-8 5-15 4z" fill="url(#proGreen)" stroke="#08723d" stroke-width="2.5"/><circle cx="60" cy="48" r="2" fill="#d8ffe5"/><circle cx="70" cy="56" r="1.6" fill="#d8ffe5"/></g></symbol>
-  </svg>
-
-  <div id="toastRegion" class="toast-region" aria-live="polite"></div>
-
-  <section id="bootView" class="boot-view">
-    <div class="boot-card">
-      <img src="./logo-original.png" alt="LUBAYD SA">
-      <div class="boot-spinner"></div>
-      <strong>Preparando la aplicacion</strong>
-      <span>Restaurando tu sesion y los datos del dispositivo...</span>
-    </div>
-  </section>
-
-  <section id="authView" class="auth-layout hidden">
-    <div class="auth-brand-panel">
-      <div class="brand-lockup brand-lockup-light">
-        <img src="./logo-original.png" alt="LUBAYD SA" class="brand-logo">
-        <div><strong>LUBAYD SA</strong><span>Gestion de trabajos en campo</span></div>
-      </div>
-      <div class="auth-copy">
-        <span class="eyebrow eyebrow-light">CONTROL OPERATIVO</span>
-        <h1>Control operativo simple, moderno y seguro.</h1>
-        <p>Gestiona la jornada, los partes, el servicio mecanico y el combustible desde cualquier dispositivo.</p>
-      </div>
-      <div class="auth-benefits">
-        <article><span>1</span><div><strong>Trabajo offline</strong><small>Los datos quedan pendientes hasta recuperar Internet.</small></div></article>
-        <article><span>2</span><div><strong>Permisos por rol</strong><small>Operador, mecanico y administrador.</small></div></article>
-        <article><span>3</span><div><strong>Trazabilidad</strong><small>Fotos, ubicacion, hora y usuario responsable.</small></div></article>
-      </div>
-    </div>
-
-    <div class="auth-form-panel">
-      <div class="auth-card">
-        <div class="mobile-brand brand-lockup">
-          <img src="./logo-original.png" alt="LUBAYD SA" class="brand-logo">
-          <div><strong>LUBAYD SA</strong><span>Gestion de trabajos en campo</span></div>
-        </div>
-        <div class="auth-tabs">
-          <button id="loginTab" class="auth-tab active" type="button">Iniciar sesion</button>
-          <button id="registerTab" class="auth-tab" type="button">Crear usuario</button>
-        </div>
-        <div id="authMessage" class="auth-message hidden" role="alert"></div>
-
-        <form id="loginForm" class="auth-form active">
-          <header><span class="eyebrow">BIENVENIDO</span><h2>Ingresa a tu cuenta</h2><p>La sesion queda guardada en este dispositivo.</p></header>
-          <label class="field"><span>Correo electronico</span><input id="loginEmail" type="email" autocomplete="email" required></label>
-          <label class="field"><span>Contraseña</span><input id="loginPassword" type="password" autocomplete="current-password" minlength="6" required></label>
-          <button id="loginButton" class="primary-button" type="submit">Ingresar con Internet</button>
-        </form>
-
-        <section id="offlineLoginPanel" class="offline-login-panel">
-          <div class="offline-login-heading"><span class="offline-badge">SIN INTERNET</span><div><h3>Ingresar sin conexion</h3><p id="offlineLoginHint">Usa el PIN configurado en este dispositivo.</p></div></div>
-          <div class="saved-user-card"><div id="offlineUserAvatar" class="avatar">U</div><div><strong id="offlineUserName">Dispositivo no configurado</strong><span id="offlineUserEmail">Primero ingresa una vez con Internet</span></div></div>
-          <label class="field"><span>PIN offline de 6 numeros</span><input id="offlinePinInput" type="password" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" disabled></label>
-          <button id="offlineLoginButton" class="secondary-button" type="button" disabled>Ingresar sin conexion</button>
-        </section>
-
-        <form id="registerForm" class="auth-form">
-          <header><span class="eyebrow">NUEVO USUARIO</span><h2>Crear cuenta</h2><p>Los nuevos usuarios se crean inicialmente como operadores.</p></header>
-          <label class="field"><span>Nombre y apellido</span><input id="registerName" type="text" maxlength="80" required></label>
-          <label class="field"><span>Correo electronico</span><input id="registerEmail" type="email" required></label>
-          <label class="field"><span>Contraseña</span><input id="registerPassword" type="password" minlength="6" required></label>
-          <label class="field"><span>Repetir contraseña</span><input id="registerPasswordConfirm" type="password" minlength="6" required></label>
-          <button id="registerButton" class="primary-button" type="submit">Crear usuario</button>
-        </form>
-      </div>
-    </div>
-  </section>
-
-  <div id="appView" class="app-shell hidden">
-    <aside id="sidebar" class="sidebar">
-      <div class="sidebar-brand brand-lockup brand-lockup-light">
-        <img src="./logo-original.png" alt="LUBAYD SA" class="brand-logo">
-      </div>
-      <nav class="sidebar-nav">
-        <button class="nav-item active" type="button" data-section="dashboard" data-roles="mechanic,admin"><svg class="ui-icon"><use href="#icon-home"></use></svg><small>Inicio</small></button>
-        <button class="nav-item" type="button" data-section="break" data-roles="operator,admin"><svg class="ui-icon"><use href="#icon-bed"></use></svg><small>Descanso</small></button>
-        <button class="nav-item" type="button" data-section="part" data-roles="operator,admin"><svg class="ui-icon"><use href="#icon-clipboard"></use></svg><small>Parte</small></button>
-        <button class="nav-item" type="button" data-section="service" data-roles="mechanic,admin"><svg class="ui-icon"><use href="#icon-wrench"></use></svg><small>Servicio</small></button>
-        <button class="nav-item" type="button" data-section="fuel" data-roles="mechanic,admin"><svg class="ui-icon"><use href="#icon-fuel"></use></svg><small>Combustible</small></button>
-        <button class="nav-item" type="button" data-section="chat" data-roles="operator,mechanic,admin"><svg class="ui-icon"><use href="#icon-chat"></use></svg><small>Chat</small></button>
-        <button class="nav-item" type="button" data-section="reports" data-roles="admin"><svg class="ui-icon"><use href="#icon-chart"></use></svg><small>Reportes</small></button>
-        <button class="nav-item" type="button" data-section="activity" data-roles="operator,mechanic"><svg class="ui-icon"><use href="#icon-activity"></use></svg><small>Actividad</small></button>
-        <button class="nav-item" type="button" data-section="users" data-roles="admin"><svg class="ui-icon"><use href="#icon-users"></use></svg><small>Usuarios</small></button>
-      </nav>
-      <div class="sidebar-user sidebar-profile-clean">
-        <button id="sidebarProfileButton" class="sidebar-profile-button" type="button" aria-label="Cambiar foto de perfil">
-          <span class="profile-photo-frame profile-photo-small">
-            <img id="sidebarProfileImage" class="profile-photo-image hidden" alt="Foto de perfil">
-            <span id="userAvatar" class="avatar profile-photo-fallback">U</span>
-            <span class="profile-photo-edit"><svg class="ui-icon"><use href="#icon-camera"></use></svg></span>
-          </span>
-          <span class="sidebar-role-copy"><strong id="userRoleBadge" class="role-badge">Operador</strong><small>Editar foto</small></span>
-        </button>
-        <span id="userName" class="sr-only">Usuario</span>
-        <span id="userEmail" class="sr-only">-</span>
-      </div>
-      <div class="sidebar-footer">
-        <div class="connection-pill"><span id="connectionDot" class="status-dot"></span><span id="connectionText">Comprobando</span></div>
-        <div class="sync-pill"><span id="syncText">Sin pendientes</span><strong id="pendingCount" class="hidden">0</strong></div>
-        <button id="syncButton" class="sidebar-button" type="button"><svg class="ui-icon"><use href="#icon-sync"></use></svg><span>Sincronizar ahora</span></button>
-        <button id="lockButton" class="sidebar-button sidebar-logout-button" type="button"><svg class="ui-icon"><use href="#icon-logout"></use></svg><span>Cerrar sesión</span></button>
-        <small>Version 7.0.0</small>
-      </div>
-    </aside>
-
-    <main class="main-content">
-      <header class="topbar pro-topbar">
-        <button id="menuButton" class="icon-button topbar-menu" type="button" aria-label="Abrir menú"><svg class="ui-icon"><use href="#icon-menu"></use></svg></button>
-        <span id="pageTitle" class="sr-only">Inicio</span>
-        <div class="topbar-actions">
-          <button id="topSyncButton" class="notification-button" type="button" aria-label="Sincronizar datos"><svg class="ui-icon"><use href="#icon-bell"></use></svg><span id="topPendingCount" class="notification-count hidden">0</span><span class="sr-only" id="topConnectionText">Comprobando</span><span class="sr-only" id="topSyncText">Sin pendientes</span><span id="topConnectionDot" class="status-dot hidden"></span></button>
-          <button class="notification-button" type="button" data-section-link="chat" aria-label="Abrir chat"><svg class="ui-icon"><use href="#icon-chat"></use></svg></button>
-          <span class="topbar-divider"></span>
-          <button id="topbarProfileButton" class="topbar-profile-control" type="button" aria-label="Cambiar foto de perfil"><span class="profile-photo-frame topbar-profile-frame"><img id="topbarProfileImage" class="profile-photo-image hidden" alt="Foto de perfil"><span id="topbarProfileFallback" class="profile-photo-fallback">U</span></span><span class="topbar-profile-copy"><strong id="topbarRoleName">Operador</strong><small>Perfil de usuario</small></span><svg class="ui-icon"><use href="#icon-chevron-right"></use></svg></button>
-          <button id="topLogoutButton" class="topbar-logout-button" type="button"><svg class="ui-icon"><use href="#icon-logout"></use></svg><span>Cerrar sesión</span></button>
-          <div class="topbar-clock sr-only"><strong id="liveClock">--:--:--</strong></div>
-        </div>
-      </header>
-
-      <section id="dashboardSection" class="content-section active dashboard-section">
-        <div class="mobile-dashboard-hero">
-          <div class="mobile-hero-row"><img src="./logo-original.png" alt="LUBAYD SA"><div class="mobile-hero-actions"><button class="mobile-bell" type="button" id="mobileSyncButton" aria-label="Sincronizar"><svg class="ui-icon"><use href="#icon-bell"></use></svg><span id="mobilePendingCount" class="notification-count hidden">0</span></button><button id="mobileLogoutButton" class="mobile-logout-button" type="button" aria-label="Cerrar sesión"><svg class="ui-icon"><use href="#icon-logout"></use></svg></button></div></div>
-          <div class="mobile-greeting"><button id="mobileProfileButton" class="profile-photo-button mobile-profile-button" type="button" aria-label="Agregar o cambiar foto de perfil"><span class="profile-photo-frame"><img id="mobileProfileImage" class="profile-photo-image hidden" alt="Foto de perfil"><span id="mobileProfileFallback" class="profile-photo-fallback">U</span><span class="profile-photo-edit"><svg class="ui-icon"><use href="#icon-camera"></use></svg></span></span></button><div class="mobile-greeting-copy"><h1 id="mobileGreeting">Hola</h1><div class="operator-greeting-meta"><span class="operator-role-pill">Operador</span><span>Resumen del día</span></div></div><div class="mobile-date"><svg class="ui-icon"><use href="#icon-calendar"></use></svg><span id="mobileDate">-</span></div></div>
-        </div>
-
-        <section id="roleLogoHome" class="role-logo-home" aria-label="Inicio LUBAYD SA">
-          <div class="role-logo-home-card">
-            <img src="./logo-original.png" alt="LUBAYD SA" class="role-logo-home-image">
-          </div>
-        </section>
-
-        <div class="desktop-dashboard-heading pro-dashboard-heading">
-          <div class="dashboard-heading-user"><button id="dashboardProfileButton" class="profile-photo-button dashboard-profile-button" type="button" aria-label="Cambiar foto de perfil"><span class="profile-photo-frame profile-photo-large"><img id="dashboardProfileImage" class="profile-photo-image hidden" alt="Foto de perfil"><span id="dashboardAvatar" class="profile-photo-fallback">U</span><span class="profile-photo-edit"><svg class="ui-icon"><use href="#icon-camera"></use></svg></span></span></button><div><h1 id="dashboardGreeting">Bienvenido</h1><p>Resumen operativo de la flota y recursos</p><span id="dashboardRole" class="role-chip">Operador</span></div></div>
-          <div class="dashboard-date-control"><svg class="ui-icon"><use href="#icon-calendar"></use></svg><span id="liveDate">-</span><svg class="ui-icon chevron"><use href="#icon-chevron-right"></use></svg></div>
-        </div>
-
-        <div id="offlineBanner" class="alert warning hidden"><strong>Trabajando sin conexión</strong><span>Puedes continuar normalmente. Los datos y fotos se sincronizarán al recuperar Internet.</span></div>
-
-        <section id="operatorHomePanel" class="operator-home-panel" aria-label="Inicio del operador">
-          <article class="operator-time-card">
-            <div class="operator-time-copy">
-              <span class="operator-home-eyebrow">JORNADA DE HOY</span>
-              <strong>Hora actual</strong>
-              <div class="operator-home-status-row">
-                <span id="operatorHomeConnection" class="operator-home-status is-online"><i></i> En línea</span>
-                <span id="operatorHomeSyncStatus" class="operator-home-sync">Todo sincronizado</span>
-              </div>
-            </div>
-            <div class="operator-home-time">
-              <strong id="operatorHomeClock">--:--</strong>
-              <span id="operatorHomeDay">Hoy</span>
-            </div>
-          </article>
-
-          <button id="operatorNewPartAction" class="operator-main-action" type="button">
-            <span class="operator-action-icon"><svg class="ui-icon"><use href="#icon-clipboard"></use></svg></span>
-            <span class="operator-action-copy"><small id="operatorMainActionEyebrow">REGISTRO DE JORNADA</small><strong id="operatorMainActionTitle">Crear nuevo Parte</strong><em id="operatorMainActionMeta">Máquina, horómetros y producción</em></span>
-            <svg class="ui-icon operator-action-arrow"><use href="#icon-arrow-right"></use></svg>
-          </button>
-
-          <div class="operator-secondary-actions">
-            <button id="operatorBreakAction" class="operator-secondary-action" type="button">
-              <span><svg class="ui-icon"><use href="#icon-bed"></use></svg></span>
-              <strong id="operatorBreakActionLabel">Descanso</strong>
-              <small id="operatorBreakActionMeta">Iniciar o finalizar</small>
-            </button>
-            <button class="operator-secondary-action" type="button" data-section-link="activity">
-              <span><svg class="ui-icon"><use href="#icon-activity"></use></svg></span>
-              <strong>Mis registros</strong>
-              <small>Partes y descansos</small>
-            </button>
-            <button class="operator-secondary-action" type="button" data-section-link="chat">
-              <span><svg class="ui-icon"><use href="#icon-chat"></use></svg></span>
-              <strong>Mensajes</strong>
-              <small>Comunicación interna</small>
-            </button>
-          </div>
-
-
-          <article class="operator-latest-card">
-            <header>
-              <div><span class="operator-home-eyebrow">ÚLTIMO MOVIMIENTO</span><h3>Actividad reciente</h3></div>
-              <button class="text-button" type="button" data-section-link="activity">Ver historial</button>
-            </header>
-            <div id="operatorLatestActivity" class="operator-latest-content"><div class="operator-latest-empty">Todavía no hay actividad registrada.</div></div>
-          </article>
-        </section>
-
-        <div class="dashboard-metrics pro-dashboard-metrics">
-          <article class="metric-card pro-metric-card"><span class="metric-icon pro-metric-icon"><svg class="pro-icon"><use href="#icon-calendar-pro"></use></svg></span><div><span>Jornadas hoy</span><strong id="metricJourneys">0</strong><small>Completadas</small><i class="metric-progress"><b style="--value:70%"></b></i></div></article>
-          <article class="metric-card pro-metric-card"><span class="metric-icon pro-metric-icon"><svg class="pro-icon"><use href="#icon-wrench-pro"></use></svg></span><div><span>Servicios hoy</span><strong id="metricServices">0</strong><small>Completados</small><i class="metric-progress"><b style="--value:58%"></b></i></div></article>
-          <article class="metric-card pro-metric-card"><span class="metric-icon pro-metric-icon"><svg class="pro-icon"><use href="#icon-droplet-pro"></use></svg></span><div><span>Combustible cargado</span><strong id="metricFuel">0 L</strong><small id="metricFuelTrend">Total del día</small></div></article>
-          <article class="metric-card pro-metric-card"><span class="metric-icon pro-metric-icon"><svg class="pro-icon"><use href="#icon-hours-pro"></use></svg></span><div><span>Horas operadas</span><strong id="metricHours">0 h</strong><small id="metricHoursTrend">Total del día</small></div></article>
-        </div>
-        <div class="dashboard-pro-grid">
-          <article class="dashboard-card pro-tank-card"><div class="dashboard-card-heading"><h2>Estado del tanque principal</h2></div><div class="pro-tank-layout"><svg class="tank-illustration"><use href="#icon-tank-pro"></use></svg><div class="pro-tank-copy"><span>Nivel actual</span><strong id="dashboardTankPercent">0%</strong><small id="dashboardTankRatio">0 L / 0 L</small><dl><div><dt>Volumen</dt><dd id="dashboardTankVolume">0 L</dd></div><div><dt>Capacidad</dt><dd id="dashboardTankCapacity">0 L</dd></div></dl></div></div><div class="pro-level-track"><span id="dashboardTankProgress"></span></div><button class="dashboard-action-button" type="button" data-section-link="fuel"><span>Ver detalle del tanque</span><svg class="ui-icon"><use href="#icon-arrow-right"></use></svg></button><div id="dashboardTankGauge" class="hidden"></div></article>
-          <article class="dashboard-card pro-fuel-chart-card"><div class="dashboard-card-heading"><h2>Flujo de combustible (hoy)</h2><span class="chart-period-chip">Hoy</span></div><div id="dashboardFuelChart" class="dashboard-fuel-chart"></div><div class="dashboard-flow-summary"><span id="flowTankStart">0 L</span><span id="flowLoadedToday">0 L</span><span id="flowTankBalance">0 L</span></div></article>
-          <article class="dashboard-card upcoming-breaks-card pro-upcoming-card"><div class="dashboard-card-heading"><h2>Próximos descansos</h2></div><div id="upcomingBreaks" class="upcoming-list"><div class="empty-state compact">Sin descansos programados.</div></div></article>
-        </div>
-        <section class="dashboard-quick-section"><h2>Accesos rápidos</h2><div id="dashboardCards" class="dashboard-grid"></div></section>
-        <div class="dashboard-pro-lower-grid"><article class="dashboard-card pro-activity-card"><div class="dashboard-card-heading"><h2>Actividad reciente</h2><button class="text-button" type="button" data-section-link="activity">Ver todas</button></div><div id="recentActivity" class="activity-list"><div class="empty-state">Sin actividad reciente.</div></div></article><article class="dashboard-card fleet-summary-card"><div class="dashboard-card-heading"><h2>Resumen de la flota</h2></div><div id="dashboardFleetChart" class="dashboard-fleet-chart"></div></article></div>
-        <div class="dashboard-hidden-status sr-only"><span id="dashboardConnection">En línea</span><span id="dashboardClock">--:--</span><div id="dashboardAvatarLegacy" class="hidden">U</div></div>
-      </section>
-
-      <section id="breakSection" class="content-section pro-workflow-section">
-        <article id="adminBreaksPanel" class="admin-records-panel">
-          <header class="admin-records-header">
-            <div class="admin-records-heading">
-              <span class="admin-records-icon"><svg><use href="#icon-bed"></use></svg></span>
-              <div><span class="eyebrow">CONTROL DE DESCANSOS</span><h1>Descansos de operadores</h1><p>Consulta todas las marcaciones sincronizadas, con fotografia, duracion y ubicacion GPS de inicio y finalizacion.</p></div>
-            </div>
-            <div class="admin-records-actions"><span id="adminBreaksCount" class="badge neutral">0 descansos</span><button id="refreshAdminBreaksButton" class="pro-new-button" type="button"><svg><use href="#icon-sync"></use></svg><span>Actualizar</span></button></div>
-          </header>
-          <span id="adminBreaksStatus" class="admin-records-source-status">Esperando conexion con Firebase...</span>
-          <div class="admin-records-filters">
-            <label class="field"><span>Buscar</span><input id="adminBreaksSearch" type="search" placeholder="Nombre del operador"></label>
-            <label class="field"><span>Fecha</span><input id="adminBreaksDateFilter" type="date"></label>
-            <label class="field"><span>Operador</span><select id="adminBreaksOperatorFilter"><option value="">Todos los operadores</option></select></label>
-            <label class="field"><span>Estado</span><select id="adminBreaksStatusFilter"><option value="">Todos los estados</option><option value="active">En curso</option><option value="completed">Finalizado</option></select></label>
-          </div>
-          <div id="adminBreaksList" class="admin-records-list"><div class="empty-state">Cargando descansos...</div></div>
-        </article>
-        <div class="workflow-page-heading">
-          <div class="workflow-heading-icon"><svg><use href="#icon-break-pro"></use></svg></div>
-          <div><span class="eyebrow">DESCANSO OPERATIVO</span><h1>Gestión de descanso</h1><p>Registra inicio y finalización con fotografía, hora exacta y ubicación GPS.</p></div>
-          <div class="workflow-security"><span class="workflow-security-dot"></span><div><strong>Trazabilidad activa</strong><small>Foto + GPS obligatorios</small></div></div>
-        </div>
-        <div class="break-pro-grid">
-          <article id="breakStatusVisual" class="workflow-hero-card break-control-card">
-            <div class="workflow-hero-top"><span id="breakBadge" class="badge neutral">Disponible</span><span class="live-indicator"><i></i> Estado en tiempo real</span></div>
-            <div class="break-clock-layout">
-              <div class="break-clock-ring"><svg class="break-clock-art"><use href="#icon-break-pro"></use></svg><div class="break-clock-value" id="breakTimer">00:00:00</div></div>
-              <div class="break-state-copy"><span class="eyebrow">ESTADO ACTUAL</span><h2 id="breakTitle">Sin descanso activo</h2><p id="breakDescription">Puedes iniciar tu descanso.</p><div class="break-actions"><button id="startBreakButton" class="pro-action-button start" type="button"><span class="action-icon"><svg><use href="#icon-service-start-pro"></use></svg></span><span><strong>Iniciar descanso</strong><small>Capturar foto y GPS</small></span></button><button id="endBreakButton" class="pro-action-button stop" type="button" disabled><span class="action-icon"><svg><use href="#icon-service-end-pro"></use></svg></span><span><strong>Finalizar descanso</strong><small>Registrar cierre verificable</small></span></button></div></div>
-            </div>
-          </article>
-          <article class="workflow-side-card verification-card">
-            <div class="workflow-card-title"><svg><use href="#icon-check"></use></svg><div><h3>Proceso de validación</h3><p>La marcación se completa en tres pasos.</p></div></div>
-            <div class="verification-steps"><div class="verification-step"><span><svg><use href="#icon-camera-pro"></use></svg></span><div><strong>1. Evidencia fotográfica</strong><small>Imagen tomada en el momento.</small></div></div><div class="verification-step"><span><svg><use href="#icon-location-pro"></use></svg></span><div><strong>2. Ubicación precisa</strong><small>GPS del dispositivo y acceso al mapa.</small></div></div><div class="verification-step"><span><svg><use href="#icon-clock"></use></svg></span><div><strong>3. Hora certificada</strong><small>Registro local y sincronización con Firebase.</small></div></div></div>
-            <div class="workflow-info-note"><svg><use href="#icon-sync"></use></svg><span>También funciona sin conexión. La información se enviará automáticamente al recuperar Internet.</span></div>
-          </article>
-        </div>
-        <article class="workflow-list-card"><div class="workflow-card-title"><svg><use href="#icon-history-pro"></use></svg><div><span class="eyebrow">ÚLTIMOS REGISTROS</span><h3>Historial reciente de descansos</h3></div></div><div id="breakRecentList" class="activity-list pro-activity-list"></div></article>
-      </section>
-
-      <section id="partSection" class="content-section pro-workflow-section">
-        <div class="workflow-page-heading">
-          <div class="workflow-heading-icon"><svg><use href="#icon-part-pro"></use></svg></div>
-          <div><span class="eyebrow">PARTE DIARIO</span><h1>Registro operativo del equipo</h1><p>Un Parte por operador, máquina y fecha, con evidencias verificables en cada lectura.</p></div>
-          <div class="page-actions"><span id="partStatus" class="badge neutral">Borrador</span><button id="newPartButton" class="pro-new-button" type="button"><svg><use href="#icon-plus"></use></svg><span>Nuevo Parte</span></button></div>
-        </div>
-
-        <article id="adminPartsPanel" class="admin-parts-panel">
-          <header class="admin-parts-header">
-            <div class="admin-parts-heading">
-              <span class="admin-parts-icon"><svg><use href="#icon-clipboard"></use></svg></span>
-              <div><span class="eyebrow">ADMINISTRACIÓN DE PARTES</span><h2>Partes de todos los operadores</h2><p>Consulta los Partes sincronizados en Firebase y los registros heredados de versiones anteriores.</p></div>
-            </div>
-            <div class="admin-parts-actions"><span id="adminPartsCount" class="badge neutral">0 Partes</span><button id="refreshAdminPartsButton" class="pro-new-button" type="button"><svg><use href="#icon-sync"></use></svg><span>Actualizar</span></button></div>
-          </header>
-          <div class="admin-parts-status-row"><span id="adminPartsStatus" class="admin-parts-source-status">Esperando conexión con Firebase...</span></div>
-          <div class="admin-parts-filters">
-            <label class="field"><span>Buscar</span><input id="adminPartsSearch" type="search" placeholder="Operador, máquina o establecimiento"></label>
-            <label class="field"><span>Fecha</span><input id="adminPartsDateFilter" type="date"></label>
-            <label class="field"><span>Operador</span><select id="adminPartsOperatorFilter"><option value="">Todos los operadores</option></select></label>
-          </div>
-          <div id="adminPartsList" class="admin-parts-list"><div class="empty-state">Cargando Partes...</div></div>
-        </article>
-        <div class="part-progress-strip"><div class="part-progress-step active"><span>1</span><div><strong>Datos generales</strong><small>Máquina y jornada</small></div></div><i></i><div class="part-progress-step"><span>2</span><div><strong>Horómetros</strong><small>Foto y ubicación</small></div></div><i></i><div class="part-progress-step"><span>3</span><div><strong>Producción</strong><small>Troza y pulpa</small></div></div><i></i><div class="part-progress-step"><span>4</span><div><strong>Guardar</strong><small>Sincronizar Parte</small></div></div></div>
-        <article class="workflow-session-card">
-          <div class="workflow-session-icon"><svg><use href="#icon-machine-pro"></use></svg></div>
-          <div class="part-session-copy"><span class="eyebrow">SESIÓN DE PARTE</span><h3>Selecciona un Parte existente o inicia uno nuevo</h3><p id="partSessionInfo">Todavía no hay Partes para hoy.</p></div>
-          <label class="field part-session-select"><span>Partes del día</span><select id="partSessionSelect"><option value="">Nuevo Parte</option></select></label>
-        </article>
-        <form id="partForm" class="pro-part-form">
-          <article class="workflow-form-card">
-            <div class="workflow-card-title"><svg><use href="#icon-machine-pro"></use></svg><div><span class="eyebrow">PASO 1</span><h3>Jornada y máquina</h3><p>La combinación operador, fecha y máquina identifica el Parte.</p></div></div>
-            <div class="form-grid three pro-form-grid"><label class="field"><span>Establecimiento</span><select id="establishmentInput"><option value="LAS CANIAS">LAS CANIAS</option></select></label><label class="field"><span>Máquina</span><select id="machineInput" required><option value="">Seleccionar</option><option>HV 1</option><option>HV 2</option><option>FW 1</option><option>FW 2</option><option>FELLER</option></select></label><label class="field"><span>Fecha</span><input id="partDateInput" type="date" required></label></div>
-          </article>
-          <article class="workflow-form-card horometer-workflow-card">
-            <div class="workflow-card-title"><svg><use href="#icon-horometer-pro"></use></svg><div><span class="eyebrow">PASO 2</span><h3>Registro de horómetros</h3><p>Guarda cada lectura por separado. Una vez enviada, no podrá modificarse; el GPS es opcional.</p></div></div>
-            <div id="horometerStages" class="stage-list pro-stage-list"></div>
-          </article>
-          <article class="workflow-form-card production-mobile-panel">
-            <div class="workflow-card-title production-title-row">
-              <span class="production-title-icon"><svg><use href="#icon-production-pro"></use></svg></span>
-              <div><span class="eyebrow">PASO 3</span><h3>Producción de la jornada</h3><p>Ingresa las cantidades realizadas para el Parte seleccionado.</p></div>
-            </div>
-            <div class="production-mobile-list">
-              <label class="production-mobile-row" for="trozoInput">
-                <span class="production-mobile-icon"><svg><use href="#icon-production-pro"></use></svg></span>
-                <span class="production-mobile-copy"><strong>Troza</strong><small>Cantidad producida</small></span>
-                <span class="production-mobile-input"><input id="trozoInput" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0" aria-label="Cantidad de Troza"><em>unid.</em></span>
-              </label>
-              <label class="production-mobile-row" for="pulpaInput">
-                <span class="production-mobile-icon pulp"><svg><use href="#icon-chart"></use></svg></span>
-                <span class="production-mobile-copy"><strong>Pulpa</strong><small>Cantidad producida</small></span>
-                <span class="production-mobile-input"><input id="pulpaInput" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0" aria-label="Cantidad de Pulpa"><em>unid.</em></span>
-              </label>
-            </div>
-            <div class="production-save-panel">
-              <div class="production-save-copy"><svg><use href="#icon-sync"></use></svg><span><strong>Guardado seguro</strong><small>Disponible sin conexión y con sincronización automática.</small></span></div>
-              <button id="savePartButton" class="pro-save-button production-save-button" type="submit"><svg><use href="#icon-check"></use></svg><span>Guardar Parte</span></button>
-            </div>
-          </article>
-        </form>
-      </section>
-
-      <section id="serviceSection" class="content-section pro-workflow-section">
-        <article id="adminServicesPanel" class="admin-records-panel">
-          <header class="admin-records-header">
-            <div class="admin-records-heading">
-              <span class="admin-records-icon"><svg><use href="#icon-wrench"></use></svg></span>
-              <div><span class="eyebrow">CONTROL DE MANTENIMIENTO</span><h1>Servicios mecanicos</h1><p>Consulta todos los servicios registrados por los mecanicos, incluyendo motivo, trabajo realizado, duracion, fotografias y ubicaciones.</p></div>
-            </div>
-            <div class="admin-records-actions"><span id="adminServicesCount" class="badge neutral">0 servicios</span><button id="refreshAdminServicesButton" class="pro-new-button" type="button"><svg><use href="#icon-sync"></use></svg><span>Actualizar</span></button></div>
-          </header>
-          <span id="adminServicesStatus" class="admin-records-source-status">Esperando conexion con Firebase...</span>
-          <div class="admin-records-filters admin-service-filters">
-            <label class="field"><span>Buscar</span><input id="adminServicesSearch" type="search" placeholder="Maquina, operador, mecanico o reparacion"></label>
-            <label class="field"><span>Fecha</span><input id="adminServicesDateFilter" type="date"></label>
-            <label class="field"><span>Operador</span><select id="adminServicesOperatorFilter"><option value="">Todos los operadores</option></select></label>
-            <label class="field"><span>Mecanico</span><select id="adminServicesMechanicFilter"><option value="">Todos los mecanicos</option></select></label>
-            <label class="field"><span>Maquina</span><select id="adminServicesMachineFilter"><option value="">Todas las maquinas</option></select></label>
-            <label class="field"><span>Estado</span><select id="adminServicesStatusFilter"><option value="">Todos los estados</option><option value="active">En curso</option><option value="completed">Finalizado</option></select></label>
-          </div>
-          <div id="adminServicesList" class="admin-records-list"><div class="empty-state">Cargando servicios...</div></div>
-        </article>
-        <div class="workflow-page-heading">
-          <div class="workflow-heading-icon"><svg><use href="#icon-wrench-pro"></use></svg></div>
-          <div><span class="eyebrow">MANTENIMIENTO</span><h1>Parte de servicio mecánico</h1><p>Cada reparación se registra como una sesión independiente asociada al Parte del operador.</p></div>
-          <span class="workflow-security"><span class="workflow-security-dot"></span><div><strong>Edición restringida</strong><small>Mecánico o administrador</small></div></span>
-        </div>
-        <div class="service-progress-strip"><div class="service-progress-step active"><span>1</span><strong>Seleccionar Parte</strong></div><i></i><div class="service-progress-step"><span>2</span><strong>Iniciar servicio</strong></div><i></i><div class="service-progress-step"><span>3</span><strong>Reparación</strong></div><i></i><div class="service-progress-step"><span>4</span><strong>Finalizar</strong></div></div>
-        <article class="workflow-session-card service-part-selector-card">
-          <div class="workflow-session-icon"><svg><use href="#icon-machine-pro"></use></svg></div>
-          <div class="service-selector-main">
-            <label class="field"><span>Parte / operador</span><select id="servicePartSelect"><option value="">Seleccionar Parte disponible</option></select></label>
-            <div class="service-parts-helper"><span id="servicePartsStatus">Cargando Partes sincronizados...</span><button id="refreshServicePartsButton" class="service-refresh-parts" type="button"><svg class="ui-icon"><use href="#icon-sync"></use></svg><span>Actualizar</span></button></div>
-          </div>
-          <div class="service-summary pro-service-summary"><div><span>Máquina</span><strong id="serviceMachine">-</strong></div><div><span>Operador</span><strong id="serviceOperator">-</strong></div></div>
-          <button id="newServiceButton" class="pro-new-button service-new-button" type="button" disabled><svg><use href="#icon-plus"></use></svg><span>Nuevo servicio</span></button>
-        </article>
-        <div class="service-pro-grid">
-          <article class="workflow-hero-card service-clock-pro-card"><div class="service-clock-icon"><svg><use href="#icon-service-timer-pro"></use></svg></div><span class="eyebrow">RELOJ DE SERVICIO</span><div id="serviceTimer" class="service-pro-timer">00:00:00</div><strong id="serviceStatus">Sin servicio activo</strong><p id="serviceStartedAt">Selecciona un Parte para comenzar.</p><div class="service-live-bar"><span></span></div></article>
-          <article class="workflow-form-card service-action-card start-card"><div class="workflow-card-title"><svg><use href="#icon-service-start-pro"></use></svg><div><span class="eyebrow">INICIO</span><h3>Inicio de reparación</h3><p>Describe la falla y registra evidencia inicial.</p></div></div><label class="field"><span>Motivo de reparación</span><textarea id="serviceStartReason" rows="4" maxlength="500" placeholder="Describe la falla o el motivo..."></textarea></label><div id="serviceStartEvidence" class="evidence-box pro-evidence-box empty">Foto y ubicación pendientes</div><button id="startServiceButton" class="pro-action-button start full-width" type="button"><span class="action-icon"><svg><use href="#icon-service-start-pro"></use></svg></span><span><strong>Iniciar servicio</strong><small>Comenzar reloj y guardar evidencia</small></span></button></article>
-          <article class="workflow-form-card service-action-card end-card"><div class="workflow-card-title"><svg><use href="#icon-service-end-pro"></use></svg><div><span class="eyebrow">FINALIZACIÓN</span><h3>Cierre de reparación</h3><p>Detalla el trabajo y registra evidencia final.</p></div></div><label class="field"><span>Trabajo realizado</span><textarea id="serviceEndReason" rows="4" maxlength="500" placeholder="Describe el trabajo, repuestos y resultado..."></textarea></label><div id="serviceEndEvidence" class="evidence-box pro-evidence-box empty">Foto y ubicación pendientes</div><button id="endServiceButton" class="pro-action-button stop full-width" type="button" disabled><span class="action-icon"><svg><use href="#icon-service-end-pro"></use></svg></span><span><strong>Finalizar servicio</strong><small>Detener reloj y cerrar sesión</small></span></button></article>
-        </div>
-        <article class="workflow-list-card service-history-card"><div class="workflow-card-title"><svg><use href="#icon-history-pro"></use></svg><div><span class="eyebrow">SERVICIOS ASOCIADOS</span><h3>Historial del Parte</h3><p>Cada inicio y finalización queda guardado como una sesión independiente.</p></div><span id="serviceSessionCount" class="badge neutral">0 servicios</span></div><div id="serviceSessionList" class="service-session-list pro-service-session-list"><div class="empty-state compact">Selecciona un Parte para ver sus servicios.</div></div></article>
-      </section>
-
-      <section id="fuelSection" class="content-section">
-        <div class="page-heading"><div><span class="eyebrow">ADMINISTRADOR / MECANICO</span><h1>Carga de combustible</h1><p>Disponible para administradores y mecanicos.</p></div><span class="secure-chip">Acceso controlado</span></div>
-        <div class="fuel-layout">
-          <div class="fuel-left-column">
-            <article class="panel-card tank-card">
-              <div class="panel-heading"><div><span class="eyebrow">TANQUE PRINCIPAL</span><h3>Stock disponible</h3></div><button id="editTankButton" class="text-button tank-manager-button" type="button" data-roles="mechanic,admin"><svg class="ui-icon"><use href="#icon-plus"></use></svg><span>Cargar tanque</span></button></div>
-              <div class="tank-level"><div><span>Nivel actual</span><strong id="tankPercent">0%</strong></div><div class="progress-track"><div id="tankProgress" class="progress-value"></div></div></div>
-              <div class="tank-metrics"><div><span>Capacidad total</span><strong id="tankCapacity">0 L</strong></div><div><span>Disponible</span><strong id="tankCurrent">0 L</strong></div></div>
-              <small id="tankUpdated">Sin datos del tanque.</small>
-            </article>
-            <article class="panel-card"><div class="panel-heading"><div><span class="eyebrow">CARGAS RECIENTES</span><h3>Ultimas cargas</h3></div></div><div id="fuelRecentList" class="activity-list"></div></article>
-          </div>
-          <form id="fuelForm" class="panel-card stack-form">
-            <div class="panel-heading"><div><span class="eyebrow">NUEVA CARGA</span><h3>Registrar carga de maquina</h3></div></div>
-            <label class="field"><span>Maquina</span><select id="fuelMachine" required><option value="">Seleccionar</option><option>HV 1</option><option>HV 2</option><option>FW 1</option><option>FW 2</option><option>FELLER</option></select></label>
-            <label class="field"><span>Operador relacionado</span><select id="fuelOperator"><option value="">Sin operador seleccionado</option></select></label>
-            <label class="field"><span>Litros cargados</span><input id="fuelLiters" type="number" inputmode="decimal" min="0.1" step="0.1" required></label>
-            <fieldset class="shift-selector"><legend>Turno de carga</legend><label><input type="radio" name="fuelShift" value="day" checked><span>Diurno</span></label><label><input type="radio" name="fuelShift" value="night"><span>Nocturno</span></label></fieldset>
-            <div id="fuelPhotoEvidence" class="evidence-box empty">Foto obligatoria pendiente</div>
-            <button id="captureFuelPhotoButton" class="secondary-button" type="button">Tomar foto</button>
-            <button id="saveFuelButton" class="primary-button full-width" type="submit">Registrar carga</button>
-          </form>
-        </div>
-      </section>
-      <section id="activitySection" class="content-section operator-activity-section">
-        <div class="page-heading activity-page-heading">
-          <div><span class="eyebrow">TRAZABILIDAD</span><h1>Actividad</h1><p>Operadores ven sus registros; el administrador consulta toda la operación.</p></div>
-          <label class="activity-date-filter"><svg class="ui-icon"><use href="#icon-calendar"></use></svg><input id="activityDateFilter" type="date"></label>
-        </div>
-        <div id="adminActivityControls" class="admin-activity-panel hidden">
-          <div class="admin-activity-summary">
-            <article><span>Total</span><strong id="adminActivityTotal">0</strong></article>
-            <article><span>Partes</span><strong id="adminActivityParts">0</strong></article>
-            <article><span>Descansos</span><strong id="adminActivityBreaks">0</strong></article>
-            <article><span>Servicios</span><strong id="adminActivityServices">0</strong></article>
-            <article><span>Combustible</span><strong id="adminActivityFuel">0</strong></article>
-          </div>
-          <div class="admin-activity-filters">
-            <label class="field"><span>Tipo de registro</span><select id="adminActivityType"><option value="all">Todos</option><option value="part">Partes</option><option value="break">Descansos</option><option value="service">Servicios</option><option value="fuel">Combustible</option></select></label>
-            <label class="field"><span>Usuario</span><select id="adminActivityPerson"><option value="">Todos los usuarios</option></select></label>
-            <label class="field"><span>Fecha</span><input id="adminActivityDate" type="date"></label>
-            <label class="field admin-activity-search"><span>Buscar</span><input id="adminActivitySearch" type="search" placeholder="Operador, mecánico o máquina"></label>
-            <button id="adminActivityRefresh" class="primary-button compact-button" type="button">Actualizar registros</button>
-          </div>
-        </div>
-        <article class="panel-card operator-activity-card">
-          <div id="operatorActivityTabs" class="segmented-tabs" role="tablist"><button class="segmented-tab active" type="button" data-activity-tab="parts"><svg class="ui-icon"><use href="#icon-clipboard"></use></svg><span>Mis Partes</span></button><button class="segmented-tab" type="button" data-activity-tab="breaks"><svg class="ui-icon"><use href="#icon-bed"></use></svg><span>Marcas de descanso</span></button></div>
-          <div id="operatorPartsActivity" class="operator-record-list"></div><div id="operatorBreaksActivity" class="operator-record-list hidden"></div><div id="generalActivityList" class="activity-list hidden"></div><div id="activityList" class="hidden"></div>
-        </article>
-      </section>
-
-      <section id="chatSection" class="content-section direct-chat-section">
-        <div class="page-heading chat-page-heading">
-          <div><span class="eyebrow">COMUNICACIÓN INTERNA</span><h1>Mensajes</h1><p>Busca un usuario y mantené conversaciones privadas en tiempo real.</p></div>
-          <span id="chatConnectionBadge" class="secure-chip">Conectando...</span>
-        </div>
-
-        <article id="directChatShell" class="panel-card direct-chat-shell">
-          <aside class="chat-contacts-panel" aria-label="Usuarios disponibles">
-            <header class="chat-contacts-header">
-              <div><strong>Contactos</strong><span id="chatDirectoryStatus">Cargando usuarios...</span></div>
-              <span id="chatUnreadTotal" class="chat-unread-total hidden">0</span>
-            </header>
-            <label class="chat-user-search" for="chatUserSearch">
-              <svg class="ui-icon"><use href="#icon-search"></use></svg>
-              <input id="chatUserSearch" type="search" autocomplete="off" placeholder="Buscar por nombre, correo o rol">
-            </label>
-            <div id="chatContactList" class="chat-contact-list">
-              <div class="empty-state compact">Cargando usuarios...</div>
-            </div>
-          </aside>
-
-          <section class="chat-conversation-panel" aria-label="Conversación seleccionada">
-            <header class="chat-conversation-header">
-              <button id="chatBackButton" class="chat-back-button" type="button" aria-label="Volver a contactos">
-                <svg class="ui-icon"><use href="#icon-arrow-left"></use></svg>
-              </button>
-              <div id="chatRecipientAvatar" class="chat-recipient-avatar">—</div>
-              <div class="chat-recipient-copy">
-                <strong id="chatRecipientName">Seleccioná un usuario</strong>
-                <span id="chatRecipientMeta">Elegí un contacto para comenzar</span>
-              </div>
-              <span id="chatStatusText" class="chat-live-status">Sin conversación</span>
-            </header>
-
-            <div id="chatMessages" class="chat-messages direct-chat-messages" role="log" aria-live="polite" aria-label="Mensajes privados">
-              <div class="chat-welcome-state">
-                <span class="chat-welcome-icon"><svg class="ui-icon"><use href="#icon-chat"></use></svg></span>
-                <strong>Conversaciones privadas</strong>
-                <p>Seleccioná un usuario de la lista para enviarle un mensaje.</p>
-              </div>
-            </div>
-
-            <form id="chatForm" class="chat-composer direct-chat-composer">
-              <label class="chat-input-wrap" for="chatInput">
-                <span class="sr-only">Escribir mensaje</span>
-                <textarea id="chatInput" rows="1" maxlength="1000" placeholder="Seleccioná un usuario para escribir..." disabled required></textarea>
-              </label>
-              <button id="chatSendButton" class="primary-button chat-send-button" type="submit" disabled aria-label="Enviar mensaje">
-                <svg class="ui-icon"><use href="#icon-send"></use></svg><span>Enviar</span>
-              </button>
-            </form>
-            <p class="chat-offline-note">Los mensajes pendientes se guardan en el dispositivo y se envían al recuperar la conexión.</p>
-          </section>
-        </article>
-      </section>
-      <section id="reportsSection" class="content-section reports-modern-section exact-reports-section">
-        <div class="page-heading reports-title-row report-page-hero exact-report-hero">
-          <div class="report-page-title">
-            <span class="eyebrow">CONTROL OPERATIVO EXACTO</span>
-            <h1>Reportes por máquina y día</h1>
-            <p>Producción de horómetro, combustible utilizado y horas de servicio por máquina y día, calculados directamente desde los registros operativos.</p>
-          </div>
-          <div class="report-heading-actions">
-            <span id="reportsConnectionBadge" class="secure-chip">Sin cargar</span>
-            <button id="refreshReportsButton" class="primary-button compact-button" type="button"><svg class="ui-icon"><use href="#icon-sync"></use></svg><span>Actualizar datos</span></button>
-          </div>
-        </div>
-
-        <article class="panel-card reports-filter-bar exact-report-filter-card">
-          <div class="report-filter-grid exact-report-filters">
-            <label class="field"><span>Desde</span><input id="reportDateFrom" type="date"></label>
-            <label class="field"><span>Hasta</span><input id="reportDateTo" type="date"></label>
-            <label class="field"><span>Máquina</span><select id="reportMachine"><option value="">Todas las máquinas</option></select></label>
-            <button id="applyReportsButton" class="primary-button report-filter-button" type="button"><svg class="ui-icon"><use href="#icon-search"></use></svg><span>Aplicar filtros</span></button>
-            <button id="clearReportsButton" class="secondary-button report-filter-button" type="button">Restablecer</button>
-          </div>
-          <div class="report-source-line"><span id="reportsLastUpdated">Todavía no se cargaron datos.</span><small>Tramo 1 = descanso − inicial · Tramo 2 = final − post descanso · Total diario = final − inicial.</small></div>
-        </article>
-
-        <div class="report-kpi-grid exact-report-kpis">
-          <article class="report-kpi-card exact-kpi-card hours-total">
-            <span class="report-kpi-icon premium-icon"><svg class="report-pro-icon"><use href="#icon-horometer-pro"></use></svg></span>
-            <div><small>Producción total del día</small><strong id="reportOperatingHours">0 h</strong><span id="reportOperatingDetail">Final − inicial</span></div>
-          </article>
-          <article class="report-kpi-card exact-kpi-card pre-break">
-            <span class="report-kpi-icon premium-icon"><svg class="ui-icon"><use href="#icon-clock"></use></svg></span>
-            <div><small>Primer tramo</small><strong id="reportPreBreakHours">0 h</strong><span>Descanso − inicial</span></div>
-          </article>
-          <article class="report-kpi-card exact-kpi-card post-break">
-            <span class="report-kpi-icon premium-icon"><svg class="ui-icon"><use href="#icon-activity"></use></svg></span>
-            <div><small>Segundo tramo</small><strong id="reportPostBreakHours">0 h</strong><span>Final − post descanso</span></div>
-          </article>
-          <article class="report-kpi-card exact-kpi-card fuel-daily">
-            <span class="report-kpi-icon premium-icon"><svg class="report-pro-icon"><use href="#icon-report-fuel-pro"></use></svg></span>
-            <div><small>Litros por día</small><strong id="reportFuelPerDay">0 L</strong><span id="reportFuelPerDayDetail">Promedio diario general</span></div>
-          </article>
-          <article class="report-kpi-card exact-kpi-card service-hours">
-            <span class="report-kpi-icon premium-icon"><svg class="report-pro-icon"><use href="#icon-report-service-pro"></use></svg></span>
-            <div><small>Horas de servicio</small><strong id="reportServiceHours">0 h</strong><span id="reportServiceDetail">0 servicios finalizados</span></div>
-          </article>
-        </div>
-
-        <article class="panel-card report-chart-card exact-report-card horometer-report-card">
-          <div class="panel-heading exact-report-heading">
-            <div class="report-chart-heading"><span class="mini-report-icon"><svg class="report-pro-icon"><use href="#icon-horometer-pro"></use></svg></span><div><span class="eyebrow">HORÓMETROS</span><h3>Producción de horómetro por máquina y día</h3><p>Muestra el primer tramo, el segundo tramo y el total diario calculado desde el horómetro inicial hasta el final.</p></div></div>
-            <span id="horometerDailyCount" class="badge neutral">0 filas</span>
-          </div>
-          <div id="horometerDailyMachineChart" class="exact-segment-chart"><div class="empty-state">Sin datos.</div></div>
-        </article>
-
-        <div class="exact-report-grid two-columns">
-          <article class="panel-card report-chart-card exact-report-card">
-            <div class="panel-heading exact-report-heading"><div class="report-chart-heading"><span class="mini-report-icon"><svg class="report-pro-icon"><use href="#icon-report-fuel-pro"></use></svg></span><div><span class="eyebrow">COMBUSTIBLE</span><h3>Litros por máquina y día</h3><p>Suma exacta de las cargas registradas para cada máquina.</p></div></div></div>
-            <div id="fuelByMachineDayChart" class="exact-bar-list"></div>
-          </article>
-          <article class="panel-card report-chart-card exact-report-card">
-            <div class="panel-heading exact-report-heading"><div class="report-chart-heading"><span class="mini-report-icon"><svg class="ui-icon"><use href="#icon-chart"></use></svg></span><div><span class="eyebrow">TOTAL GENERAL</span><h3>Combustible total por día</h3><p>Total diario de litros de todas las máquinas.</p></div></div></div>
-            <div id="fuelDailyTotalChart" class="svg-chart"></div>
-          </article>
-        </div>
-
-        <article class="panel-card report-chart-card exact-report-card">
-          <div class="panel-heading exact-report-heading"><div class="report-chart-heading"><span class="mini-report-icon"><svg class="report-pro-icon"><use href="#icon-report-service-pro"></use></svg></span><div><span class="eyebrow">MANTENIMIENTO</span><h3>Horas de servicio por máquina y día</h3><p>Duración real entre el inicio y la finalización de cada servicio.</p></div></div></div>
-          <div id="serviceByMachineDayChart" class="exact-bar-list"></div>
-        </article>
-
-        <article class="panel-card report-table-card exact-detail-card">
-          <div class="panel-heading"><div><span class="eyebrow">DETALLE DE HORÓMETROS</span><h3>Lecturas y producción diaria</h3><p>Primer tramo, segundo tramo y total del día calculado como horómetro final menos horómetro inicial.</p></div><span id="horometerTableCount" class="badge neutral">0 registros</span></div>
-          <div id="horometerDailyTable" class="report-table-wrap"><div class="empty-state">Sin datos.</div></div>
-        </article>
-
-        <div class="exact-report-grid two-columns detail-tables-grid">
-          <article class="panel-card report-table-card exact-detail-card">
-            <div class="panel-heading"><div><span class="eyebrow">DETALLE DE COMBUSTIBLE</span><h3>Consumo diario por máquina</h3></div><span id="fuelTableCount" class="badge neutral">0 registros</span></div>
-            <div id="fuelDailyTable" class="report-table-wrap"><div class="empty-state">Sin datos.</div></div>
-          </article>
-          <article class="panel-card report-table-card exact-detail-card">
-            <div class="panel-heading"><div><span class="eyebrow">DETALLE DE SERVICIOS</span><h3>Horas diarias por máquina</h3></div><span id="serviceTableCount" class="badge neutral">0 registros</span></div>
-            <div id="serviceDailyTable" class="report-table-wrap"><div class="empty-state">Sin datos.</div></div>
-          </article>
-        </div>
-      </section>
-
-      <section id="usersSection" class="content-section">
-        <div class="page-heading"><div><span class="eyebrow">ADMINISTRACIÓN</span><h1>Usuarios, fotos y permisos</h1><p>Asigna roles y carga una foto para identificar a cada integrante.</p></div></div>
-        <article class="panel-card"><div id="usersList" class="users-list"><div class="empty-state">Cargando usuarios...</div></div></article>
-        <article class="panel-card maintenance-card">
-          <div class="panel-heading"><div><span class="eyebrow danger-eyebrow">MANTENIMIENTO</span><h3>Limpiar datos de prueba</h3><p>Elimina registros operativos de Firebase y ordena a todos los dispositivos borrar sus copias locales al volver a conectarse.</p></div><span class="secure-chip danger-chip">Solo administrador</span></div>
-          <div class="maintenance-options">
-            <label><input id="cleanupParts" type="checkbox" checked><span><strong>Partes diarios</strong><small>Incluye horómetros y producción.</small></span></label>
-            <label><input id="cleanupServices" type="checkbox" checked><span><strong>Servicios mecánicos</strong><small>Incluye sesiones asociadas a Partes.</small></span></label>
-            <label><input id="cleanupFuel" type="checkbox" checked><span><strong>Cargas de combustible</strong><small>Elimina el historial de cargas.</small></span></label>
-            <label><input id="cleanupTank" type="checkbox"><span><strong>Reiniciar tanque a 0 L</strong><small>Conserva la capacidad configurada.</small></span></label>
-          </div>
-          <div class="maintenance-confirm">
-            <label class="field"><span>Escribe ELIMINAR para confirmar</span><input id="cleanupConfirmInput" type="text" autocomplete="off" placeholder="ELIMINAR"></label>
-            <button id="cleanupDataButton" class="danger-button" type="button" disabled><svg class="ui-icon"><use href="#icon-trash"></use></svg><span>Limpiar datos seleccionados</span></button>
-          </div>
-          <p class="maintenance-warning">Esta acción no elimina usuarios, roles, PIN offline ni mensajes del chat.</p>
-        </article>
-      </section>
-    </main>
-    <nav class="mobile-bottom-nav" aria-label="Navegación móvil">
-      <button class="mobile-nav-item" type="button" data-section="dashboard" data-roles="mechanic"><svg class="ui-icon"><use href="#icon-home"></use></svg><small>Inicio</small></button>
-      <button class="mobile-nav-item" type="button" data-section="break" data-roles="operator,admin"><svg class="ui-icon"><use href="#icon-bed"></use></svg><small>Descanso</small></button>
-      <button class="mobile-nav-item" type="button" data-section="part" data-roles="operator,admin"><svg class="ui-icon"><use href="#icon-clipboard"></use></svg><small>Parte</small></button>
-      <button class="mobile-nav-item" type="button" data-section="activity" data-roles="operator"><svg class="ui-icon"><use href="#icon-activity"></use></svg><small>Actividad</small></button>
-      <button class="mobile-nav-item" type="button" data-section="service" data-roles="mechanic,admin"><svg class="ui-icon"><use href="#icon-wrench"></use></svg><small>Servicio</small></button>
-      <button class="mobile-nav-item" type="button" data-section="fuel" data-roles="mechanic,admin"><svg class="ui-icon"><use href="#icon-fuel"></use></svg><small>Tanque</small></button>
-      <button class="mobile-nav-item" type="button" data-section="reports" data-roles="none"><svg class="ui-icon"><use href="#icon-chart"></use></svg><small>Reportes</small></button>
-      <button class="mobile-nav-item" type="button" data-section="chat" data-roles="operator,mechanic"><svg class="ui-icon"><use href="#icon-chat"></use></svg><small>Chat</small></button>
-      <button id="mobileMoreButton" class="mobile-nav-item" type="button" data-roles="operator,mechanic,admin"><svg class="ui-icon"><use href="#icon-menu"></use></svg><small>Más</small></button>
-    </nav>
-  </div>
-
-
-  <div id="recordDetailModal" class="modal record-detail-modal hidden" role="dialog" aria-modal="true" aria-labelledby="recordDetailTitle">
-    <div class="modal-backdrop" data-close-record-detail></div>
-    <article class="record-detail-dialog">
-      <header class="record-detail-header">
-        <div><span class="eyebrow">CONSULTA DE REGISTRO</span><h2 id="recordDetailTitle">Detalle</h2><p>Vista de solo lectura. El registro no puede modificarse desde esta pantalla.</p></div>
-        <button class="icon-button record-detail-close" type="button" data-close-record-detail aria-label="Cerrar detalle">×</button>
-      </header>
-      <div id="recordDetailBody" class="record-detail-body"></div>
-      <footer class="record-detail-footer"><button class="secondary-button" type="button" data-close-record-detail>Cerrar</button></footer>
-    </article>
-  </div>
-
-  <div id="captureModal" class="modal hidden" role="dialog" aria-modal="true">
-    <div class="modal-backdrop" data-close-modal></div>
-    <div class="capture-dialog">
-      <header><div><span class="eyebrow">EVIDENCIA</span><h2 id="captureTitle">Foto y ubicacion</h2><p id="captureSubtitle">Completa los datos requeridos.</p></div><button class="icon-button" type="button" data-close-modal>×</button></header>
-      <div class="capture-grid">
-        <section class="capture-card">
-          <h3>Fotografia</h3>
-          <div id="capturePreview" class="capture-preview"><span>Sin foto</span></div>
-          <label class="primary-button file-button">Tomar foto<input id="captureFileInput" type="file" accept="image/*" capture="environment"></label>
-        </section>
-        <section id="captureGpsCard" class="capture-card gps-capture-card">
-          <div class="capture-card-heading">
-            <h3>Ubicacion GPS</h3>
-            <span id="captureGpsRequirement" class="gps-optional-badge">Opcional</span>
-          </div>
-          <div id="captureGpsStatus" class="gps-status" aria-live="polite">Pendiente</div>
-          <p id="captureGpsHelp" class="gps-help">Intentaremos obtener la ubicacion. Si no hay señal GPS, podras guardar igualmente.</p>
-          <div class="gps-action-grid">
-            <button id="captureGpsButton" class="secondary-button" type="button">Reintentar GPS</button>
-            <button id="captureGpsSkipButton" class="text-button gps-skip-button" type="button">Continuar sin ubicacion</button>
-          </div>
-          <a id="captureMapLink" class="text-button hidden" target="_blank" rel="noopener">Ver en mapa</a>
-        </section>
-      </div>
-      <footer><button id="confirmCaptureButton" class="primary-button" type="button" disabled>Confirmar evidencia</button></footer>
-    </div>
-  </div>
-
-  <div id="pinModal" class="modal hidden" role="dialog" aria-modal="true">
-    <div class="modal-backdrop"></div>
-    <div class="pin-dialog"><span class="eyebrow">ACCESO SIN INTERNET</span><h2>Configura tu PIN offline</h2><p>El PIN permite abrir esta aplicacion sin Internet en este dispositivo.</p><label class="field"><span>PIN de 6 numeros</span><input id="pinInput" type="password" inputmode="numeric" maxlength="6"></label><label class="field"><span>Repetir PIN</span><input id="pinConfirm" type="password" inputmode="numeric" maxlength="6"></label><div id="pinError" class="auth-message hidden"></div><button id="savePinButton" class="primary-button" type="button">Guardar PIN</button><button id="skipPinButton" class="text-button" type="button">Configurar mas tarde</button></div>
-  </div>
-
-  <div id="tankModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="tankModalTitle">
-    <div class="modal-backdrop" data-close-tank></div>
-    <div class="pin-dialog tank-management-dialog">
-      <header class="tank-dialog-header">
-        <span class="tank-dialog-icon"><svg class="ui-icon"><use href="#icon-fuel"></use></svg></span>
-        <div><span class="eyebrow">TANQUE PRINCIPAL</span><h2 id="tankModalTitle">Cargar combustible</h2><p id="tankModalHint">Agrega combustible al tanque principal sin alterar los registros de máquinas.</p></div>
-      </header>
-      <div class="tank-dialog-summary">
-        <div><span>Disponible</span><strong id="tankModalCurrent">0 L</strong></div>
-        <div><span>Capacidad</span><strong id="tankModalCapacity">0 L</strong></div>
-      </div>
-      <section class="tank-refill-panel">
-        <label class="field"><span>Litros que ingresan al tanque</span><input id="tankLoadInput" type="number" inputmode="decimal" min="0.1" step="0.1" placeholder="Ej.: 2.500"></label>
-        <p id="tankLoadResult" class="tank-load-result">El nuevo saldo se calculará automáticamente.</p>
-        <button id="addTankFuelButton" class="primary-button full-width" type="button"><svg class="ui-icon"><use href="#icon-plus"></use></svg><span>Agregar combustible</span></button>
-      </section>
-      <section id="tankAdjustmentPanel" class="tank-adjustment-panel">
-        <div class="tank-adjustment-heading"><strong>Ajuste administrativo</strong><small>Disponible para administradores. El mecánico solo puede cargar combustible.</small></div>
-        <label class="field"><span>Capacidad total en litros</span><input id="tankCapacityInput" type="number" min="1" step="1"></label>
-        <label class="field"><span>Saldo disponible en litros</span><input id="tankCurrentInput" type="number" min="0" step="0.1"></label>
-        <button id="saveTankButton" class="secondary-button full-width" type="button">Guardar ajuste</button>
-      </section>
-      <button class="text-button tank-cancel-button" type="button" data-close-tank>Cancelar</button>
-    </div>
-  </div>
-
-  <input id="profilePhotoInput" class="hidden" type="file" accept="image/*">
-
-  <div id="processingOverlay" class="processing-overlay hidden"><div class="processing-card"><div class="boot-spinner"></div><strong id="processingTitle">Guardando...</strong><span id="processingMessage">No cierres la aplicacion.</span></div></div>
-
-  <script defer src="./offline-db.js?v=7.0.0"></script>
-  <script defer src="./sync-manager.js?v=7.0.0"></script>
-  <script defer src="./app.js?v=7.0.0"></script>
-  <script>
+</div>
+<div class="report-heading-actions">
+<span class="secure-chip" id="reportsConnectionBadge">Sin cargar</span>
+<button class="primary-button compact-button" id="refreshReportsButton" type="button"><svg class="ui-icon"><use href="#icon-sync"></use></svg><span>Actualizar datos</span></button>
+</div>
+</div>
+<article class="panel-card reports-filter-bar exact-report-filter-card">
+<div class="report-filter-grid exact-report-filters">
+<label class="field"><span>Desde</span><input id="reportDateFrom" type="date"/></label>
+<label class="field"><span>Hasta</span><input id="reportDateTo" type="date"/></label>
+<label class="field"><span>Máquina</span><select id="reportMachine"><option value="">Todas las máquinas</option></select></label>
+<button class="primary-button report-filter-button" id="applyReportsButton" type="button"><svg class="ui-icon"><use href="#icon-search"></use></svg><span>Aplicar filtros</span></button>
+<button class="secondary-button report-filter-button" id="clearReportsButton" type="button">Restablecer</button>
+</div>
+<div class="report-source-line"><span id="reportsLastUpdated">Todavía no se cargaron datos.</span><small>Tramo 1 = descanso − inicial · Tramo 2 = final − post descanso · Total diario = final − inicial.</small></div>
+</article>
+<div class="report-kpi-grid exact-report-kpis">
+<article class="report-kpi-card exact-kpi-card hours-total">
+<span class="report-kpi-icon premium-icon"><svg class="report-pro-icon"><use href="#icon-horometer-pro"></use></svg></span>
+<div><small>Producción total del día</small><strong id="reportOperatingHours">0 h</strong><span id="reportOperatingDetail">Final − inicial</span></div>
+</article>
+<article class="report-kpi-card exact-kpi-card pre-break">
+<span class="report-kpi-icon premium-icon"><svg class="ui-icon"><use href="#icon-clock"></use></svg></span>
+<div><small>Primer tramo</small><strong id="reportPreBreakHours">0 h</strong><span>Descanso − inicial</span></div>
+</article>
+<article class="report-kpi-card exact-kpi-card post-break">
+<span class="report-kpi-icon premium-icon"><svg class="ui-icon"><use href="#icon-activity"></use></svg></span>
+<div><small>Segundo tramo</small><strong id="reportPostBreakHours">0 h</strong><span>Final − post descanso</span></div>
+</article>
+<article class="report-kpi-card exact-kpi-card fuel-daily">
+<span class="report-kpi-icon premium-icon"><svg class="report-pro-icon"><use href="#icon-report-fuel-pro"></use></svg></span>
+<div><small>Litros por día</small><strong id="reportFuelPerDay">0 L</strong><span id="reportFuelPerDayDetail">Promedio diario general</span></div>
+</article>
+<article class="report-kpi-card exact-kpi-card service-hours">
+<span class="report-kpi-icon premium-icon"><svg class="report-pro-icon"><use href="#icon-report-service-pro"></use></svg></span>
+<div><small>Horas de servicio</small><strong id="reportServiceHours">0 h</strong><span id="reportServiceDetail">0 servicios finalizados</span></div>
+</article>
+</div>
+<article class="panel-card report-chart-card exact-report-card horometer-report-card">
+<div class="panel-heading exact-report-heading">
+<div class="report-chart-heading"><span class="mini-report-icon"><svg class="report-pro-icon"><use href="#icon-horometer-pro"></use></svg></span><div><span class="eyebrow">HORÓMETROS</span><h3>Producción de horómetro por máquina y día</h3></div></div>
+<span class="badge neutral" id="horometerDailyCount">0 filas</span>
+</div>
+<div class="exact-segment-chart" id="horometerDailyMachineChart"><div class="empty-state">Sin datos.</div></div>
+</article>
+<div class="exact-report-grid two-columns">
+<article class="panel-card report-chart-card exact-report-card">
+<div class="panel-heading exact-report-heading"><div class="report-chart-heading"><span class="mini-report-icon"><svg class="report-pro-icon"><use href="#icon-report-fuel-pro"></use></svg></span><div><span class="eyebrow">COMBUSTIBLE</span><h3>Litros por máquina y día</h3></div></div></div>
+<div class="exact-bar-list" id="fuelByMachineDayChart"></div>
+</article>
+<article class="panel-card report-chart-card exact-report-card">
+<div class="panel-heading exact-report-heading"><div class="report-chart-heading"><span class="mini-report-icon"><svg class="ui-icon"><use href="#icon-chart"></use></svg></span><div><span class="eyebrow">TOTAL GENERAL</span><h3>Combustible total por día</h3></div></div></div>
+<div class="svg-chart" id="fuelDailyTotalChart"></div>
+</article>
+</div>
+<article class="panel-card report-chart-card exact-report-card">
+<div class="panel-heading exact-report-heading"><div class="report-chart-heading"><span class="mini-report-icon"><svg class="report-pro-icon"><use href="#icon-report-service-pro"></use></svg></span><div><span class="eyebrow">MANTENIMIENTO</span><h3>Horas de servicio por máquina y día</h3></div></div></div>
+<div class="exact-bar-list" id="serviceByMachineDayChart"></div>
+</article>
+<article class="panel-card report-table-card exact-detail-card">
+<div class="panel-heading"><div><span class="eyebrow">DETALLE DE HORÓMETROS</span><h3>Lecturas y producción diaria</h3></div><span class="badge neutral" id="horometerTableCount">0 registros</span></div>
+<div class="report-table-wrap" id="horometerDailyTable"><div class="empty-state">Sin datos.</div></div>
+</article>
+<div class="exact-report-grid two-columns detail-tables-grid">
+<article class="panel-card report-table-card exact-detail-card">
+<div class="panel-heading"><div><span class="eyebrow">DETALLE DE COMBUSTIBLE</span><h3>Consumo diario por máquina</h3></div><span class="badge neutral" id="fuelTableCount">0 registros</span></div>
+<div class="report-table-wrap" id="fuelDailyTable"><div class="empty-state">Sin datos.</div></div>
+</article>
+<article class="panel-card report-table-card exact-detail-card">
+<div class="panel-heading"><div><span class="eyebrow">DETALLE DE SERVICIOS</span><h3>Horas diarias por máquina</h3></div><span class="badge neutral" id="serviceTableCount">0 registros</span></div>
+<div class="report-table-wrap" id="serviceDailyTable"><div class="empty-state">Sin datos.</div></div>
+</article>
+</div>
+</section>
+<section class="content-section" id="usersSection">
+<div class="page-heading"><div><span class="eyebrow">ADMINISTRACIÓN</span><h1>Usuarios, fotos y permisos</h1></div></div>
+<article class="panel-card"><div class="users-list" id="usersList"><div class="empty-state">Cargando usuarios...</div></div></article>
+<article class="panel-card maintenance-card">
+<div class="panel-heading"><div><span class="eyebrow danger-eyebrow">MANTENIMIENTO</span><h3>Limpiar datos de prueba</h3></div><span class="secure-chip danger-chip">Solo administrador</span></div>
+<div class="maintenance-options">
+<label><input checked="" id="cleanupParts" type="checkbox"/><span><strong>Partes diarios</strong><small>Incluye horómetros y producción.</small></span></label>
+<label><input checked="" id="cleanupServices" type="checkbox"/><span><strong>Servicios mecánicos</strong><small>Incluye sesiones asociadas a Partes.</small></span></label>
+<label><input checked="" id="cleanupFuel" type="checkbox"/><span><strong>Cargas de combustible</strong><small>Elimina el historial de cargas.</small></span></label>
+<label><input id="cleanupTank" type="checkbox"/><span><strong>Reiniciar tanque a 0 L</strong><small>Conserva la capacidad configurada.</small></span></label>
+</div>
+<div class="maintenance-confirm">
+<label class="field"><span>Escribe ELIMINAR para confirmar</span><input autocomplete="off" id="cleanupConfirmInput" placeholder="ELIMINAR" type="text"/></label>
+<button class="danger-button" disabled="" id="cleanupDataButton" type="button"><svg class="ui-icon"><use href="#icon-trash"></use></svg><span>Limpiar datos seleccionados</span></button>
+</div>
+<p class="maintenance-warning">Esta acción no elimina usuarios, roles, PIN offline ni mensajes del chat.</p>
+</article>
+</section>
+</main>
+<nav aria-label="Navegación móvil" class="mobile-bottom-nav">
+<button class="mobile-nav-item" data-roles="mechanic" data-section="dashboard" type="button"><svg class="ui-icon"><use href="#icon-home"></use></svg><small>Inicio</small></button>
+<button class="mobile-nav-item" data-roles="operator,admin" data-section="break" type="button"><svg class="ui-icon"><use href="#icon-bed"></use></svg><small>Descanso</small></button>
+<button class="mobile-nav-item" data-roles="operator,admin" data-section="part" type="button"><svg class="ui-icon"><use href="#icon-clipboard"></use></svg><small>Parte</small></button>
+<button class="mobile-nav-item" data-roles="operator" data-section="activity" type="button"><svg class="ui-icon"><use href="#icon-activity"></use></svg><small>Actividad</small></button>
+<button class="mobile-nav-item" data-roles="mechanic,admin" data-section="service" type="button"><svg class="ui-icon"><use href="#icon-wrench"></use></svg><small>Servicio</small></button>
+<button class="mobile-nav-item" data-roles="mechanic,admin" data-section="fuel" type="button"><svg class="ui-icon"><use href="#icon-fuel"></use></svg><small>Tanque</small></button>
+<button class="mobile-nav-item" data-roles="none" data-section="reports" type="button"><svg class="ui-icon"><use href="#icon-chart"></use></svg><small>Reportes</small></button>
+<button class="mobile-nav-item" data-roles="operator,mechanic" data-section="chat" type="button"><svg class="ui-icon"><use href="#icon-chat"></use></svg><small>Chat</small></button>
+<button class="mobile-nav-item" data-roles="operator,mechanic,admin" id="mobileMoreButton" type="button"><svg class="ui-icon"><use href="#icon-menu"></use></svg><small>Más</small></button>
+</nav>
+</div>
+<div aria-labelledby="recordDetailTitle" aria-modal="true" class="modal record-detail-modal hidden" id="recordDetailModal" role="dialog">
+<div class="modal-backdrop" data-close-record-detail=""></div>
+<article class="record-detail-dialog">
+<header class="record-detail-header">
+<div><span class="eyebrow">CONSULTA DE REGISTRO</span><h2 id="recordDetailTitle">Detalle</h2></div>
+<button aria-label="Cerrar detalle" class="icon-button record-detail-close" data-close-record-detail="" type="button">×</button>
+</header>
+<div class="record-detail-body" id="recordDetailBody"></div>
+<footer class="record-detail-footer"><button class="secondary-button" data-close-record-detail="" type="button">Cerrar</button></footer>
+</article>
+</div>
+<div aria-modal="true" class="modal hidden" id="captureModal" role="dialog">
+<div class="modal-backdrop" data-close-modal=""></div>
+<div class="capture-dialog">
+<header><div><span class="eyebrow">EVIDENCIA</span><h2 id="captureTitle">Foto y ubicacion</h2><p id="captureSubtitle">Completa los datos requeridos.</p></div><button class="icon-button" data-close-modal="" type="button">×</button></header>
+<div class="capture-grid">
+<section class="capture-card">
+<h3>Fotografia</h3>
+<div class="capture-preview" id="capturePreview"><span>Sin foto</span></div>
+<label class="primary-button file-button">Tomar foto<input accept="image/*" capture="environment" id="captureFileInput" type="file"/></label>
+</section>
+<section class="capture-card gps-capture-card" id="captureGpsCard">
+<div class="capture-card-heading">
+<h3>Ubicacion GPS</h3>
+<span class="gps-optional-badge" id="captureGpsRequirement">Opcional</span>
+</div>
+<div aria-live="polite" class="gps-status" id="captureGpsStatus">Pendiente</div>
+<p class="gps-help" id="captureGpsHelp">Intentaremos obtener la ubicacion. Si no hay señal GPS, podras guardar igualmente.</p>
+<div class="gps-action-grid">
+<button class="secondary-button" id="captureGpsButton" type="button">Reintentar GPS</button>
+<button class="text-button gps-skip-button" id="captureGpsSkipButton" type="button">Continuar sin ubicacion</button>
+</div>
+<a class="text-button hidden" id="captureMapLink" rel="noopener" target="_blank">Ver en mapa</a>
+</section>
+</div>
+<footer><button class="primary-button" disabled="" id="confirmCaptureButton" type="button">Confirmar evidencia</button></footer>
+</div>
+</div>
+<div aria-modal="true" class="modal hidden" id="pinModal" role="dialog">
+<div class="modal-backdrop"></div>
+<div class="pin-dialog"><span class="eyebrow">ACCESO SIN INTERNET</span><h2>Configura tu PIN offline</h2><p>El PIN permite abrir esta aplicacion sin Internet en este dispositivo.</p><label class="field"><span>PIN de 6 numeros</span><input id="pinInput" inputmode="numeric" maxlength="6" type="password"/></label><label class="field"><span>Repetir PIN</span><input id="pinConfirm" inputmode="numeric" maxlength="6" type="password"/></label><div class="auth-message hidden" id="pinError"></div><button class="primary-button" id="savePinButton" type="button">Guardar PIN</button><button class="text-button" id="skipPinButton" type="button">Configurar mas tarde</button></div>
+</div>
+<div aria-labelledby="tankModalTitle" aria-modal="true" class="modal hidden" id="tankModal" role="dialog">
+<div class="modal-backdrop" data-close-tank=""></div>
+<div class="pin-dialog tank-management-dialog">
+<header class="tank-dialog-header">
+<span class="tank-dialog-icon"><svg class="ui-icon"><use href="#icon-fuel"></use></svg></span>
+<div><span class="eyebrow">TANQUE PRINCIPAL</span><h2 id="tankModalTitle">Cargar combustible</h2><p id="tankModalHint">Agrega combustible al tanque principal sin alterar los registros de máquinas.</p></div>
+</header>
+<div class="tank-dialog-summary">
+<div><span>Disponible</span><strong id="tankModalCurrent">0 L</strong></div>
+<div><span>Capacidad</span><strong id="tankModalCapacity">0 L</strong></div>
+</div>
+<section class="tank-refill-panel">
+<label class="field"><span>Litros que ingresan al tanque</span><input id="tankLoadInput" inputmode="decimal" min="0.1" placeholder="Ej.: 2.500" step="0.1" type="number"/></label>
+<p class="tank-load-result" id="tankLoadResult">El nuevo saldo se calculará automáticamente.</p>
+<button class="primary-button full-width" id="addTankFuelButton" type="button"><svg class="ui-icon"><use href="#icon-plus"></use></svg><span>Agregar combustible</span></button>
+</section>
+<section class="tank-adjustment-panel" id="tankAdjustmentPanel">
+<div class="tank-adjustment-heading"><strong>Ajuste administrativo</strong><small>Disponible para administradores. El mecánico solo puede cargar combustible.</small></div>
+<label class="field"><span>Capacidad total en litros</span><input id="tankCapacityInput" min="1" step="1" type="number"/></label>
+<label class="field"><span>Saldo disponible en litros</span><input id="tankCurrentInput" min="0" step="0.1" type="number"/></label>
+<button class="secondary-button full-width" id="saveTankButton" type="button">Guardar ajuste</button>
+</section>
+<button class="text-button tank-cancel-button" data-close-tank="" type="button">Cancelar</button>
+</div>
+</div>
+<input accept="image/*" class="hidden" id="profilePhotoInput" type="file"/>
+<div class="processing-overlay hidden" id="processingOverlay"><div class="processing-card"><div class="boot-spinner"></div><strong id="processingTitle">Guardando...</strong><span id="processingMessage">No cierres la aplicacion.</span></div></div>
+<script defer="" src="./offline-db.js?v=7.1.0"></script>
+<script defer="" src="./sync-manager.js?v=7.1.0"></script>
+<script defer="" src="./app.js?v=7.1.0"></script>
+<script>
     if ('serviceWorker' in navigator && location.protocol === 'https:') {
       window.addEventListener('load', function () {
-        navigator.serviceWorker.register('./service-worker.js?v=7.0.0').then(function (registration) {
+        navigator.serviceWorker.register('./service-worker.js?v=7.1.0').then(function (registration) {
           registration.update().catch(function () {});
         }).catch(function (error) { console.warn('Service Worker', error); });
       });

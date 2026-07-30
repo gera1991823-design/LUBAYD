@@ -8792,3 +8792,68 @@ body[data-role="mechanic"] .role-logo-home {
     width: min(165px, 78%);
   }
 }
+
+
+/* ============================================================
+   LUBAYD V7.1 - Encabezados sin descripciones
+   Se ocultan únicamente subtítulos explicativos de secciones,
+   paneles y pasos. No afecta estados, datos ni textos funcionales.
+   ============================================================ */
+.lubayd-v6 .page-heading > div > p,
+.lubayd-v6 .workflow-page-heading > div > p,
+.lubayd-v6 .admin-records-heading > div > p,
+.lubayd-v6 .admin-parts-heading > div > p,
+.lubayd-v6 .workflow-card-title > div > p,
+.lubayd-v6 .report-page-title > p,
+.lubayd-v6 .report-chart-heading > div > p,
+.lubayd-v6 .panel-heading > div > p,
+.lubayd-v6 .dashboard-heading-user > div > p,
+.lubayd-v6 .record-detail-dialog header > div > p {
+  display: none !important;
+}
+
+.lubayd-v6 .page-heading > div,
+.lubayd-v6 .workflow-page-heading > div,
+.lubayd-v6 .admin-records-heading > div,
+.lubayd-v6 .admin-parts-heading > div,
+.lubayd-v6 .workflow-card-title > div,
+.lubayd-v6 .report-page-title,
+.lubayd-v6 .report-chart-heading > div,
+.lubayd-v6 .panel-heading > div,
+.lubayd-v6 .dashboard-heading-user > div {
+  display: grid;
+  align-content: center;
+  gap: 4px;
+}
+
+.lubayd-v6 .page-heading h1,
+.lubayd-v6 .workflow-page-heading h1,
+.lubayd-v6 .admin-records-heading h1,
+.lubayd-v6 .admin-parts-heading h2,
+.lubayd-v6 .workflow-card-title h3,
+.lubayd-v6 .report-page-title h1,
+.lubayd-v6 .report-chart-heading h3,
+.lubayd-v6 .panel-heading h3,
+.lubayd-v6 .dashboard-heading-user h1 {
+  margin-bottom: 0 !important;
+}
+
+.lubayd-v6 .page-heading,
+.lubayd-v6 .workflow-page-heading,
+.lubayd-v6 .report-page-hero {
+  min-height: 0 !important;
+}
+
+@media (max-width: 820px) {
+  .lubayd-v6 .page-heading,
+  .lubayd-v6 .workflow-page-heading,
+  .lubayd-v6 .report-page-hero {
+    padding-block: 13px !important;
+  }
+
+  .lubayd-v6 .workflow-card-title,
+  .lubayd-v6 .report-chart-heading,
+  .lubayd-v6 .panel-heading {
+    margin-bottom: 12px !important;
+  }
+}
