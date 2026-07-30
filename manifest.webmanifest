@@ -1,7 +1,7 @@
 {
-  "name": "LUBAYD Operativa 6.6 Horómetros Progresivos",
+  "name": "LUBAYD Operativa 6.7 Reportes Exactos",
   "short_name": "LUBAYD",
-  "description": "Gestión operativa LUBAYD con horómetros progresivos, envío por etapas, trabajo offline, partes, servicios, descansos y combustible.",
+  "description": "Gestión operativa LUBAYD con reportes exactos de horómetros, combustible y servicios por máquina y día.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

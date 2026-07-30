@@ -12,10 +12,10 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="LUBAYD Operativa">
   <title>LUBAYD SA | Gestion de trabajos en campo</title>
-  <link rel="manifest" href="./manifest.webmanifest?v=6.6.0">
+  <link rel="manifest" href="./manifest.webmanifest?v=6.7.0">
   <link rel="icon" href="./icon-192.png">
   <link rel="apple-touch-icon" href="./icon-192.png">
-  <link rel="stylesheet" href="./styles.css?v=6.6.0">
+  <link rel="stylesheet" href="./styles.css?v=6.7.0">
 </head>
 <body class="booting lubayd-v6">
 
@@ -181,7 +181,7 @@
         <div class="sync-pill"><span id="syncText">Sin pendientes</span><strong id="pendingCount" class="hidden">0</strong></div>
         <button id="syncButton" class="sidebar-button" type="button"><svg class="ui-icon"><use href="#icon-sync"></use></svg><span>Sincronizar ahora</span></button>
         <button id="lockButton" class="sidebar-button sidebar-logout-button" type="button"><svg class="ui-icon"><use href="#icon-logout"></use></svg><span>Cerrar sesión</span></button>
-        <small>Version 6.6.0</small>
+        <small>Version 6.7.0</small>
       </div>
     </aside>
 
@@ -527,74 +527,92 @@
           </section>
         </article>
       </section>
-      <section id="reportsSection" class="content-section reports-modern-section">
-        <div class="page-heading reports-title-row report-page-hero">
+      <section id="reportsSection" class="content-section reports-modern-section exact-reports-section">
+        <div class="page-heading reports-title-row report-page-hero exact-report-hero">
           <div class="report-page-title">
-            <span class="eyebrow">ANÁLISIS OPERATIVO</span>
-            <h1>Reportes</h1>
-            <p>Combustible, servicios, descansos y actividad por turno en una única vista.</p>
+            <span class="eyebrow">CONTROL OPERATIVO EXACTO</span>
+            <h1>Reportes por máquina y día</h1>
+            <p>Horas productivas de horómetro, combustible utilizado y horas de servicio, calculadas directamente desde los registros operativos.</p>
           </div>
           <div class="report-heading-actions">
             <span id="reportsConnectionBadge" class="secure-chip">Sin cargar</span>
-            <button id="refreshReportsButton" class="primary-button compact-button" type="button"><svg class="ui-icon"><use href="#icon-sync"></use></svg><span>Actualizar</span></button>
+            <button id="refreshReportsButton" class="primary-button compact-button" type="button"><svg class="ui-icon"><use href="#icon-sync"></use></svg><span>Actualizar datos</span></button>
           </div>
         </div>
 
-        <article class="panel-card reports-filter-bar">
-          <div class="report-filter-grid modern-report-filters">
+        <article class="panel-card reports-filter-bar exact-report-filter-card">
+          <div class="report-filter-grid exact-report-filters">
             <label class="field"><span>Desde</span><input id="reportDateFrom" type="date"></label>
             <label class="field"><span>Hasta</span><input id="reportDateTo" type="date"></label>
-            <label class="field"><span>Operador</span><select id="reportOperator"><option value="">Todos</option></select></label>
-            <label class="field"><span>Máquina</span><select id="reportMachine"><option value="">Todas</option></select></label>
-            <label class="field"><span>Turno</span><select id="reportShift"><option value="">Todos</option><option value="day">Diurno</option><option value="night">Nocturno</option></select></label>
-            <button id="applyReportsButton" class="primary-button report-filter-button" type="button">Aplicar filtros</button>
+            <label class="field"><span>Máquina</span><select id="reportMachine"><option value="">Todas las máquinas</option></select></label>
+            <button id="applyReportsButton" class="primary-button report-filter-button" type="button"><svg class="ui-icon"><use href="#icon-search"></use></svg><span>Aplicar filtros</span></button>
             <button id="clearReportsButton" class="secondary-button report-filter-button" type="button">Restablecer</button>
           </div>
-          <small id="reportsLastUpdated">Todavía no se cargaron datos.</small>
+          <div class="report-source-line"><span id="reportsLastUpdated">Todavía no se cargaron datos.</span><small>Los cálculos no incluyen diferencias negativas ni registros sin los valores necesarios.</small></div>
         </article>
 
-        <div class="report-kpi-grid graphical-kpis report-kpis-clean">
-          <article class="report-kpi-card report-kpi-premium">
+        <div class="report-kpi-grid exact-report-kpis">
+          <article class="report-kpi-card exact-kpi-card hours-total">
+            <span class="report-kpi-icon premium-icon"><svg class="report-pro-icon"><use href="#icon-horometer-pro"></use></svg></span>
+            <div><small>Horas productivas</small><strong id="reportOperatingHours">0 h</strong><span id="reportOperatingDetail">0 jornadas con datos</span></div>
+          </article>
+          <article class="report-kpi-card exact-kpi-card pre-break">
+            <span class="report-kpi-icon premium-icon"><svg class="ui-icon"><use href="#icon-clock"></use></svg></span>
+            <div><small>Inicial → descanso</small><strong id="reportPreBreakHours">0 h</strong><span>Primer tramo productivo</span></div>
+          </article>
+          <article class="report-kpi-card exact-kpi-card post-break">
+            <span class="report-kpi-icon premium-icon"><svg class="ui-icon"><use href="#icon-activity"></use></svg></span>
+            <div><small>Post descanso → final</small><strong id="reportPostBreakHours">0 h</strong><span>Segundo tramo productivo</span></div>
+          </article>
+          <article class="report-kpi-card exact-kpi-card fuel-daily">
             <span class="report-kpi-icon premium-icon"><svg class="report-pro-icon"><use href="#icon-report-fuel-pro"></use></svg></span>
-            <div><small>Litros cargados</small><strong id="reportFuelTotal">0 L</strong><span id="reportFuelDetail">0 cargas</span></div>
+            <div><small>Litros por día</small><strong id="reportFuelPerDay">0 L</strong><span id="reportFuelPerDayDetail">Promedio diario general</span></div>
           </article>
-          <article class="report-kpi-card report-kpi-premium">
+          <article class="report-kpi-card exact-kpi-card service-hours">
             <span class="report-kpi-icon premium-icon"><svg class="report-pro-icon"><use href="#icon-report-service-pro"></use></svg></span>
-            <div><small>Horas de servicio</small><strong id="reportServiceHours">0 h</strong><span id="reportServiceDetail">0 servicios</span></div>
-          </article>
-          <article class="report-kpi-card report-kpi-premium">
-            <span class="report-kpi-icon premium-icon"><svg class="report-pro-icon"><use href="#icon-report-machine-pro"></use></svg></span>
-            <div><small>Máquinas activas</small><strong id="reportMachineCount">0</strong><span>En el período seleccionado</span></div>
-          </article>
-          <article class="report-kpi-card report-kpi-premium">
-            <span class="report-kpi-icon premium-icon"><svg class="report-pro-icon"><use href="#icon-report-shift-pro"></use></svg></span>
-            <div><small>Turno predominante</small><strong id="reportDominantShift">Sin datos</strong><span>Según litros cargados</span></div>
+            <div><small>Horas de servicio</small><strong id="reportServiceHours">0 h</strong><span id="reportServiceDetail">0 servicios finalizados</span></div>
           </article>
         </div>
 
-        <div class="report-hero-grid report-primary-grid">
-          <article class="panel-card report-chart-card report-chart-premium">
-            <div class="panel-heading"><div class="report-chart-heading"><span class="mini-report-icon"><svg class="ui-icon"><use href="#icon-chart"></use></svg></span><div><span class="eyebrow">TENDENCIA</span><h3>Combustible por día</h3><p>Litros cargados durante el período.</p></div></div></div>
-            <div id="fuelByDayChart" class="svg-chart"></div>
-          </article>
-          <article class="panel-card report-chart-card report-chart-premium shift-report-card">
-            <div class="panel-heading"><div class="report-chart-heading"><span class="mini-report-icon shift"><svg class="ui-icon"><use href="#icon-clock"></use></svg></span><div><span class="eyebrow">TURNOS</span><h3>Combustible por turno</h3><p>Comparación entre Diurno y Nocturno.</p></div></div></div>
-            <div id="fuelByShiftChart" class="shift-comparison-chart"></div>
-          </article>
-        </div>
-
-        <div class="report-visual-grid report-secondary-grid">
-          <article class="panel-card report-chart-card report-chart-premium"><div class="panel-heading"><div class="report-chart-heading"><span class="mini-report-icon"><svg class="ui-icon"><use href="#icon-bed"></use></svg></span><div><h3>Descansos por operador</h3><p>Cantidad de descansos finalizados.</p></div></div></div><div id="breaksByOperatorChart" class="svg-chart"></div></article>
-          <article class="panel-card report-chart-card report-chart-premium"><div class="panel-heading"><div class="report-chart-heading"><span class="mini-report-icon"><svg class="ui-icon"><use href="#icon-fuel"></use></svg></span><div><h3>Combustible por máquina</h3><p>Distribución de litros cargados.</p></div></div></div><div id="fuelByMachineChart" class="svg-chart"></div></article>
-          <article class="panel-card report-chart-card report-chart-premium"><div class="panel-heading"><div class="report-chart-heading"><span class="mini-report-icon"><svg class="ui-icon"><use href="#icon-wrench"></use></svg></span><div><h3>Horas de servicio por máquina</h3><p>Servicios finalizados en horas.</p></div></div></div><div id="serviceByMachineChart" class="svg-chart"></div></article>
-          <article class="panel-card report-chart-card report-chart-premium"><div class="panel-heading"><div class="report-chart-heading"><span class="mini-report-icon"><svg class="ui-icon"><use href="#icon-activity"></use></svg></span><div><h3>Resumen de actividad</h3><p>Combustible y horas de servicio.</p></div></div></div><div id="reportSummaryChart" class="svg-chart"></div></article>
-        </div>
-        <div class="hidden"><div id="breaksByDayChart"></div><div id="fuelByOperatorChart"></div></div>
-
-        <article class="panel-card report-table-card report-service-detail-card">
-          <div class="panel-heading"><div><span class="eyebrow">DETALLE</span><h3>Servicios realizados</h3><p>Consulta de servicios de todos los mecánicos.</p></div><span id="reportServiceTableCount" class="badge neutral">0 registros</span></div>
-          <div id="reportServiceTable" class="report-table-wrap"><div class="empty-state">Sin datos.</div></div>
+        <article class="panel-card report-chart-card exact-report-card horometer-report-card">
+          <div class="panel-heading exact-report-heading">
+            <div class="report-chart-heading"><span class="mini-report-icon"><svg class="report-pro-icon"><use href="#icon-horometer-pro"></use></svg></span><div><span class="eyebrow">HORÓMETROS</span><h3>Horas productivas por máquina y día</h3><p>Inicial a descanso + post descanso a final. El tiempo de descanso no se suma.</p></div></div>
+            <span id="horometerDailyCount" class="badge neutral">0 filas</span>
+          </div>
+          <div id="horometerDailyMachineChart" class="exact-segment-chart"><div class="empty-state">Sin datos.</div></div>
         </article>
+
+        <div class="exact-report-grid two-columns">
+          <article class="panel-card report-chart-card exact-report-card">
+            <div class="panel-heading exact-report-heading"><div class="report-chart-heading"><span class="mini-report-icon"><svg class="report-pro-icon"><use href="#icon-report-fuel-pro"></use></svg></span><div><span class="eyebrow">COMBUSTIBLE</span><h3>Litros por máquina y día</h3><p>Suma exacta de las cargas registradas para cada máquina.</p></div></div></div>
+            <div id="fuelByMachineDayChart" class="exact-bar-list"></div>
+          </article>
+          <article class="panel-card report-chart-card exact-report-card">
+            <div class="panel-heading exact-report-heading"><div class="report-chart-heading"><span class="mini-report-icon"><svg class="ui-icon"><use href="#icon-chart"></use></svg></span><div><span class="eyebrow">TOTAL GENERAL</span><h3>Combustible total por día</h3><p>Total diario de litros de todas las máquinas.</p></div></div></div>
+            <div id="fuelDailyTotalChart" class="svg-chart"></div>
+          </article>
+        </div>
+
+        <article class="panel-card report-chart-card exact-report-card">
+          <div class="panel-heading exact-report-heading"><div class="report-chart-heading"><span class="mini-report-icon"><svg class="report-pro-icon"><use href="#icon-report-service-pro"></use></svg></span><div><span class="eyebrow">MANTENIMIENTO</span><h3>Horas de servicio por máquina y día</h3><p>Duración real entre el inicio y la finalización de cada servicio.</p></div></div></div>
+          <div id="serviceByMachineDayChart" class="exact-bar-list"></div>
+        </article>
+
+        <article class="panel-card report-table-card exact-detail-card">
+          <div class="panel-heading"><div><span class="eyebrow">DETALLE DE HORÓMETROS</span><h3>Lecturas y producción diaria</h3><p>Valores ingresados, diferencias calculadas y estado de cada jornada.</p></div><span id="horometerTableCount" class="badge neutral">0 registros</span></div>
+          <div id="horometerDailyTable" class="report-table-wrap"><div class="empty-state">Sin datos.</div></div>
+        </article>
+
+        <div class="exact-report-grid two-columns detail-tables-grid">
+          <article class="panel-card report-table-card exact-detail-card">
+            <div class="panel-heading"><div><span class="eyebrow">DETALLE DE COMBUSTIBLE</span><h3>Consumo diario por máquina</h3></div><span id="fuelTableCount" class="badge neutral">0 registros</span></div>
+            <div id="fuelDailyTable" class="report-table-wrap"><div class="empty-state">Sin datos.</div></div>
+          </article>
+          <article class="panel-card report-table-card exact-detail-card">
+            <div class="panel-heading"><div><span class="eyebrow">DETALLE DE SERVICIOS</span><h3>Horas diarias por máquina</h3></div><span id="serviceTableCount" class="badge neutral">0 registros</span></div>
+            <div id="serviceDailyTable" class="report-table-wrap"><div class="empty-state">Sin datos.</div></div>
+          </article>
+        </div>
       </section>
 
       <section id="usersSection" class="content-section">
@@ -705,13 +723,13 @@
 
   <div id="processingOverlay" class="processing-overlay hidden"><div class="processing-card"><div class="boot-spinner"></div><strong id="processingTitle">Guardando...</strong><span id="processingMessage">No cierres la aplicacion.</span></div></div>
 
-  <script defer src="./offline-db.js?v=6.6.0"></script>
-  <script defer src="./sync-manager.js?v=6.6.0"></script>
-  <script defer src="./app.js?v=6.6.0"></script>
+  <script defer src="./offline-db.js?v=6.7.0"></script>
+  <script defer src="./sync-manager.js?v=6.7.0"></script>
+  <script defer src="./app.js?v=6.7.0"></script>
   <script>
     if ('serviceWorker' in navigator && location.protocol === 'https:') {
       window.addEventListener('load', function () {
-        navigator.serviceWorker.register('./service-worker.js?v=6.6.0').then(function (registration) {
+        navigator.serviceWorker.register('./service-worker.js?v=6.7.0').then(function (registration) {
           registration.update().catch(function () {});
         }).catch(function (error) { console.warn('Service Worker', error); });
       });
