@@ -8157,3 +8157,91 @@ a {
   .tank-dialog-icon { width: 42px; height: 42px; flex-basis: 42px; border-radius: 13px; }
   .tank-dialog-summary strong { font-size: 17px; }
 }
+
+
+/* ============================================================
+   LUBAYD V6.5 - desplazamiento táctil estable en iPhone y Android
+   Corrige bloqueos de scroll causados por reglas históricas de altura/overflow.
+   ============================================================ */
+html.mobile-scroll-enabled,
+body.mobile-scroll-enabled {
+  max-height: none !important;
+}
+
+@media (max-width: 980px) {
+  html.mobile-scroll-enabled {
+    width: 100% !important;
+    height: auto !important;
+    min-height: 100% !important;
+    max-height: none !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    overscroll-behavior-x: none;
+    overscroll-behavior-y: auto !important;
+    touch-action: pan-y pinch-zoom !important;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body.mobile-scroll-enabled.lubayd-v6:not(.booting) {
+    position: static !important;
+    inset: auto !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 100dvh !important;
+    max-height: none !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    overscroll-behavior-x: none;
+    overscroll-behavior-y: auto !important;
+    touch-action: pan-y pinch-zoom !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  body.mobile-scroll-enabled.lubayd-v6 .app-shell,
+  body.mobile-scroll-enabled.lubayd-v6 .main-content,
+  body.mobile-scroll-enabled.lubayd-v6 .content-section,
+  body.mobile-scroll-enabled.lubayd-v6 .content-section.active,
+  body.mobile-scroll-enabled.lubayd-v6 .dashboard-section,
+  body.mobile-scroll-enabled.lubayd-v6 .operator-home-panel,
+  body.mobile-scroll-enabled.lubayd-v6 .pro-workflow-section {
+    position: relative;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow-x: hidden !important;
+    overflow-y: visible !important;
+    overscroll-behavior-y: auto !important;
+    touch-action: pan-y pinch-zoom !important;
+  }
+
+  body.mobile-scroll-enabled.lubayd-v6 .app-shell,
+  body.mobile-scroll-enabled.lubayd-v6 .main-content {
+    min-height: 100dvh !important;
+  }
+
+  body.mobile-scroll-enabled.lubayd-v6 .content-section:not(.active) {
+    display: none !important;
+  }
+
+  body.mobile-scroll-enabled.lubayd-v6 .content-section.active {
+    display: block !important;
+  }
+
+  /* Los componentes con desplazamiento propio conservan su scroll interno. */
+  body.mobile-scroll-enabled.lubayd-v6 .sidebar-nav,
+  body.mobile-scroll-enabled.lubayd-v6 .capture-dialog,
+  body.mobile-scroll-enabled.lubayd-v6 .record-detail-dialog,
+  body.mobile-scroll-enabled.lubayd-v6 .tank-management-dialog,
+  body.mobile-scroll-enabled.lubayd-v6 .chat-messages,
+  body.mobile-scroll-enabled.lubayd-v6 .direct-chat-messages,
+  body.mobile-scroll-enabled.lubayd-v6 .chat-contact-list {
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y !important;
+  }
+
+  /* La barra fija no debe capturar gestos fuera de su propia superficie. */
+  body.mobile-scroll-enabled.lubayd-v6 .mobile-bottom-nav {
+    touch-action: manipulation !important;
+  }
+}

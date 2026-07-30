@@ -15,6 +15,30 @@ const firebaseConfig = {
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => Array.from(document.querySelectorAll(selector));
 
+
+function enableMobilePageScroll() {
+  const mobile = window.matchMedia("(max-width: 980px)").matches;
+  document.documentElement.classList.toggle("mobile-scroll-enabled", mobile);
+  document.body.classList.toggle("mobile-scroll-enabled", mobile);
+
+  if (!mobile) return;
+
+  // Safari puede conservar estilos de bloqueo después de cerrar una vista o volver desde WhatsApp.
+  for (const node of [document.documentElement, document.body]) {
+    node.style.removeProperty("position");
+    node.style.removeProperty("inset");
+    node.style.removeProperty("top");
+    node.style.removeProperty("left");
+    node.style.removeProperty("right");
+    node.style.removeProperty("bottom");
+    node.style.removeProperty("height");
+    node.style.removeProperty("max-height");
+    node.style.removeProperty("overflow");
+    node.style.removeProperty("overflow-y");
+    node.style.removeProperty("touch-action");
+  }
+}
+
 const els = {
   bootView: $("#bootView"), authView: $("#authView"), appView: $("#appView"), authMessage: $("#authMessage"),
   loginTab: $("#loginTab"), registerTab: $("#registerTab"), loginForm: $("#loginForm"), registerForm: $("#registerForm"),
@@ -246,6 +270,7 @@ function reveal(view) {
   els.authView.classList.toggle("hidden", view !== "auth");
   els.appView.classList.toggle("hidden", view !== "app");
   document.body.classList.remove("booting");
+  enableMobilePageScroll();
 }
 
 async function importFirebase() {
@@ -526,6 +551,10 @@ function showSection(section) {
   $$('[data-section]').forEach((node) => node.classList.toggle("active", node.dataset.section === section));
   els.pageTitle.textContent = SECTION_TITLES[section] || "Inicio";
   els.sidebar.classList.remove("open");
+  enableMobilePageScroll();
+  if (window.matchMedia("(max-width: 980px)").matches) {
+    window.requestAnimationFrame(() => window.scrollTo({ top: 0, left: 0, behavior: "auto" }));
+  }
   if (section === "part") {
     if (currentProfile?.role === "admin") {
       renderAdminParts();
@@ -650,7 +679,7 @@ function bindEvents() {
   els.saveTankButton.addEventListener("click", saveTank);
   els.addTankFuelButton?.addEventListener("click", addFuelToMainTank);
   els.tankLoadInput?.addEventListener("input", updateTankLoadPreview);
-  $$('[data-close-tank]').forEach((button) => button.addEventListener("click", () => els.tankModal.classList.add("hidden")));
+  $$('[data-close-tank]').forEach((button) => button.addEventListener("click", () => { els.tankModal.classList.add("hidden"); enableMobilePageScroll(); }));
   $$('[data-close-modal]').forEach((button) => button.addEventListener("click", closeCapture));
   $$('[data-close-record-detail]').forEach((button) => button.addEventListener("click", closeRecordDetail));
   window.addEventListener("keydown", (event) => { if (event.key === "Escape" && !els.recordDetailModal?.classList.contains("hidden")) closeRecordDetail(); });
@@ -662,6 +691,10 @@ function bindEvents() {
   els.skipPinButton.addEventListener("click", () => els.pinModal.classList.add("hidden"));
   window.addEventListener("online", () => { updateConnection(); reconnectAndSync().catch(console.warn); });
   window.addEventListener("offline", () => { updateConnection(); scheduleSyncRetry(false); });
+  window.addEventListener("pageshow", enableMobilePageScroll);
+  window.addEventListener("resize", enableMobilePageScroll, { passive: true });
+  window.addEventListener("orientationchange", () => setTimeout(enableMobilePageScroll, 120), { passive: true });
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) enableMobilePageScroll(); });
   navigator.serviceWorker?.addEventListener?.("message", (event) => {
     if (event.data?.type === "TRY_SYNC") reconnectAndSync().catch(console.warn);
   });
@@ -3321,6 +3354,7 @@ function openCapture({ title, subtitle, showGps = false, requireGps = false, onC
 function closeCapture() {
   captureGpsRequestId += 1;
   els.captureModal.classList.add("hidden");
+  enableMobilePageScroll();
   if (captureObjectUrl) URL.revokeObjectURL(captureObjectUrl);
   captureObjectUrl = null;
   captureContext = null;
